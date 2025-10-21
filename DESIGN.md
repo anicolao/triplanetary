@@ -82,9 +82,8 @@ When a user taps/clicks on a player's color icon, a color picker overlay will ap
 When the "Add Player" button is clicked:
 1. A Redux action is dispatched to add a new player
 2. The new player is assigned the next available color from the palette
-3. If all colors are in use and fewer than 6 players exist, the new player receives a duplicate color
-4. If 6 players already exist, the button becomes disabled
-5. The player list updates to show the new player
+3. If 6 players already exist, the button becomes disabled
+4. The player list updates to show the new player
 
 ### Remove Player Interaction
 
@@ -112,7 +111,6 @@ The Redux store will contain a configuration section with the following structur
 - **players**: Array of player objects, each containing:
   - **id**: Unique identifier for the player
   - **color**: The hex color code assigned to this player
-  - **displayName**: Optional custom name (default: "Player N")
 
 ### Redux Actions
 
@@ -159,33 +157,6 @@ The canvas will resize to fill the browser viewport and adapt its rendering base
 - Font sizes and UI element sizes will scale appropriately
 - Touch targets will be sized appropriately for mobile devices (minimum 44x44 points)
 
-## Additional Features (Future Work)
-
-The following features are planned for future iterations:
-
-### Scenario Selection
-
-A screen allowing players to choose from different game scenarios:
-- Racing scenarios
-- Combat scenarios  
-- Campaign missions
-- Custom scenarios
-
-### Game Settings
-
-Configuration options such as:
-- Time limits per turn
-- Rule variations
-- Difficulty settings
-- Sound and visual preferences
-
-### Save/Load Games
-
-Ability to save game state and resume later:
-- Save configuration and current game state to browser storage
-- Load previously saved games
-- Export/import game states
-
 ## Technical Considerations
 
 ### Canvas Rendering Performance
@@ -212,21 +183,24 @@ Unit tests will cover:
 - Input coordinate to UI element mapping
 - Color assignment logic
 
-Integration tests will cover:
-- Full user interaction flows
-- State changes triggering correct renders
-- Multi-player configuration scenarios
+Integration tests will use Playwright to:
+- Record screenshots of UI states after all user actions
+- Validate correct UI state after adding players
+- Validate correct UI state after removing players
+- Validate correct UI state after changing colors
+- Validate correct UI state after starting the game
+- Validate gameplay UI states (future)
 
 ## Accessibility Considerations
 
-While using a canvas-based UI presents accessibility challenges, the following considerations will be made:
+The following considerations will be made:
 
-- **Color-blind Friendly Palette**: Using scientifically validated color-blind safe colors
+- **Color-blind Friendly Palette**: Using scientifically validated color-blind safe colors to ensure all players can distinguish between player colors
 - **High Contrast**: Ensuring sufficient contrast between UI elements and backgrounds
 - **Clear Labels**: All interactive elements will have clear text labels
-- **Touch Targets**: Minimum size requirements for touch interaction
+- **Touch Targets**: Minimum size requirements for touch interaction (minimum 44x44 points)
 
-Note: Full keyboard navigation and screen reader support are difficult with canvas-based UIs and may require additional architectural considerations in future iterations.
+Note: This game is designed for a physical shared tabletop device where players can see and touch the screen. Keyboard navigation and screen reader support are not planned as they are not applicable to this use case.
 
 ## Summary
 
