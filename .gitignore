@@ -7,3 +7,5 @@ test-results/
 .vite
 *.js
 *.js.map
+!playwright.config.ts
+!vitest.config.ts
