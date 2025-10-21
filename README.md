@@ -41,7 +41,68 @@ Play through historical scenarios from the original game, including mining opera
 
 ## Getting Started
 
-This project is in early development. Check back soon for installation and setup instructions.
+### Prerequisites
+
+- Node.js (v18 or later)
+- npm (v9 or later)
+
+### Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/anicolao/triplanetary.git
+cd triplanetary
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+### Development
+
+Start the development server:
+```bash
+npm run dev
+```
+
+The application will be available at `http://localhost:5173`
+
+### Building
+
+Build for production:
+```bash
+npm run build
+```
+
+The built files will be in the `dist` directory.
+
+### Testing
+
+Run unit tests:
+```bash
+npm test
+```
+
+Run end-to-end tests (requires Playwright browsers):
+```bash
+npx playwright install chromium
+npm run test:e2e
+```
+
+## Current Features
+
+### Game Configuration Screen
+
+The initial implementation includes a fully functional game configuration screen:
+
+- **Add Players**: Click "Add Player" to add up to 6 players
+- **Remove Players**: Click the × button to remove any player
+- **Change Colors**: Click on a player's color swatch to open the color picker
+- **Color-Blind Friendly**: Uses a scientifically validated palette of 6 colors
+- **Start Game**: Begin gameplay once at least one player is configured
+
+All UI is rendered on HTML5 Canvas using TypeScript with Redux state management.
 
 ## Contributing
 
