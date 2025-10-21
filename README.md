@@ -17,7 +17,7 @@ This project aims to bring the classic Triplanetary experience to the web, makin
 - **Hexagonal game board** representing the inner solar system (Mercury, Venus, Earth, Mars orbits)
 - **Realistic Newtonian physics** for ship movement
 - **Turn-based gameplay** with movement planning
-- **Multiplayer support** for online play
+- **Multiplayer support** on shared touchscreen tabletop device
 - **Single-player scenarios** from the original game
 - **Campaign mode** with linked scenarios
 - **Ship customization** and fleet management
@@ -27,7 +27,6 @@ This project aims to bring the classic Triplanetary experience to the web, makin
 
 - **TypeScript** for type-safe game logic and rendering
 - **HTML5 Canvas** for the entire game interface (minimal HTML/CSS)
-- **WebSocket** support for multiplayer functionality
 
 ## Game Modes
 
