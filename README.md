@@ -25,9 +25,9 @@ This project aims to bring the classic Triplanetary experience to the web, makin
 
 ## Technology Stack
 
-- Modern web technologies (HTML5, CSS3, JavaScript)
-- Canvas/SVG for hexagonal grid rendering
-- WebSocket support for multiplayer functionality
+- **TypeScript** for type-safe game logic and rendering
+- **HTML5 Canvas** for the entire game interface (minimal HTML/CSS)
+- **WebSocket** support for multiplayer functionality
 
 ## Game Modes
 
