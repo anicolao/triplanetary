@@ -7,6 +7,7 @@ export class Renderer {
   private ctx: CanvasRenderingContext2D;
   private canvas: HTMLCanvasElement;
   private colorPickerPlayerId: string | null = null;
+  private onRenderNeeded: (() => void) | null = null;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -18,6 +19,10 @@ export class Renderer {
     this.resizeCanvas();
   }
 
+  setRenderCallback(callback: () => void): void {
+    this.onRenderNeeded = callback;
+  }
+
   resizeCanvas(): void {
     this.canvas.width = window.innerWidth;
     this.canvas.height = window.innerHeight;
@@ -25,10 +30,16 @@ export class Renderer {
 
   showColorPicker(playerId: string): void {
     this.colorPickerPlayerId = playerId;
+    if (this.onRenderNeeded) {
+      this.onRenderNeeded();
+    }
   }
 
   hideColorPicker(): void {
     this.colorPickerPlayerId = null;
+    if (this.onRenderNeeded) {
+      this.onRenderNeeded();
+    }
   }
 
   getColorPickerPlayerId(): string | null {
@@ -63,8 +74,8 @@ export class Renderer {
     this.renderTitle(layout);
 
     // Render player entries
-    layout.playerEntries.forEach((entry) => {
-      this.renderPlayerEntry(entry);
+    layout.playerEntries.forEach((entry, index) => {
+      this.renderPlayerEntry(entry, index + 1);
     });
 
     // Render buttons
@@ -113,7 +124,7 @@ export class Renderer {
     this.ctx.fillText('TRIPLANETARY', layout.titleX, layout.titleY);
   }
 
-  private renderPlayerEntry(entry: PlayerEntry): void {
+  private renderPlayerEntry(entry: PlayerEntry, playerNumber: number): void {
     // Render color icon
     this.ctx.fillStyle = entry.player.color;
     this.ctx.fillRect(
@@ -134,14 +145,11 @@ export class Renderer {
     );
 
     // Render player label
-    const playerIndex =
-      parseInt(entry.player.id.split('-')[1]) % 100 ||
-      Math.floor(Math.random() * 100);
     this.ctx.fillStyle = '#ffffff';
     this.ctx.font = `${entry.colorIconSize * 0.4}px sans-serif`;
     this.ctx.textAlign = 'left';
     this.ctx.textBaseline = 'middle';
-    this.ctx.fillText(`Player ${playerIndex % 10 || 1}`, entry.labelX, entry.labelY);
+    this.ctx.fillText(`Player ${playerNumber}`, entry.labelX, entry.labelY);
 
     // Render remove button
     this.renderButton(entry.removeButton);

@@ -14,18 +14,21 @@ function init() {
   const renderer = new Renderer(canvas);
   const inputHandler = new InputHandler(renderer);
 
-  // Handle window resize
-  window.addEventListener('resize', () => {
-    renderer.resizeCanvas();
-    render();
-  });
-
   // Main render function
   function render() {
     const state = store.getState();
     const layout = renderer.render(state);
     inputHandler.setCurrentLayout(layout);
   }
+
+  // Set up render callback for color picker changes
+  renderer.setRenderCallback(render);
+
+  // Handle window resize
+  window.addEventListener('resize', () => {
+    renderer.resizeCanvas();
+    render();
+  });
 
   // Subscribe to store changes
   store.subscribe(render);
