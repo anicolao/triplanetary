@@ -99,20 +99,34 @@ When ships occupy adjacent hexes or are within weapon range:
 
 ## Turn Sequence
 
-1. **Initiative Phase**: Determine player order
-2. **Movement Phase**:
-   - Each player plots their velocity vectors
-   - Apply thrust modifications
-   - Move all ships simultaneously
+At the start of the game, randomly determine player turn order. This order remains fixed for the entire game.
+
+Each round, players take their turns in order. During a player's turn:
+
+1. **Plot Phase**:
+   - Plot velocity vectors for all your ships
+   - Declare thrust modifications for each ship
+
+2. **Ordnance Phase**:
+   - Launch mines, torpedoes, or nuclear weapons
+   - Ordnance will move during the Movement Phase
+
+3. **Movement Phase**:
+   - Move all your ships according to their velocity vectors
+   - Move all your ordnance
    - Apply gravity effects
-3. **Combat Phase**:
-   - Declare attacks
+
+4. **Combat Phase**:
+   - Declare attacks with your ships
    - Resolve weapon fire
    - Apply damage
-4. **Maintenance Phase**:
+
+5. **Maintenance Phase**:
    - Check victory conditions
    - Resolve special situations
-   - Prepare for next turn
+   - Prepare for next player's turn
+
+After all players have completed their turns, the round ends and a new round begins with the first player.
 
 ## Special Rules
 
@@ -170,6 +184,13 @@ The vector movement system is the heart of Triplanetary. Unlike traditional boar
 Gravity adds another layer of complexity and strategy. Skilled players can use planetary gravity to conserve fuel or set up surprise attacks by "falling" toward an opponent.
 
 ## Quick Reference
+
+### Turn Sequence Summary
+1. Plot Phase: Plot vectors and declare thrust
+2. Ordnance Phase: Launch mines/torpedoes/nukes
+3. Movement Phase: Move ships and ordnance
+4. Combat Phase: Fire weapons and apply damage
+5. Maintenance Phase: Check victory conditions
 
 ### Movement Summary
 - Plot velocity arrow from current position
