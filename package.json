@@ -1,0 +1,29 @@
+{
+  "name": "triplanetary",
+  "version": "1.0.0",
+  "description": "A web-based implementation of the classic 1973 science fiction board game **Triplanetary** by Game Designers' Workshop (GDW).",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:e2e": "playwright test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.56.1",
+    "@redux-devtools/extension": "^3.3.0",
+    "@types/node": "^24.9.1",
+    "@vitest/ui": "^3.2.4",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.11",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "redux": "^5.0.1"
+  }
+}
