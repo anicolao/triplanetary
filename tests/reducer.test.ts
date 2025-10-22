@@ -8,6 +8,7 @@ import {
   changePlayerColor,
   startGame,
   returnToConfig,
+  endPhase,
 } from '../src/redux/actions';
 import { MAX_PLAYERS, PLAYER_COLORS } from '../src/redux/types';
 
@@ -121,6 +122,26 @@ describe('gameReducer', () => {
       const state = gameReducer(initialState, startGame());
       expect(state.screen).toBe('configuration');
     });
+
+    it('should initialize gameplay state with turn order', () => {
+      let state = initialState;
+      state = gameReducer(state, addPlayer());
+      state = gameReducer(state, addPlayer());
+      state = gameReducer(state, addPlayer());
+      state = gameReducer(state, startGame());
+
+      expect(state.gameplay).not.toBeNull();
+      expect(state.gameplay?.currentRound).toBe(1);
+      expect(state.gameplay?.currentPlayerIndex).toBe(0);
+      expect(state.gameplay?.currentPhase).toBe('plot');
+      expect(state.gameplay?.playerTurnOrder.length).toBe(3);
+      
+      // Verify all player IDs are in turn order
+      const playerIds = state.players.map(p => p.id);
+      state.gameplay?.playerTurnOrder.forEach(id => {
+        expect(playerIds).toContain(id);
+      });
+    });
   });
 
   describe('RETURN_TO_CONFIG', () => {
@@ -131,6 +152,91 @@ describe('gameReducer', () => {
       state = gameReducer(state, returnToConfig());
 
       expect(state.screen).toBe('configuration');
+    });
+
+    it('should clear gameplay state when returning to config', () => {
+      let state = initialState;
+      state = gameReducer(state, addPlayer());
+      state = gameReducer(state, startGame());
+      state = gameReducer(state, returnToConfig());
+
+      expect(state.gameplay).toBeNull();
+    });
+  });
+
+  describe('END_PHASE', () => {
+    it('should advance through phases in order', () => {
+      let state = initialState;
+      state = gameReducer(state, addPlayer());
+      state = gameReducer(state, startGame());
+
+      expect(state.gameplay?.currentPhase).toBe('plot');
+      
+      state = gameReducer(state, endPhase());
+      expect(state.gameplay?.currentPhase).toBe('ordnance');
+      
+      state = gameReducer(state, endPhase());
+      expect(state.gameplay?.currentPhase).toBe('movement');
+      
+      state = gameReducer(state, endPhase());
+      expect(state.gameplay?.currentPhase).toBe('combat');
+      
+      state = gameReducer(state, endPhase());
+      expect(state.gameplay?.currentPhase).toBe('maintenance');
+    });
+
+    it('should advance to next player after maintenance phase', () => {
+      let state = initialState;
+      state = gameReducer(state, addPlayer());
+      state = gameReducer(state, addPlayer());
+      state = gameReducer(state, startGame());
+
+      // Go through all phases
+      state = gameReducer(state, endPhase()); // ordnance
+      state = gameReducer(state, endPhase()); // movement
+      state = gameReducer(state, endPhase()); // combat
+      state = gameReducer(state, endPhase()); // maintenance
+      
+      // After maintenance, should move to next player's plot phase
+      state = gameReducer(state, endPhase());
+      expect(state.gameplay?.currentPhase).toBe('plot');
+      expect(state.gameplay?.currentPlayerIndex).toBe(1);
+      expect(state.gameplay?.currentRound).toBe(1);
+    });
+
+    it('should advance to next round after all players complete turns', () => {
+      let state = initialState;
+      state = gameReducer(state, addPlayer());
+      state = gameReducer(state, addPlayer());
+      state = gameReducer(state, startGame());
+
+      // Complete first player's turn
+      for (let i = 0; i < 5; i++) {
+        state = gameReducer(state, endPhase());
+      }
+      expect(state.gameplay?.currentPlayerIndex).toBe(1);
+      expect(state.gameplay?.currentRound).toBe(1);
+
+      // Complete second player's turn
+      for (let i = 0; i < 5; i++) {
+        state = gameReducer(state, endPhase());
+      }
+      
+      // Should be back to first player, round 2
+      expect(state.gameplay?.currentPlayerIndex).toBe(0);
+      expect(state.gameplay?.currentRound).toBe(2);
+      expect(state.gameplay?.currentPhase).toBe('plot');
+    });
+
+    it('should not advance phase when not in gameplay', () => {
+      let state = initialState;
+      state = gameReducer(state, addPlayer());
+      
+      // Try to end phase while in configuration
+      const stateBefore = { ...state };
+      state = gameReducer(state, endPhase());
+      
+      expect(state).toEqual(stateBefore);
     });
   });
 });

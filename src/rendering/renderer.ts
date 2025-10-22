@@ -91,29 +91,126 @@ export class Renderer {
   }
 
   private renderGameplayScreen(state: GameState): UILayout {
-    // Placeholder for gameplay screen
+    if (!state.gameplay) {
+      return this.createEmptyLayout();
+    }
+
+    const { gameplay, players } = state;
+    const currentPlayerId = gameplay.playerTurnOrder[gameplay.currentPlayerIndex];
+    const currentPlayer = players.find(p => p.id === currentPlayerId);
+    const currentPlayerNumber = players.findIndex(p => p.id === currentPlayerId) + 1;
+
+    // Title
     this.ctx.fillStyle = '#ffffff';
-    this.ctx.font = '48px sans-serif';
+    this.ctx.font = 'bold 36px sans-serif';
     this.ctx.textAlign = 'center';
-    this.ctx.textBaseline = 'middle';
+    this.ctx.textBaseline = 'top';
+    this.ctx.fillText('TRIPLANETARY', this.canvas.width / 2, 20);
+
+    // Round information
+    this.ctx.font = '24px sans-serif';
     this.ctx.fillText(
-      'Gameplay Screen (Coming Soon)',
+      `Round ${gameplay.currentRound}`,
       this.canvas.width / 2,
-      this.canvas.height / 2
+      70
     );
 
-    // Show player list
-    this.ctx.font = '24px sans-serif';
-    state.players.forEach((player, index) => {
-      this.ctx.fillStyle = player.color;
-      this.ctx.fillText(
-        `Player ${index + 1}`,
-        this.canvas.width / 2,
-        this.canvas.height / 2 + 60 + index * 30
-      );
+    // Current player and phase
+    const phaseY = this.canvas.height / 2 - 100;
+    this.ctx.font = 'bold 32px sans-serif';
+    this.ctx.fillStyle = currentPlayer?.color || '#ffffff';
+    this.ctx.fillText(
+      `Player ${currentPlayerNumber}'s Turn`,
+      this.canvas.width / 2,
+      phaseY
+    );
+
+    // Phase indicator
+    this.ctx.fillStyle = '#ffffff';
+    this.ctx.font = '28px sans-serif';
+    const phaseText = this.getPhaseDisplayName(gameplay.currentPhase);
+    this.ctx.fillText(
+      `Phase: ${phaseText}`,
+      this.canvas.width / 2,
+      phaseY + 50
+    );
+
+    // End Phase button
+    const buttonWidth = 200;
+    const buttonHeight = 60;
+    const buttonX = this.canvas.width / 2 - buttonWidth / 2;
+    const buttonY = phaseY + 120;
+
+    const endPhaseButton: Button = {
+      x: buttonX,
+      y: buttonY,
+      width: buttonWidth,
+      height: buttonHeight,
+      text: 'End Phase',
+      enabled: true,
+      type: 'end-phase',
+    };
+    this.renderButton(endPhaseButton);
+
+    // Return to Config button (small, in corner)
+    const returnButtonWidth = 150;
+    const returnButtonHeight = 40;
+    const returnButton: Button = {
+      x: this.canvas.width - returnButtonWidth - 20,
+      y: 20,
+      width: returnButtonWidth,
+      height: returnButtonHeight,
+      text: 'Return to Config',
+      enabled: true,
+      type: 'return-to-config',
+    };
+    this.renderButton(returnButton);
+
+    // Player list with turn order
+    this.ctx.fillStyle = '#ffffff';
+    this.ctx.font = '18px sans-serif';
+    this.ctx.textAlign = 'left';
+    this.ctx.fillText('Turn Order:', 20, 120);
+
+    gameplay.playerTurnOrder.forEach((playerId, index) => {
+      const player = players.find(p => p.id === playerId);
+      const playerNum = players.findIndex(p => p.id === playerId) + 1;
+      const y = 150 + index * 35;
+      
+      if (player) {
+        // Highlight current player
+        if (index === gameplay.currentPlayerIndex) {
+          this.ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+          this.ctx.fillRect(15, y - 20, 200, 30);
+        }
+
+        // Color indicator
+        this.ctx.fillStyle = player.color;
+        this.ctx.fillRect(20, y - 12, 20, 20);
+        
+        // Player name
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.fillText(`Player ${playerNum}`, 50, y);
+      }
     });
 
-    return this.createEmptyLayout();
+    // Return layout with buttons
+    return {
+      ...this.createEmptyLayout(),
+      endPhaseButton,
+      returnButton,
+    };
+  }
+
+  private getPhaseDisplayName(phase: string): string {
+    const phaseNames: Record<string, string> = {
+      plot: 'Plot',
+      ordnance: 'Ordnance',
+      movement: 'Movement',
+      combat: 'Combat',
+      maintenance: 'Maintenance',
+    };
+    return phaseNames[phase] || phase;
   }
 
   private renderTitle(layout: UILayout): void {

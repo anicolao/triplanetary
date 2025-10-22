@@ -2,14 +2,24 @@
 
 export type Screen = 'configuration' | 'gameplay';
 
+export type Phase = 'plot' | 'ordnance' | 'movement' | 'combat' | 'maintenance';
+
 export interface Player {
   id: string;
   color: string;
 }
 
+export interface GameplayState {
+  currentRound: number;
+  playerTurnOrder: string[]; // Array of player IDs in turn order
+  currentPlayerIndex: number; // Index into playerTurnOrder
+  currentPhase: Phase;
+}
+
 export interface GameState {
   screen: Screen;
   players: Player[];
+  gameplay: GameplayState | null; // null when not in gameplay
 }
 
 // Available color-blind friendly palette
