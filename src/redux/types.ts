@@ -9,11 +9,37 @@ export interface Player {
   color: string;
 }
 
+// Ship position in hex coordinates
+export interface HexPosition {
+  q: number; // column
+  r: number; // row
+}
+
+// Ship velocity vector in hex coordinates
+export interface HexVelocity {
+  dq: number; // change in q per turn
+  dr: number; // change in r per turn
+}
+
+// Ship state
+export interface Ship {
+  id: string;
+  ownerId: string; // Player ID who owns this ship
+  type: 'corvette'; // Ship type (only corvette for now)
+  position: HexPosition;
+  velocity: HexVelocity;
+  thrustPoints: number; // Available thrust for this turn
+  maxThrust: number; // Maximum thrust per turn
+  hullPoints: number;
+  maxHullPoints: number;
+}
+
 export interface GameplayState {
   currentRound: number;
   playerTurnOrder: string[]; // Array of player IDs in turn order
   currentPlayerIndex: number; // Index into playerTurnOrder
   currentPhase: Phase;
+  ships: Ship[]; // All ships in the game
 }
 
 export interface GameState {

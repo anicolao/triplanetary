@@ -142,6 +142,25 @@ describe('gameReducer', () => {
         expect(playerIds).toContain(id);
       });
     });
+
+    it('should initialize ships for each player', () => {
+      let state = initialState;
+      state = gameReducer(state, addPlayer());
+      state = gameReducer(state, addPlayer());
+      state = gameReducer(state, startGame());
+
+      expect(state.gameplay?.ships).toBeDefined();
+      expect(state.gameplay?.ships.length).toBe(2);
+      
+      // Each player should have one corvette
+      state.players.forEach(player => {
+        const playerShips = state.gameplay?.ships.filter(s => s.ownerId === player.id);
+        expect(playerShips?.length).toBe(1);
+        expect(playerShips?.[0].type).toBe('corvette');
+        expect(playerShips?.[0].maxThrust).toBe(2);
+        expect(playerShips?.[0].hullPoints).toBe(6);
+      });
+    });
   });
 
   describe('RETURN_TO_CONFIG', () => {

@@ -1,6 +1,6 @@
 // Redux reducer for game state management
 
-import { GameState, Player, PLAYER_COLORS, MAX_PLAYERS, GameplayState } from './types';
+import { GameState, Player, PLAYER_COLORS, MAX_PLAYERS, GameplayState, Ship } from './types';
 import {
   GameAction,
   ADD_PLAYER,
@@ -30,6 +30,11 @@ function generatePlayerId(): string {
   return `player-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
 
+// Helper function to generate unique ship ID
+function generateShipId(playerId: string): string {
+  return `ship-${playerId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+}
+
 // Helper function to shuffle array (Fisher-Yates shuffle)
 function shuffleArray<T>(array: T[]): T[] {
   const shuffled = [...array];
@@ -40,16 +45,51 @@ function shuffleArray<T>(array: T[]): T[] {
   return shuffled;
 }
 
+// Helper function to initialize ships for the race scenario
+// Race scenario: Earth orbit to Mars orbit, each player gets one corvette
+function initializeShips(players: Player[]): Ship[] {
+  const ships: Ship[] = [];
+  
+  // Starting positions in Earth orbit (roughly circular)
+  // Space ships around Earth's orbit to avoid collisions
+  const earthOrbitRadius = 10; // hex distance from center
+  const angleStep = (2 * Math.PI) / players.length;
+  
+  players.forEach((player, index) => {
+    const angle = index * angleStep;
+    const q = Math.round(earthOrbitRadius * Math.cos(angle));
+    const r = Math.round(earthOrbitRadius * Math.sin(angle));
+    
+    const ship: Ship = {
+      id: generateShipId(player.id),
+      ownerId: player.id,
+      type: 'corvette',
+      position: { q, r },
+      velocity: { dq: 0, dr: 0 }, // Starting stationary in orbit
+      thrustPoints: 2, // Corvettes start with 2 thrust points per turn
+      maxThrust: 2,
+      hullPoints: 6, // Corvettes have 6 hull points
+      maxHullPoints: 6,
+    };
+    
+    ships.push(ship);
+  });
+  
+  return ships;
+}
+
 // Helper function to initialize gameplay state
 function initializeGameplay(players: Player[]): GameplayState {
   const playerIds = players.map((p) => p.id);
   const shuffledPlayerIds = shuffleArray(playerIds);
+  const ships = initializeShips(players);
   
   return {
     currentRound: 1,
     playerTurnOrder: shuffledPlayerIds,
     currentPlayerIndex: 0,
     currentPhase: 'plot',
+    ships,
   };
 }
 

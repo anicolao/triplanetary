@@ -194,6 +194,60 @@ export class Renderer {
       }
     });
 
+    // Ship status display (right side)
+    const shipInfoX = this.canvas.width - 280;
+    this.ctx.fillStyle = '#ffffff';
+    this.ctx.font = '18px sans-serif';
+    this.ctx.textAlign = 'left';
+    this.ctx.fillText('Ships:', shipInfoX, 120);
+
+    let shipY = 150;
+    gameplay.ships.forEach((ship) => {
+      const player = players.find(p => p.id === ship.ownerId);
+      const playerNum = players.findIndex(p => p.id === ship.ownerId) + 1;
+      
+      if (player) {
+        // Ship color indicator
+        this.ctx.fillStyle = player.color;
+        this.ctx.fillRect(shipInfoX, shipY - 12, 20, 20);
+        
+        // Ship info
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.font = '16px sans-serif';
+        this.ctx.fillText(
+          `P${playerNum} Corvette`,
+          shipInfoX + 30,
+          shipY
+        );
+        
+        // Hull and thrust info
+        this.ctx.font = '14px sans-serif';
+        this.ctx.fillStyle = '#aaaaaa';
+        this.ctx.fillText(
+          `Hull: ${ship.hullPoints}/${ship.maxHullPoints}`,
+          shipInfoX + 30,
+          shipY + 18
+        );
+        this.ctx.fillText(
+          `Thrust: ${ship.thrustPoints}`,
+          shipInfoX + 155,
+          shipY + 18
+        );
+        
+        shipY += 50;
+      }
+    });
+
+    // Scenario info (bottom center)
+    this.ctx.fillStyle = '#888888';
+    this.ctx.font = '16px sans-serif';
+    this.ctx.textAlign = 'center';
+    this.ctx.fillText(
+      'Scenario: Race from Earth to Mars',
+      this.canvas.width / 2,
+      this.canvas.height - 30
+    );
+
     // Return layout with buttons
     return {
       ...this.createEmptyLayout(),
