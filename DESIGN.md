@@ -122,16 +122,434 @@ Configuration screen actions include:
 - **START_GAME**: Transitions from configuration to gameplay
 - **RETURN_TO_CONFIG**: Returns from gameplay to configuration (future)
 
-## Gameplay Screen (Future Work)
+## Gameplay Screen
 
-The gameplay screen will render the actual game, including:
-- Hexagonal game board
-- Planet orbits and celestial bodies
-- Spaceships with velocity vectors
-- Turn indicators and player status
-- Game controls
+The gameplay screen is the main game interface where players interact with the game world and execute their turns. This screen will render the hexagonal game board, celestial bodies, ships, and all UI controls needed to play the game according to the Triplanetary rules.
 
-This will be designed and implemented in future iterations after the configuration screen is complete.
+### Visual Layout
+
+The gameplay screen will be organized into several key areas:
+
+1. **Game Board Area**: The primary central area displaying the hexagonal grid with planets, orbits, ships, and space objects
+2. **Player Status Panel**: Shows current player information, available ships, and resources
+3. **Turn Indicator**: Displays whose turn it is and what phase they are in
+4. **Phase Controls**: Buttons and controls specific to the current phase of play
+5. **Game Status Bar**: Victory conditions, round counter, and other game-wide information
+
+### Game Board Rendering
+
+The game board is the centerpiece of the gameplay screen and will display:
+
+#### Hexagonal Grid
+- Hexagonal grid overlaid on the space map
+- Grid lines in a subtle color to avoid visual clutter
+- Coordinate system for referencing hex positions
+- Zoom and pan controls for navigating large maps
+
+#### Celestial Bodies
+- **The Sun**: Rendered at the center with strong visual prominence
+- **Planetary Orbits**: Circular paths showing Mercury, Venus, Earth, and Mars orbits
+- **Planets**: Rendered on their orbits with appropriate colors and sizes
+- **Asteroid Belt**: Between Mars and outer system
+- **Space Stations**: Special locations marked on the map
+- **Gravity Wells**: Visual indicators showing zones of gravitational influence
+
+#### Ships and Units
+- **Ship Pieces**: Each player's ships rendered in their assigned color
+- **Velocity Vectors**: Arrows showing each ship's current velocity and direction
+- **Thrust Modifications**: Visual indicators when plotting thrust changes
+- **Ordnance**: Mines, torpedoes, and other launched weapons
+- **Selection State**: Visual highlight for currently selected ships
+
+### Game Loop State Management
+
+The gameplay state in Redux will track:
+
+#### Round and Turn Management
+- **currentRound**: Integer tracking the current round number
+- **playerTurnOrder**: Array of player IDs in their turn order (fixed for entire game)
+- **currentPlayerIndex**: Index into playerTurnOrder indicating whose turn it is
+- **currentPhase**: String indicating the current phase ("plot", "ordnance", "movement", "combat", "maintenance")
+
+#### Game State
+- **ships**: Array of all ships in the game with their positions, velocities, hull points, and other attributes
+- **ordnance**: Array of active mines, torpedoes, and weapons in flight
+- **celestialBodies**: Positions and properties of planets, sun, stations
+- **selectedShip**: ID of the currently selected ship (if any)
+- **plotQueue**: Temporary storage for moves being plotted during Plot Phase
+- **combatQueue**: Temporary storage for attacks being declared during Combat Phase
+
+#### Victory Conditions
+- **scenarioObjectives**: The goals that must be achieved to win
+- **victoryStatus**: Whether the game is ongoing, won, or drawn
+- **winner**: Player ID of the winner (if any)
+
+### Turn Sequence Implementation
+
+Following the rules from RULES.md, the game loop consists of rounds where each player takes a turn with five distinct phases.
+
+#### Game Initialization
+At the start of gameplay:
+1. Randomly determine player turn order
+2. Set currentRound to 1
+3. Set currentPlayerIndex to 0 (first player)
+4. Set currentPhase to "plot"
+5. Place ships according to scenario setup
+
+#### Plot Phase
+
+During the Plot Phase, the active player:
+- Selects each of their ships one at a time
+- For each ship, the game displays:
+  - Current position on the hex map
+  - Current velocity vector (arrow from current position)
+  - Available thrust points
+- Player can:
+  - Plot the velocity vector (shows where ship will move)
+  - Spend thrust points to modify the velocity vector
+  - Each thrust point shifts the vector endpoint by one hex
+  - Confirm the plot for this ship
+- UI Controls:
+  - Ship selection list or click-to-select on map
+  - Thrust adjustment controls (directional buttons or drag interface)
+  - Thrust point counter showing remaining thrust
+  - "Confirm Plot" button for each ship
+  - "End Plot Phase" button when all ships are plotted
+
+When the player ends the Plot Phase:
+- All plotted moves are stored in the plotQueue
+- Game transitions to Ordnance Phase
+
+#### Ordnance Phase
+
+During the Ordnance Phase, the active player:
+- Can launch mines, torpedoes, or nuclear weapons from their ships
+- Must have the appropriate ordnance available
+- UI shows:
+  - Ships that can launch ordnance
+  - Type and quantity of available ordnance
+  - Launch controls for each weapon type
+- UI Controls:
+  - Select ship with ordnance
+  - Choose ordnance type to launch
+  - Set initial velocity/direction for ordnance (if applicable)
+  - "Launch" button to confirm
+  - "Skip Ordnance Phase" button if no ordnance to launch
+
+When the player ends the Ordnance Phase:
+- All launched ordnance is added to the ordnance array
+- Game transitions to Movement Phase
+
+#### Movement Phase
+
+The Movement Phase is partially automated but shows:
+- Visual animation of ships moving along their velocity vectors
+- Ships moving simultaneously to their plotted destinations
+- Ordnance moving according to their velocities
+- Gravity effects being applied:
+  - Ships near planets have their vectors modified by gravity
+  - Visual indicators show gravity pulls
+- Collision detection:
+  - If ships end up in the same hex, collision may occur
+  - Damage is calculated and applied
+- UI shows:
+  - Animation of all movement
+  - Sequence of events (ship A moves, ship B moves, gravity applied, etc.)
+  - Collision notifications if they occur
+- UI Controls:
+  - "Continue" button to proceed after movement animation completes
+  - Animation speed control (optional)
+
+Movement follows these steps automatically:
+1. All active player's ships move simultaneously
+2. All active player's ordnance moves
+3. Gravity effects are calculated and applied
+4. Collisions are detected and resolved
+5. Ships update their position and velocity for next turn
+
+When movement is complete:
+- Game transitions to Combat Phase
+
+#### Combat Phase
+
+During the Combat Phase, the active player:
+- Declares attacks from their ships
+- Targets must be within weapon range
+- UI shows:
+  - Which ships can fire weapons
+  - Potential targets in range
+  - Weapon types available
+  - Hit probability/modifiers
+- Player can:
+  - Select attacking ship
+  - Choose target
+  - Select weapon to use
+  - See attack modifiers (range, relative velocity, etc.)
+  - Declare the attack
+- UI Controls:
+  - Ship selection
+  - Target selection (click on map or from list)
+  - Weapon type selector
+  - "Declare Attack" button
+  - "End Combat Phase" button
+
+Combat resolution:
+1. For each declared attack:
+   - Roll to hit (or calculate based on deterministic rules)
+   - Display hit/miss result
+   - If hit, calculate damage
+   - Apply damage to target's hull points
+   - Show damage animation and updated hull status
+2. If any ship reaches 0 hull points:
+   - Ship is destroyed
+   - Remove from game
+   - Show destruction animation
+
+When the player ends the Combat Phase:
+- Game transitions to Maintenance Phase
+
+#### Maintenance Phase
+
+The Maintenance Phase handles end-of-turn bookkeeping:
+- Check victory conditions:
+  - Are all enemy ships destroyed?
+  - Have race checkpoints been reached?
+  - Are scenario objectives complete?
+- Resolve special situations:
+  - Docking completion
+  - Fuel depletion warnings
+  - System repairs (in campaign mode)
+- Display any notifications or events
+- UI shows:
+  - Victory condition status
+  - Special events that occurred
+  - Resource status updates
+- UI Controls:
+  - "End Turn" button to pass to next player
+
+When Maintenance Phase completes:
+1. If victory conditions are met:
+   - Game transitions to victory screen
+   - Display winner and game statistics
+2. Otherwise:
+   - Increment currentPlayerIndex
+   - If currentPlayerIndex exceeds number of players:
+     - Reset currentPlayerIndex to 0
+     - Increment currentRound
+   - Set currentPhase back to "plot"
+   - Next player begins their turn
+
+### Phase Transition State Machine
+
+The game implements a state machine for phase transitions:
+
+- **plot** → (player action) → **ordnance**
+- **ordnance** → (player action) → **movement**
+- **movement** → (automatic) → **combat**
+- **combat** → (player action) → **maintenance**
+- **maintenance** → (automatic) → **plot** (next player) OR **victory** (game over)
+
+Each transition is triggered by:
+- Player action (clicking "End Phase" button)
+- Automatic progression (after animations or calculations complete)
+- Game rules (victory condition met)
+
+### UI Controls and Interactions
+
+#### Universal Controls (Available All Phases)
+- **Pan**: Click-and-drag to pan the game board
+- **Zoom**: Scroll wheel or pinch gesture to zoom in/out
+- **Ship Info**: Click on any ship to see detailed information panel
+- **Menu Button**: Access game menu (save, settings, quit)
+
+#### Phase-Specific Controls
+Each phase has its own set of controls that appear in the Phase Controls area, as described in each phase section above.
+
+#### Visual Feedback
+- **Selected Ship**: Highlighted with glow or border
+- **Valid Targets**: Highlighted when declaring attacks
+- **Valid Moves**: Ghost image or path showing where ship will end up
+- **Hover States**: UI elements show hover state for feedback
+- **Animation States**: Smooth transitions between phases and actions
+- **Error States**: Clear visual indication when invalid action attempted
+
+### Ship Management
+
+Ships are the primary game pieces and require detailed state tracking:
+
+#### Ship State Properties
+- **id**: Unique identifier
+- **ownerId**: Player ID who owns this ship
+- **position**: Hex coordinates on the map
+- **velocity**: Vector (direction and magnitude) representing momentum
+- **thrustPoints**: Available thrust for this turn
+- **hullPoints**: Current hull integrity (health)
+- **maxHullPoints**: Maximum hull integrity
+- **weaponSystems**: Array of weapons and their status
+- **ordnanceInventory**: Mines, torpedoes, etc. carried
+- **cargoCapacity**: For cargo/racing scenarios
+- **specialSystems**: Shields, sensors, etc.
+- **dockingStatus**: Whether docked and where
+
+#### Ship Actions
+Based on the phase and ship state:
+- Plot velocity changes (Plot Phase)
+- Launch ordnance (Ordnance Phase)
+- Fire weapons (Combat Phase)
+- Dock at stations (Multiple phases)
+
+### Gravity and Physics Simulation
+
+The game must simulate realistic Newtonian physics:
+
+#### Velocity Vectors
+- Each ship has a velocity vector represented as hex-based direction and distance
+- Vectors persist turn-to-turn (momentum conservation)
+- Visual arrows show vector from current position
+
+#### Thrust Application
+- Each thrust point can shift the velocity vector endpoint by one hex
+- Thrust can be applied in any direction
+- Multiple thrust points can be combined
+- Limited thrust points per turn require strategic planning
+
+#### Gravity Effects
+During Movement Phase:
+- Calculate gravitational influence from all celestial bodies
+- Sun has strongest gravity
+- Planets have gravity proportional to their mass
+- Gravity zones (inner, middle, outer) have different pull strengths
+- Modify ship velocity vectors based on gravity
+- Visual indicators show gravity wells and influence
+
+#### Orbital Mechanics
+- Ships in correct orbital velocity maintain stable orbit
+- Too slow: ship falls toward planet
+- Too fast: ship escapes orbit
+- Gravity assists allow fuel-efficient trajectory changes
+
+### Combat System
+
+Combat occurs during the Combat Phase when ships are within range:
+
+#### Weapon Types
+- **Lasers**: Direct line-of-sight, instant hit/miss
+- **Missiles**: Guided projectiles, move in subsequent turns
+- **Mass Drivers**: Close range, high damage
+
+#### Combat Calculations
+- Range to target affects hit probability
+- Relative velocity affects hit probability
+- Ship size and profile affect hit probability
+- Defensive systems may reduce damage
+- Display all modifiers to player before confirming attack
+
+#### Damage Application
+- Successful hits reduce target hull points
+- Critical hits may damage specific systems
+- Zero hull points destroys ship
+- Visual feedback shows damage state
+
+### Scenario and Victory Conditions
+
+Different scenarios have different objectives:
+
+#### Racing Scenarios
+- Checkpoints displayed on map
+- Must pass through in sequence
+- First to complete all checkpoints wins
+- Track completion status for each player
+
+#### Combat Scenarios
+- Destroy all enemy ships
+- Protect specific targets
+- Capture objectives
+- Track casualties and objectives
+
+#### Campaign Scenarios
+- Multiple linked objectives
+- Persistent ship status between missions
+- Victory points accumulated over multiple games
+
+Victory check occurs every Maintenance Phase:
+- Evaluate current game state against scenario objectives
+- If victory conditions met, transition to victory screen
+- Otherwise, continue to next player's turn
+
+### Player Status Display
+
+Throughout gameplay, display current player information:
+- Active player indicator (whose turn it is)
+- Phase indicator (which phase is active)
+- Player's ships and their status
+- Available resources (thrust, ordnance, etc.)
+- Victory progress indicators
+
+### Game Persistence (Future Enhancement)
+
+Design supports future addition of:
+- Save game state to local storage or server
+- Load previously saved games
+- Replay functionality
+- Undo/redo for plot phase
+
+### Multiplayer Considerations
+
+The game is designed for shared tabletop device play:
+- Single screen shows all information
+- Players take turns physically passing the device
+- No hidden information (all players see all ships)
+- Turn-based nature eliminates timing issues
+- Large touch targets for finger interaction
+
+### Animation and Visual Polish
+
+To enhance gameplay experience:
+- Smooth animations for ship movement
+- Particle effects for weapon fire
+- Explosion animations for destroyed ships
+- Transition effects between phases
+- Visual trails showing movement paths
+- Gravity well visualization effects
+
+All animations should:
+- Be clear and informative
+- Not obscure important information
+- Be fast enough to maintain game pace
+- Be skippable for experienced players
+
+### Error Handling and Validation
+
+The game must prevent invalid actions:
+- Cannot exceed available thrust points
+- Cannot target out-of-range ships
+- Cannot move ships during other player's turn
+- Cannot skip required actions (must plot all ships)
+- Display clear error messages for invalid actions
+- Prevent impossible physics (e.g., instant 180° reversals)
+
+### Accessibility in Gameplay
+
+Following configuration screen principles:
+- Color-blind friendly player colors maintained
+- High contrast for all UI elements
+- Large touch targets (minimum 44x44 points)
+- Clear labels and instructions
+- Visual indicators supplement color coding
+
+### Summary
+
+The gameplay screen implements a complete turn-based game loop following the official Triplanetary rules. The design emphasizes:
+- Clear phase structure matching the five-phase turn sequence
+- Redux state management for predictable game state
+- Canvas-based rendering for all game elements
+- Intuitive controls for ship management and combat
+- Realistic physics simulation with gravity and momentum
+- Support for multiple scenario types and victory conditions
+- Smooth animations and visual feedback
+- Future extensibility for advanced features
+
+This design provides the foundation for implementing the core Triplanetary gameplay experience while maintaining the architecture established in the configuration screen.
 
 ## Input Handling
 
