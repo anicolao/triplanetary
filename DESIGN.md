@@ -199,7 +199,7 @@ At the start of gameplay:
 #### Plot Phase
 
 During the Plot Phase, the active player:
-- Selects each of their ships one at a time
+- The game automatically selects the first of the player's ships (or the next unplotted ship)
 - For each ship, the game displays:
   - Current position on the hex map
   - Current velocity vector (arrow from current position)
@@ -208,9 +208,10 @@ During the Plot Phase, the active player:
   - Plot the velocity vector (shows where ship will move)
   - Spend thrust points to modify the velocity vector
   - Each thrust point shifts the vector endpoint by one hex
-  - Confirm the plot for this ship
+  - Confirm the plot for this ship (automatically selects next ship if available)
+  - Manually select a different ship from the list or click on the map
 - UI Controls:
-  - Ship selection list or click-to-select on map
+  - Ship selection list or click-to-select on map (for manual override)
   - Thrust adjustment controls (directional buttons or drag interface)
   - Thrust point counter showing remaining thrust
   - "Confirm Plot" button for each ship
