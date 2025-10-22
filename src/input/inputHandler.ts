@@ -9,6 +9,8 @@ import {
   removePlayer,
   changePlayerColor,
   startGame,
+  returnToConfig,
+  endPhase,
 } from '../redux/actions';
 
 export class InputHandler {
@@ -54,6 +56,26 @@ export class InputHandler {
     if (this.currentLayout.colorPicker?.visible) {
       this.handleColorPickerClick(x, y);
       return;
+    }
+
+    // Check for end phase button
+    if (this.currentLayout.endPhaseButton) {
+      if (this.isPointInButton(x, y, this.currentLayout.endPhaseButton)) {
+        if (this.currentLayout.endPhaseButton.enabled) {
+          store.dispatch(endPhase());
+        }
+        return;
+      }
+    }
+
+    // Check for return to config button
+    if (this.currentLayout.returnButton) {
+      if (this.isPointInButton(x, y, this.currentLayout.returnButton)) {
+        if (this.currentLayout.returnButton.enabled) {
+          store.dispatch(returnToConfig());
+        }
+        return;
+      }
     }
 
     // Check for button clicks

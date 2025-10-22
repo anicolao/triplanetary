@@ -5,6 +5,7 @@ export const REMOVE_PLAYER = 'REMOVE_PLAYER';
 export const CHANGE_PLAYER_COLOR = 'CHANGE_PLAYER_COLOR';
 export const START_GAME = 'START_GAME';
 export const RETURN_TO_CONFIG = 'RETURN_TO_CONFIG';
+export const END_PHASE = 'END_PHASE';
 
 export interface AddPlayerAction {
   type: typeof ADD_PLAYER;
@@ -33,12 +34,17 @@ export interface ReturnToConfigAction {
   type: typeof RETURN_TO_CONFIG;
 }
 
+export interface EndPhaseAction {
+  type: typeof END_PHASE;
+}
+
 export type GameAction =
   | AddPlayerAction
   | RemovePlayerAction
   | ChangePlayerColorAction
   | StartGameAction
-  | ReturnToConfigAction;
+  | ReturnToConfigAction
+  | EndPhaseAction;
 
 // Action creators
 export const addPlayer = (): AddPlayerAction => ({
@@ -64,4 +70,8 @@ export const startGame = (): StartGameAction => ({
 
 export const returnToConfig = (): ReturnToConfigAction => ({
   type: RETURN_TO_CONFIG,
+});
+
+export const endPhase = (): EndPhaseAction => ({
+  type: END_PHASE,
 });

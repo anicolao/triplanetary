@@ -9,7 +9,7 @@ export interface Button {
   height: number;
   text: string;
   enabled: boolean;
-  type: 'add-player' | 'start-game' | 'remove-player';
+  type: 'add-player' | 'start-game' | 'remove-player' | 'end-phase' | 'return-to-config';
   playerId?: string; // For remove player buttons
 }
 
@@ -46,6 +46,8 @@ export interface UILayout {
   addPlayerButton: Button;
   startGameButton: Button;
   colorPicker: ColorPickerOverlay | null;
+  endPhaseButton?: Button;
+  returnButton?: Button;
 }
 
 // Calculate layout based on canvas dimensions and game state
