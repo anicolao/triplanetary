@@ -204,16 +204,29 @@ During the Plot Phase, the active player:
   - Current position on the hex map
   - Current velocity vector (arrow from current position)
   - Available thrust points
+  - **Reachable hex highlights**: All hexes the ship can legally reach are highlighted, considering:
+    - Acceleration limits
+    - Current fuel/thrust points available
+    - Physics constraints
+  - Highlight visualization (user-configurable via game status bar icon):
+    - Enhanced hex outline
+    - Modified hex fill color
+    - Vector arrows from the target hex showing resulting velocity
+    - Numbers indicating thrust points required to reach each hex
 - Player can:
   - Plot the velocity vector (shows where ship will move)
   - Spend thrust points to modify the velocity vector
   - Each thrust point shifts the vector endpoint by one hex
-  - Confirm the plot for this ship (automatically selects next ship if available)
+  - **Tap/click a highlighted hex** to temporarily select that target (other highlights are removed)
+  - **Tap the selected hex again** to confirm the plot and automatically select next ship if available
+  - **Tap elsewhere on the map** to cancel the temporary selection and restore all highlighted hexes
   - Manually select a different ship from the list or click on the map
 - UI Controls:
   - Ship selection list or click-to-select on map (for manual override)
   - Thrust adjustment controls (directional buttons or drag interface)
   - Thrust point counter showing remaining thrust
+  - Reachable hex highlighting (automatically shown for selected ship)
+  - Highlight configuration icon in game status bar
   - "Confirm Plot" button for each ship
   - "End Plot Phase" button when all ships are plotted
 
@@ -226,7 +239,11 @@ When the player ends the Plot Phase:
 During the Ordnance Phase, the active player:
 - Can launch mines, torpedoes, or nuclear weapons from their ships
 - Must have the appropriate ordnance available
-- UI shows:
+- **If no ordnance is available**:
+  - A brief message appears: "No ordnance available - skipping Ordnance Phase"
+  - Message fades after a short delay
+  - Game automatically transitions to Movement Phase
+- UI shows (when ordnance is available):
   - Ships that can launch ordnance
   - Type and quantity of available ordnance
   - Launch controls for each weapon type
@@ -235,7 +252,7 @@ During the Ordnance Phase, the active player:
   - Choose ordnance type to launch
   - Set initial velocity/direction for ordnance (if applicable)
   - "Launch" button to confirm
-  - "Skip Ordnance Phase" button if no ordnance to launch
+  - "Skip Ordnance Phase" button if player chooses not to launch ordnance
 
 When the player ends the Ordnance Phase:
 - All launched ordnance is added to the ordnance array
