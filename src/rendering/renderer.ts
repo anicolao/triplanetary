@@ -101,7 +101,8 @@ export class Renderer {
 
   private renderGameplayScreen(state: GameState): UILayout {
     // Define hex layout for the game board
-    const hexSize = 30; // Size of each hex in pixels
+    // Adjusted hex size to fit the full solar system (Mars orbit is ~50 hexes)
+    const hexSize = 10; // Smaller size to fit more hexes on screen
     const layout: HexLayout = {
       size: hexSize,
       origin: {
@@ -111,9 +112,12 @@ export class Renderer {
       orientation: 'pointy',
     };
 
-    // Render the hex grid with a radius of 10 hexes
-    const gridRadius = 10;
-    this.gridRenderer.renderGameBoard(layout, gridRadius, this.canvas.width, this.canvas.height);
+    // Render the hex grid with a larger radius to show all planets
+    // Mars orbits at ~50 hexes, so we need at least that much radius
+    const gridRadius = 55;
+    this.gridRenderer.renderGameBoard(layout, gridRadius, this.canvas.width, this.canvas.height, {
+      showCoordinates: false, // Hide coordinates for cleaner view at this zoom level
+    });
 
     // Initialize planet positions based on their current orbital angles
     const celestialBodies = initializePlanetPositions(
