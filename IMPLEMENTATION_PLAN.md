@@ -191,18 +191,18 @@ This document outlines the complete implementation plan for the Triplanetary web
 - Unit tests for ship creation ✓
 - Validation of property constraints ✓
 
-#### 4.2: Ship State Management
-- Redux actions for ship operations
-- Reducers for ship state updates
-- Ship collection management (add, remove, update)
-- Ship selection state
+#### 4.2: Ship State Management ✓ COMPLETED
+- Redux actions for ship operations ✓
+- Reducers for ship state updates ✓
+- Ship collection management (add, remove, update) ✓
+- Ship selection state ✓
 - Ship filtering and queries
 
 **Testing & Verification**:
-- Unit tests for all ship actions
-- Unit tests for ship reducers
-- Tests for ship collection operations
-- Tests for ship selection logic
+- Unit tests for all ship actions ✓
+- Unit tests for ship reducers ✓
+- Tests for ship collection operations ✓
+- Tests for ship selection logic ✓
 
 #### 4.3: Initial Ship Placement
 - Scenario-based ship placement

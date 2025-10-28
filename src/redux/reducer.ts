@@ -8,6 +8,14 @@ import {
   CHANGE_PLAYER_COLOR,
   START_GAME,
   RETURN_TO_CONFIG,
+  ADD_SHIP,
+  REMOVE_SHIP,
+  UPDATE_SHIP_POSITION,
+  UPDATE_SHIP_VELOCITY,
+  UPDATE_SHIP_HULL,
+  UPDATE_SHIP_THRUST,
+  DESTROY_SHIP,
+  SELECT_SHIP,
 } from './actions';
 import { DEFAULT_SCENARIO, initializeMap } from '../celestial';
 
@@ -15,6 +23,8 @@ import { DEFAULT_SCENARIO, initializeMap } from '../celestial';
 export const initialState: GameState = {
   screen: 'configuration',
   players: [],
+  ships: [],
+  selectedShipId: null,
   mapObjects: initializeMap(DEFAULT_SCENARIO),
   currentScenario: DEFAULT_SCENARIO,
   mapBounds: DEFAULT_SCENARIO.bounds,
@@ -118,6 +128,84 @@ export function gameReducer(
       return {
         ...state,
         screen: 'configuration',
+      };
+    }
+
+    case ADD_SHIP: {
+      const { ship } = action.payload;
+      return {
+        ...state,
+        ships: [...state.ships, ship],
+      };
+    }
+
+    case REMOVE_SHIP: {
+      const { shipId } = action.payload;
+      return {
+        ...state,
+        ships: state.ships.filter((s) => s.id !== shipId),
+        selectedShipId: state.selectedShipId === shipId ? null : state.selectedShipId,
+      };
+    }
+
+    case UPDATE_SHIP_POSITION: {
+      const { shipId, position } = action.payload;
+      return {
+        ...state,
+        ships: state.ships.map((s) =>
+          s.id === shipId ? { ...s, position } : s
+        ),
+      };
+    }
+
+    case UPDATE_SHIP_VELOCITY: {
+      const { shipId, velocity } = action.payload;
+      return {
+        ...state,
+        ships: state.ships.map((s) =>
+          s.id === shipId ? { ...s, velocity } : s
+        ),
+      };
+    }
+
+    case UPDATE_SHIP_HULL: {
+      const { shipId, hull } = action.payload;
+      return {
+        ...state,
+        ships: state.ships.map((s) =>
+          s.id === shipId
+            ? { ...s, stats: { ...s.stats, currentHull: hull } }
+            : s
+        ),
+      };
+    }
+
+    case UPDATE_SHIP_THRUST: {
+      const { shipId, thrust } = action.payload;
+      return {
+        ...state,
+        ships: state.ships.map((s) =>
+          s.id === shipId ? { ...s, remainingThrust: thrust } : s
+        ),
+      };
+    }
+
+    case DESTROY_SHIP: {
+      const { shipId } = action.payload;
+      return {
+        ...state,
+        ships: state.ships.map((s) =>
+          s.id === shipId ? { ...s, destroyed: true } : s
+        ),
+        selectedShipId: state.selectedShipId === shipId ? null : state.selectedShipId,
+      };
+    }
+
+    case SELECT_SHIP: {
+      const { shipId } = action.payload;
+      return {
+        ...state,
+        selectedShipId: shipId,
       };
     }
 

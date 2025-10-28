@@ -189,4 +189,11 @@ describe('gameReducer', () => {
       expect(state.screen).toBe('configuration');
     });
   });
+
+  describe('Ship State Management', () => {
+    it('should have empty ships array in initial state', () => {
+      expect(initialState.ships).toEqual([]);
+      expect(initialState.selectedShipId).toBeNull();
+    });
+  });
 });
