@@ -260,13 +260,14 @@ export class CelestialRenderer {
     this.ctx.lineWidth = 1;
 
     // Create irregular shape with random points
+    const ASTEROID_SHAPE_VARIANCE = 30; // Controls randomness range for asteroid shapes
     this.ctx.beginPath();
     const points = 6;
     for (let i = 0; i < points; i++) {
       const angle = (i / points) * Math.PI * 2;
       // Add slight randomness to radius (using asteroid id as seed for consistency)
       const hashCode = asteroid.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-      const randomFactor = 0.7 + ((hashCode + i) % 30) / 100;
+      const randomFactor = 0.7 + ((hashCode + i) % ASTEROID_SHAPE_VARIANCE) / 100;
       const r = radius * randomFactor;
       const x = center.x + r * Math.cos(angle);
       const y = center.y + r * Math.sin(angle);

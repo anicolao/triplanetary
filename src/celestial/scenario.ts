@@ -106,6 +106,9 @@ export function createAsteroid(
  * Create an asteroid field.
  * Generates multiple asteroids in a region.
  * 
+ * Note: Uses Math.random() for variation. For deterministic placement,
+ * the asteroid positions could be made configurable in the scenario definition.
+ * 
  * @param centerQ - Center q coordinate
  * @param centerR - Center r coordinate
  * @param count - Number of asteroids to generate
@@ -124,6 +127,7 @@ export function createAsteroidField(
   
   for (let i = 0; i < count; i++) {
     // Random position within spread
+    // For deterministic placement, these could be pre-calculated positions in scenario
     const offsetQ = Math.floor(Math.random() * spread * 2 - spread);
     const offsetR = Math.floor(Math.random() * spread * 2 - spread);
     
