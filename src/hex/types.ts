@@ -2,17 +2,18 @@
 
 /**
  * Axial coordinates for hexagonal grid.
- * Uses the "pointy-top" orientation with q (column) and r (row) axes.
+ * These coordinates are orientation-independent and work with both pointy-top
+ * and flat-top hexagons. The actual orientation is determined by the HexLayout
+ * when converting to pixel coordinates.
  * 
- * The q axis points to the right, and the r axis points down and to the left.
- * This creates a coordinate system where:
- * - q increases to the right
- * - r increases down and to the left
+ * In axial coordinates:
+ * - q axis (column-like)
+ * - r axis (row-like)
  * - s = -q - r (derived third axis for cube coordinates)
  */
 export interface HexCoordinate {
-  q: number;  // Column (x-like axis)
-  r: number;  // Row (y-like axis)
+  q: number;  // Column axis
+  r: number;  // Row axis
 }
 
 /**
