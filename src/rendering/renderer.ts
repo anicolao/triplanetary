@@ -3,7 +3,10 @@
 import { GameState, PLAYER_COLORS } from '../redux/types';
 import { UILayout, Button, PlayerEntry, calculateLayout } from './layout';
 import { GridRenderer } from './gridRenderer';
+import { CelestialRenderer } from './celestialRenderer';
 import { HexLayout } from '../hex/types';
+import { CELESTIAL_BODIES } from '../celestial/data';
+import { initializePlanetPositions } from '../celestial/orbital';
 
 export class Renderer {
   private ctx: CanvasRenderingContext2D;
@@ -11,6 +14,7 @@ export class Renderer {
   private colorPickerPlayerId: string | null = null;
   private onRenderNeeded: (() => void) | null = null;
   private gridRenderer: GridRenderer;
+  private celestialRenderer: CelestialRenderer;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -20,6 +24,7 @@ export class Renderer {
     }
     this.ctx = ctx;
     this.gridRenderer = new GridRenderer(ctx);
+    this.celestialRenderer = new CelestialRenderer(ctx);
     this.resizeCanvas();
   }
 
@@ -96,7 +101,8 @@ export class Renderer {
 
   private renderGameplayScreen(state: GameState): UILayout {
     // Define hex layout for the game board
-    const hexSize = 30; // Size of each hex in pixels
+    // Adjusted hex size to fit the full solar system (Mars orbit is ~50 hexes)
+    const hexSize = 10; // Smaller size to fit more hexes on screen
     const layout: HexLayout = {
       size: hexSize,
       origin: {
@@ -106,9 +112,22 @@ export class Renderer {
       orientation: 'pointy',
     };
 
-    // Render the hex grid with a radius of 10 hexes
-    const gridRadius = 10;
-    this.gridRenderer.renderGameBoard(layout, gridRadius, this.canvas.width, this.canvas.height);
+    // Render the hex grid with a larger radius to show all planets
+    // Mars orbits at ~50 hexes, so we need at least that much radius
+    const gridRadius = 55;
+    this.gridRenderer.renderGameBoard(layout, gridRadius, this.canvas.width, this.canvas.height, {
+      showCoordinates: false, // Hide coordinates for cleaner view at this zoom level
+    });
+
+    // Initialize planet positions based on their current orbital angles
+    const celestialBodies = initializePlanetPositions(
+      CELESTIAL_BODIES.filter(body => body.type === 'planet') as any[]
+    );
+    // Add the Sun back to the array
+    const allBodies = [CELESTIAL_BODIES.find(body => body.type === 'sun')!, ...celestialBodies];
+
+    // Render celestial bodies (Sun, planets, orbits, gravity wells)
+    this.celestialRenderer.renderCelestialBodies(allBodies, layout);
 
     // Render UI overlay showing player information
     this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
