@@ -1,8 +1,8 @@
-// Celestial body rendering system for planets, the Sun, and gravity wells
+// Celestial body rendering system for planets, the Sun, gravity wells, stations, and asteroids
 
 import { HexLayout } from '../hex/types';
 import { hexToPixel } from '../hex/operations';
-import { AnyCelestialBody, Planet, Sun } from '../celestial/types';
+import { MapObject, Planet, Sun, SpaceStation, Asteroid } from '../celestial/types';
 
 export interface CelestialRenderOptions {
   /** Whether to show orbital paths */
@@ -42,18 +42,20 @@ export class CelestialRenderer {
   }
 
   /**
-   * Renders all celestial bodies including the Sun, planets, orbits, and gravity wells.
+   * Renders all map objects including celestial bodies, stations, and asteroids.
    */
   renderCelestialBodies(
-    bodies: AnyCelestialBody[],
+    objects: MapObject[],
     layout: HexLayout,
     options: Partial<CelestialRenderOptions> = {}
   ): void {
     const opts: CelestialRenderOptions = { ...DEFAULT_CELESTIAL_OPTIONS, ...options };
 
-    // Separate Sun and planets
-    const sun = bodies.find(body => body.type === 'sun') as Sun | undefined;
-    const planets = bodies.filter(body => body.type === 'planet') as Planet[];
+    // Separate objects by type
+    const sun = objects.find(obj => obj.type === 'sun') as Sun | undefined;
+    const planets = objects.filter(obj => obj.type === 'planet') as Planet[];
+    const stations = objects.filter(obj => obj.type === 'station') as SpaceStation[];
+    const asteroids = objects.filter(obj => obj.type === 'asteroid') as Asteroid[];
 
     // Layer 1: Gravity wells (rendered first, behind everything)
     if (opts.showGravityWells) {
@@ -80,6 +82,16 @@ export class CelestialRenderer {
     // Layer 4: Planets
     planets.forEach(planet => {
       this.renderPlanet(planet, layout);
+    });
+
+    // Layer 5: Asteroids
+    asteroids.forEach(asteroid => {
+      this.renderAsteroid(asteroid, layout);
+    });
+
+    // Layer 6: Stations (on top so they're visible)
+    stations.forEach(station => {
+      this.renderStation(station, layout);
     });
   }
 
@@ -166,7 +178,7 @@ export class CelestialRenderer {
    * Renders gravity well zones for a celestial body.
    */
   private renderGravityWells(
-    body: AnyCelestialBody,
+    body: Sun | Planet,
     layout: HexLayout,
     options: CelestialRenderOptions
   ): void {
@@ -199,6 +211,75 @@ export class CelestialRenderer {
       this.ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
       this.ctx.fill();
     });
+  }
+
+  /**
+   * Renders a space station.
+   */
+  private renderStation(station: SpaceStation, layout: HexLayout): void {
+    const center = hexToPixel(station.position, layout);
+    const radius = station.visualRadius * layout.size;
+
+    // Draw station as a square with a cross pattern
+    this.ctx.fillStyle = station.color;
+    this.ctx.strokeStyle = '#ffffff';
+    this.ctx.lineWidth = 2;
+
+    // Draw square
+    this.ctx.fillRect(center.x - radius, center.y - radius, radius * 2, radius * 2);
+    this.ctx.strokeRect(center.x - radius, center.y - radius, radius * 2, radius * 2);
+
+    // Draw cross
+    this.ctx.strokeStyle = '#ffffff';
+    this.ctx.lineWidth = 1;
+    this.ctx.beginPath();
+    this.ctx.moveTo(center.x - radius, center.y);
+    this.ctx.lineTo(center.x + radius, center.y);
+    this.ctx.moveTo(center.x, center.y - radius);
+    this.ctx.lineTo(center.x, center.y + radius);
+    this.ctx.stroke();
+
+    // Draw station name
+    this.ctx.fillStyle = '#ffffff';
+    this.ctx.font = '10px sans-serif';
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'top';
+    this.ctx.fillText(station.name, center.x, center.y + radius + 3);
+  }
+
+  /**
+   * Renders an asteroid.
+   */
+  private renderAsteroid(asteroid: Asteroid, layout: HexLayout): void {
+    const center = hexToPixel(asteroid.position, layout);
+    const radius = asteroid.visualRadius * layout.size;
+
+    // Draw asteroid as an irregular polygon
+    this.ctx.fillStyle = asteroid.color;
+    this.ctx.strokeStyle = '#888888';
+    this.ctx.lineWidth = 1;
+
+    // Create irregular shape with random points
+    this.ctx.beginPath();
+    const points = 6;
+    for (let i = 0; i < points; i++) {
+      const angle = (i / points) * Math.PI * 2;
+      // Add slight randomness to radius (using asteroid id as seed for consistency)
+      const hashCode = asteroid.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      const randomFactor = 0.7 + ((hashCode + i) % 30) / 100;
+      const r = radius * randomFactor;
+      const x = center.x + r * Math.cos(angle);
+      const y = center.y + r * Math.sin(angle);
+      
+      if (i === 0) {
+        this.ctx.moveTo(x, y);
+      } else {
+        this.ctx.lineTo(x, y);
+      }
+    }
+    this.ctx.closePath();
+    this.ctx.fill();
+    this.ctx.stroke();
   }
 
   /**

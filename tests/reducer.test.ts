@@ -13,20 +13,21 @@ import { MAX_PLAYERS, PLAYER_COLORS } from '../src/redux/types';
 
 describe('gameReducer', () => {
   describe('Initial State', () => {
-    it('should have celestial bodies initialized', () => {
-      expect(initialState.celestialBodies).toBeDefined();
-      expect(initialState.celestialBodies.length).toBe(5); // Sun + 4 planets
+    it('should have map objects initialized', () => {
+      expect(initialState.mapObjects).toBeDefined();
+      // Sun + 4 planets + 2 stations + asteroids
+      expect(initialState.mapObjects.length).toBeGreaterThan(5);
     });
 
     it('should include the Sun at origin', () => {
-      const sun = initialState.celestialBodies.find(body => body.type === 'sun');
+      const sun = initialState.mapObjects.find(obj => obj.type === 'sun');
       expect(sun).toBeDefined();
       expect(sun?.position.q).toBe(0);
       expect(sun?.position.r).toBe(0);
     });
 
     it('should include all four inner planets', () => {
-      const planets = initialState.celestialBodies.filter(body => body.type === 'planet');
+      const planets = initialState.mapObjects.filter(obj => obj.type === 'planet');
       expect(planets.length).toBe(4);
       
       const planetNames = planets.map(p => p.name).sort();
@@ -34,12 +35,31 @@ describe('gameReducer', () => {
     });
 
     it('should have planets with calculated positions', () => {
-      const planets = initialState.celestialBodies.filter(body => body.type === 'planet');
+      const planets = initialState.mapObjects.filter(obj => obj.type === 'planet');
       planets.forEach(planet => {
         expect(planet.position).toBeDefined();
         expect(typeof planet.position.q).toBe('number');
         expect(typeof planet.position.r).toBe('number');
       });
+    });
+
+    it('should include space stations', () => {
+      const stations = initialState.mapObjects.filter(obj => obj.type === 'station');
+      expect(stations.length).toBeGreaterThan(0);
+    });
+
+    it('should include asteroids', () => {
+      const asteroids = initialState.mapObjects.filter(obj => obj.type === 'asteroid');
+      expect(asteroids.length).toBeGreaterThan(0);
+    });
+
+    it('should have scenario and map bounds defined', () => {
+      expect(initialState.currentScenario).toBeDefined();
+      expect(initialState.mapBounds).toBeDefined();
+      expect(initialState.mapBounds.minQ).toBeDefined();
+      expect(initialState.mapBounds.maxQ).toBeDefined();
+      expect(initialState.mapBounds.minR).toBeDefined();
+      expect(initialState.mapBounds.maxR).toBeDefined();
     });
   });
 
@@ -71,9 +91,9 @@ describe('gameReducer', () => {
       expect(state.players.length).toBe(MAX_PLAYERS);
     });
 
-    it('should preserve celestial bodies when adding players', () => {
+    it('should preserve map objects when adding players', () => {
       const state = gameReducer(initialState, addPlayer());
-      expect(state.celestialBodies).toEqual(initialState.celestialBodies);
+      expect(state.mapObjects).toEqual(initialState.mapObjects);
     });
   });
 

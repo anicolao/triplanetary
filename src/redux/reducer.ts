@@ -9,13 +9,15 @@ import {
   START_GAME,
   RETURN_TO_CONFIG,
 } from './actions';
-import { initializePlanetPositions, getPlanets, SUN } from '../celestial';
+import { DEFAULT_SCENARIO, initializeMap } from '../celestial';
 
 // Initial state
 export const initialState: GameState = {
   screen: 'configuration',
   players: [],
-  celestialBodies: [SUN, ...initializePlanetPositions(getPlanets())],
+  mapObjects: initializeMap(DEFAULT_SCENARIO),
+  currentScenario: DEFAULT_SCENARIO,
+  mapBounds: DEFAULT_SCENARIO.bounds,
 };
 
 // Helper function to get next available color

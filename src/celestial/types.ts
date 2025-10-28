@@ -73,6 +73,44 @@ export interface Planet extends CelestialBody {
 }
 
 /**
+ * Space station - a fixed position structure in space.
+ */
+export interface SpaceStation {
+  type: 'station';
+  /** Unique identifier for the space station */
+  id: string;
+  /** Display name */
+  name: string;
+  /** Position in hex coordinates */
+  position: HexCoordinate;
+  /** Visual radius for rendering (in hexes) */
+  visualRadius: number;
+  /** Color for rendering */
+  color: string;
+}
+
+/**
+ * Asteroid - an obstacle in space.
+ */
+export interface Asteroid {
+  type: 'asteroid';
+  /** Unique identifier for the asteroid */
+  id: string;
+  /** Position in hex coordinates */
+  position: HexCoordinate;
+  /** Visual radius for rendering (in hexes) */
+  visualRadius: number;
+  /** Color for rendering */
+  color: string;
+}
+
+/**
+ * Union type for all map objects.
+ * Includes celestial bodies, stations, and asteroids.
+ */
+export type MapObject = Sun | Planet | SpaceStation | Asteroid;
+
+/**
  * Union type for all celestial bodies.
  */
 export type AnyCelestialBody = Sun | Planet;
