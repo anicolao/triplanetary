@@ -1,0 +1,1332 @@
+# Triplanetary Implementation Plan
+
+## Overview
+
+This document outlines the complete implementation plan for the Triplanetary web-based game. The plan is organized into discrete, independently testable phases that build upon each other incrementally. Each phase delivers verifiable functionality and can be validated before proceeding to the next.
+
+## Implementation Principles
+
+1. **Incremental Development**: Each phase adds new functionality while preserving existing features
+2. **Independent Testing**: Each phase has clear acceptance criteria and can be tested independently
+3. **Minimal Dependencies**: Phases are ordered to minimize blocking dependencies
+4. **Verifiable Progress**: Each phase produces observable, demonstrable results
+5. **No Regression**: New phases must not break previously implemented and tested functionality
+
+## Phase Breakdown
+
+### Phase 1: Foundation and Configuration Screen ✓ COMPLETED
+
+**Objective**: Establish the technical foundation and implement the player configuration screen.
+
+**Components**:
+- Project setup with TypeScript, Vite, and development tooling
+- Redux store configuration and state management infrastructure
+- HTML5 Canvas initialization and rendering framework
+- Player configuration state management
+- Configuration screen UI rendering
+- Input handling for player management
+- Color-blind friendly color palette implementation
+
+**Testing & Verification**:
+- Unit tests for Redux reducers
+- Unit tests for player state management
+- E2E tests for adding players
+- E2E tests for removing players
+- E2E tests for changing player colors
+- Visual verification of color-blind friendly palette
+- Screenshot tests for UI states
+
+**Acceptance Criteria**:
+- Players can be added (up to 6)
+- Players can be removed
+- Player colors can be changed
+- Colors use color-blind friendly palette
+- UI renders correctly on various screen sizes
+- All unit and E2E tests pass
+
+**Status**: COMPLETED (based on existing implementation)
+
+---
+
+### Phase 2: Game Board Infrastructure
+
+**Objective**: Implement the hexagonal game board rendering system and basic navigation.
+
+**Components**:
+
+#### 2.1: Hexagonal Grid System
+- Hexagonal coordinate system implementation
+- Hex-to-pixel coordinate conversion
+- Pixel-to-hex coordinate conversion
+- Hexagonal grid data structure
+- Neighbor hex calculation
+- Distance and pathfinding utilities
+
+**Testing & Verification**:
+- Unit tests for coordinate conversions
+- Unit tests for hex math operations
+- Unit tests for distance calculations
+- Visual tests showing grid rendering
+
+#### 2.2: Game Board Rendering
+- Hexagonal grid rendering on canvas
+- Grid line drawing with configurable styles
+- Coordinate labeling system
+- Background rendering
+- Layered rendering system (background, grid, objects, UI)
+
+**Testing & Verification**:
+- Visual tests of hex grid at different zoom levels
+- Screenshot tests of coordinate system
+- Unit tests for rendering boundaries
+- Performance tests for large grids
+
+#### 2.3: Pan and Zoom Controls
+- Mouse-based panning implementation
+- Touch-based panning for mobile
+- Zoom in/out functionality
+- Zoom limits and bounds checking
+- Smooth animation for pan/zoom
+- Reset view to default position
+
+**Testing & Verification**:
+- E2E tests for mouse panning
+- E2E tests for touch panning
+- E2E tests for zoom controls
+- Tests for zoom limits
+- Visual verification of smooth animations
+
+**Acceptance Criteria**:
+- Hexagonal grid renders correctly
+- Coordinates are accurate and labeled
+- Pan and zoom work smoothly
+- Grid scales appropriately at all zoom levels
+- Touch and mouse controls both function
+- All tests pass
+
+**Dependencies**: Phase 1
+
+**Estimated Complexity**: Medium
+
+---
+
+### Phase 3: Celestial Bodies and Map
+
+**Objective**: Implement the solar system map with planets, orbits, and the Sun.
+
+**Components**:
+
+#### 3.1: Celestial Body Data Model
+- Sun data structure and properties
+- Planet data structures (Mercury, Venus, Earth, Mars)
+- Orbital path definitions
+- Gravity well zones (inner, middle, outer)
+- Position calculation for orbiting bodies
+
+**Testing & Verification**:
+- Unit tests for celestial body data
+- Unit tests for orbital calculations
+- Validation of orbital mechanics accuracy
+
+#### 3.2: Celestial Body Rendering
+- Sun rendering (centered on map)
+- Planet rendering on orbits
+- Orbital path visualization
+- Gravity well zone visualization
+- Visual distinction for different planets
+- Scaling relative to zoom level
+
+**Testing & Verification**:
+- Screenshot tests of solar system layout
+- Visual verification of planet positions
+- Tests for gravity well visualization
+- Validation of orbital paths
+
+#### 3.3: Map Initialization
+- Scenario-based map setup
+- Placement of space stations
+- Asteroid field placement
+- Map bounds definition
+- Initial view positioning
+
+**Testing & Verification**:
+- Tests for different scenario configurations
+- Visual verification of complete map
+- Tests for special locations (stations, asteroids)
+
+**Acceptance Criteria**:
+- Solar system map renders accurately
+- Planets appear on correct orbits
+- Gravity wells are visualized
+- Map scales properly with zoom
+- All celestial bodies are positioned correctly
+- All tests pass
+
+**Dependencies**: Phase 2
+
+**Estimated Complexity**: Medium
+
+---
+
+### Phase 4: Ship Data Model and State
+
+**Objective**: Implement the ship data structures and state management.
+
+**Components**:
+
+#### 4.1: Ship Data Structure
+- Ship properties definition (id, position, velocity, etc.)
+- Ship state interface in Redux
+- Velocity vector representation
+- Ship statistics (thrust, hull, weapons, cargo)
+- Ship ownership tracking
+
+**Testing & Verification**:
+- Unit tests for ship data structure
+- Unit tests for ship creation
+- Validation of property constraints
+
+#### 4.2: Ship State Management
+- Redux actions for ship operations
+- Reducers for ship state updates
+- Ship collection management (add, remove, update)
+- Ship selection state
+- Ship filtering and queries
+
+**Testing & Verification**:
+- Unit tests for all ship actions
+- Unit tests for ship reducers
+- Tests for ship collection operations
+- Tests for ship selection logic
+
+#### 4.3: Initial Ship Placement
+- Scenario-based ship placement
+- Ship placement validation (valid hex positions)
+- Multi-ship placement for players
+- Fleet organization
+
+**Testing & Verification**:
+- Unit tests for placement logic
+- Tests for placement validation
+- Tests for various scenario setups
+
+**Acceptance Criteria**:
+- Ship data model is complete
+- Ships can be added to game state
+- Ships can be updated and removed
+- Ship state is properly managed in Redux
+- Initial placement works for scenarios
+- All tests pass
+
+**Dependencies**: Phase 1, Phase 3
+
+**Estimated Complexity**: Medium
+
+---
+
+### Phase 5: Ship Rendering and Display
+
+**Objective**: Render ships on the game board with visual indicators.
+
+**Components**:
+
+#### 5.1: Basic Ship Rendering
+- Ship sprite/icon rendering
+- Color-coded ship display (using player colors)
+- Ship position on hex grid
+- Ship orientation visualization
+- Ship scaling with zoom
+
+**Testing & Verification**:
+- Screenshot tests of ship rendering
+- Tests for color application
+- Visual verification at different zoom levels
+
+#### 5.2: Velocity Vector Visualization
+- Velocity arrow rendering
+- Arrow starting from ship position
+- Arrow ending at velocity endpoint
+- Arrow styling (color, width, arrowhead)
+- Velocity magnitude visualization
+
+**Testing & Verification**:
+- Screenshot tests of velocity vectors
+- Tests for different velocity values
+- Visual verification of arrow rendering
+
+#### 5.3: Ship Status Indicators
+- Hull points display
+- Thrust points remaining
+- Selected ship highlighting
+- Damaged ship visual indicators
+- Out-of-fuel indicators
+
+**Testing & Verification**:
+- Screenshot tests of status displays
+- Tests for different ship conditions
+- Visual verification of indicators
+
+**Acceptance Criteria**:
+- Ships render correctly on the board
+- Each ship displays in correct player color
+- Velocity vectors are visible and accurate
+- Ship status is clearly indicated
+- Ships scale properly with zoom
+- All tests pass
+
+**Dependencies**: Phase 4, Phase 2
+
+**Estimated Complexity**: Medium
+
+---
+
+### Phase 6: Physics and Movement System
+
+**Objective**: Implement the core Newtonian physics and movement mechanics.
+
+**Components**:
+
+#### 6.1: Vector Mathematics
+- Vector addition and subtraction
+- Vector magnitude calculation
+- Vector normalization
+- Hex-based vector representation
+- Vector-to-hex conversion
+
+**Testing & Verification**:
+- Unit tests for all vector operations
+- Tests for hex-vector conversions
+- Validation of mathematical accuracy
+
+#### 6.2: Velocity Management
+- Current velocity tracking
+- Velocity modification (thrust application)
+- Velocity limit checking
+- Velocity persistence between turns
+- Thrust point expenditure tracking
+
+**Testing & Verification**:
+- Unit tests for velocity updates
+- Tests for thrust application
+- Tests for velocity limits
+- Tests for persistence
+
+#### 6.3: Movement Calculation
+- Calculate destination hex from position and velocity
+- Movement path calculation
+- Collision detection during movement
+- Movement validation (legal moves)
+- Multi-ship simultaneous movement
+
+**Testing & Verification**:
+- Unit tests for movement calculations
+- Tests for path validation
+- Tests for collision detection
+- Integration tests for multi-ship movement
+
+#### 6.4: Gravity Simulation
+- Gravity well zone detection
+- Gravitational force calculation
+- Velocity modification by gravity
+- Orbital mechanics implementation
+- Gravity assist calculations
+
+**Testing & Verification**:
+- Unit tests for gravity calculations
+- Tests for gravity zones
+- Tests for orbital mechanics
+- Validation against physics principles
+
+**Acceptance Criteria**:
+- Ships move according to velocity vectors
+- Thrust modifies velocity correctly
+- Gravity affects ship trajectories
+- Orbital mechanics work realistically
+- Collisions are detected
+- All physics tests pass
+
+**Dependencies**: Phase 4, Phase 3
+
+**Estimated Complexity**: High
+
+---
+
+### Phase 7: Turn Management System
+
+**Objective**: Implement the turn-based game loop and phase management.
+
+**Components**:
+
+#### 7.1: Turn Order Management
+- Player turn order initialization
+- Current player tracking
+- Turn order progression
+- Round counter
+- Turn history tracking
+
+**Testing & Verification**:
+- Unit tests for turn order
+- Tests for turn progression
+- Tests for round counting
+- Tests for multiple rounds
+
+#### 7.2: Phase State Machine
+- Phase enumeration (Plot, Ordnance, Movement, Combat, Maintenance)
+- Current phase tracking
+- Phase transition logic
+- Phase-specific state
+- Phase completion validation
+
+**Testing & Verification**:
+- Unit tests for phase transitions
+- Tests for phase state machine
+- Tests for invalid transitions
+- Integration tests for full turn cycle
+
+#### 7.3: Turn Transition UI
+- Phase indicator display
+- Current player indicator
+- Phase completion buttons
+- Turn summary display
+- Round counter display
+
+**Testing & Verification**:
+- Screenshot tests of phase UI
+- E2E tests for phase transitions
+- Visual verification of indicators
+- Tests for button states
+
+**Acceptance Criteria**:
+- Turn order is properly managed
+- Phases transition correctly
+- Current phase and player are clearly displayed
+- Phase completion works correctly
+- Round counter increments properly
+- All tests pass
+
+**Dependencies**: Phase 1, Phase 4
+
+**Estimated Complexity**: Medium
+
+---
+
+### Phase 8: Plot Phase Implementation
+
+**Objective**: Implement the Plot Phase where players plan ship movements.
+
+**Components**:
+
+#### 8.1: Plot Phase UI
+- Ship selection interface
+- Current ship highlighting
+- Available thrust display
+- Velocity plotting interface
+- Thrust application controls
+- Plot confirmation UI
+
+**Testing & Verification**:
+- Screenshot tests of Plot Phase UI
+- E2E tests for ship selection
+- Tests for UI state during plotting
+
+#### 8.2: Thrust Application
+- Directional thrust controls
+- Thrust point expenditure
+- Velocity vector modification preview
+- Undo/redo for thrust application
+- Invalid thrust rejection
+
+**Testing & Verification**:
+- E2E tests for thrust application
+- Tests for thrust limits
+- Tests for vector preview
+- Tests for undo/redo
+
+#### 8.3: Reachable Hex Highlighting
+- Calculate all reachable hexes given current velocity and thrust
+- Visual highlighting of reachable hexes
+- Thrust requirement display for each hex
+- Resulting velocity preview for each reachable hex
+- Toggle highlighting on/off
+- Highlight style configuration
+
+**Testing & Verification**:
+- Unit tests for reachable hex calculation
+- Screenshot tests of highlighting
+- Tests for thrust requirement accuracy
+- E2E tests for hex selection
+- Tests for highlight toggle
+
+#### 8.4: Plot Queue Management
+- Store plotted moves temporarily
+- Track which ships have been plotted
+- Allow plot modification before confirmation
+- Clear plots if needed
+- Validate all ships are plotted before phase end
+
+**Testing & Verification**:
+- Unit tests for plot queue
+- Tests for plot validation
+- Tests for partial plotting
+- Integration tests for complete plotting
+
+**Acceptance Criteria**:
+- Ships can be selected for plotting
+- Thrust can be applied to modify velocity
+- Reachable hexes are highlighted correctly
+- Players can see resulting velocity for each option
+- Plot queue tracks all plotted moves
+- Phase cannot end until all ships plotted
+- All tests pass
+
+**Dependencies**: Phase 5, Phase 6, Phase 7
+
+**Estimated Complexity**: High
+
+---
+
+### Phase 9: Movement Phase Implementation
+
+**Objective**: Implement the Movement Phase where ships execute their plotted moves.
+
+**Components**:
+
+#### 9.1: Movement Execution
+- Execute plotted moves from queue
+- Update ship positions
+- Update ship velocities
+- Apply gravity effects
+- Handle collisions
+- Clear plot queue after execution
+
+**Testing & Verification**:
+- Unit tests for movement execution
+- Tests for position updates
+- Tests for velocity updates
+- Integration tests for full movement cycle
+
+#### 9.2: Movement Animation
+- Smooth ship movement animation
+- Path visualization during movement
+- Gravity effect animation
+- Collision animation
+- Configurable animation speed
+- Skip animation option
+
+**Testing & Verification**:
+- Visual tests of movement animation
+- Tests for animation completion
+- E2E tests for skip functionality
+- Performance tests for animation
+
+#### 9.3: Collision Resolution
+- Detect ships in same hex after movement
+- Calculate collision damage
+- Apply damage to hull points
+- Display collision notification
+- Update ship status after collision
+- Handle ship destruction from collisions
+
+**Testing & Verification**:
+- Unit tests for collision detection
+- Tests for damage calculation
+- Tests for ship destruction
+- E2E tests for collision scenarios
+
+**Acceptance Criteria**:
+- Ships move to plotted destinations
+- Movement is animated smoothly
+- Gravity effects are applied correctly
+- Collisions are detected and resolved
+- Damage is calculated and applied
+- Animation can be skipped
+- All tests pass
+
+**Dependencies**: Phase 6, Phase 8
+
+**Estimated Complexity**: High
+
+---
+
+### Phase 10: Ordnance Phase Implementation
+
+**Objective**: Implement the Ordnance Phase for launching weapons and mines.
+
+**Components**:
+
+#### 10.1: Ordnance Data Model
+- Ordnance types (mines, torpedoes, missiles)
+- Ordnance properties (position, velocity, owner)
+- Ordnance inventory tracking
+- Ordnance state in Redux
+- Ordnance lifecycle management
+
+**Testing & Verification**:
+- Unit tests for ordnance data model
+- Tests for ordnance creation
+- Tests for inventory management
+
+#### 10.2: Ordnance Launch UI
+- Ship selection for ordnance launch
+- Available ordnance display
+- Ordnance type selection
+- Launch controls (velocity, direction if applicable)
+- Launch confirmation
+- Auto-skip if no ordnance available
+
+**Testing & Verification**:
+- Screenshot tests of Ordnance Phase UI
+- E2E tests for ordnance launch
+- Tests for auto-skip behavior
+- Tests for UI state
+
+#### 10.3: Ordnance Movement
+- Ordnance movement calculation
+- Ordnance rendering on map
+- Ordnance trajectory display
+- Ordnance lifetime tracking
+- Ordnance detonation conditions
+
+**Testing & Verification**:
+- Unit tests for ordnance movement
+- Screenshot tests of ordnance on map
+- Tests for detonation logic
+- Integration tests for ordnance lifecycle
+
+**Acceptance Criteria**:
+- Ordnance can be launched from ships
+- Ordnance inventory is tracked correctly
+- Ordnance moves according to physics
+- Ordnance is rendered on the map
+- Phase auto-skips when no ordnance available
+- All tests pass
+
+**Dependencies**: Phase 6, Phase 7, Phase 8
+
+**Estimated Complexity**: Medium
+
+---
+
+### Phase 11: Combat Phase Implementation
+
+**Objective**: Implement the Combat Phase for ship-to-ship combat.
+
+**Components**:
+
+#### 11.1: Weapon Systems Data
+- Weapon types definition
+- Weapon properties (range, damage, accuracy)
+- Ship weapon inventory
+- Weapon state tracking
+- Ammunition management (if applicable)
+
+**Testing & Verification**:
+- Unit tests for weapon data
+- Tests for weapon properties
+- Tests for inventory management
+
+#### 11.2: Combat UI
+- Attacking ship selection
+- Target selection interface
+- Weapon selection
+- Range and modifier display
+- Attack declaration
+- Combat resolution display
+
+**Testing & Verification**:
+- Screenshot tests of Combat Phase UI
+- E2E tests for attack declaration
+- Tests for target selection
+- Tests for UI feedback
+
+#### 11.3: Combat Resolution
+- Range calculation
+- Hit probability calculation
+- Damage calculation
+- Damage application to hull
+- Ship destruction handling
+- Combat log generation
+
+**Testing & Verification**:
+- Unit tests for all combat calculations
+- Tests for damage application
+- Tests for ship destruction
+- Integration tests for complete combat sequence
+
+#### 11.4: Combat Animation and Feedback
+- Weapon fire animation
+- Hit/miss indication
+- Damage display
+- Ship destruction animation
+- Combat log display
+- Status update visualization
+
+**Testing & Verification**:
+- Visual tests of combat animations
+- Screenshot tests of combat effects
+- E2E tests for combat sequence
+- Tests for feedback clarity
+
+**Acceptance Criteria**:
+- Ships can declare attacks
+- Targets can be selected
+- Range and modifiers are calculated
+- Hit/miss is determined
+- Damage is applied correctly
+- Ship destruction is handled
+- Combat is animated and clear
+- All tests pass
+
+**Dependencies**: Phase 5, Phase 7, Phase 8
+
+**Estimated Complexity**: High
+
+---
+
+### Phase 12: Maintenance Phase and Victory Conditions
+
+**Objective**: Implement the Maintenance Phase and victory condition checking.
+
+**Components**:
+
+#### 12.1: Victory Condition System
+- Victory condition data structure
+- Scenario-specific objectives
+- Victory evaluation logic
+- Victory state tracking
+- Winner determination
+
+**Testing & Verification**:
+- Unit tests for victory conditions
+- Tests for different scenario types
+- Tests for victory evaluation
+- Tests for edge cases
+
+#### 12.2: Maintenance Phase Logic
+- Victory condition check
+- Special situation resolution
+- Resource status updates
+- Turn end processing
+- Transition to next turn or victory
+
+**Testing & Verification**:
+- Unit tests for maintenance logic
+- Tests for turn transitions
+- Integration tests for complete turn cycle
+- Tests for victory transitions
+
+#### 12.3: Maintenance Phase UI
+- Victory status display
+- Special event notifications
+- Resource status display
+- End turn button
+- Victory screen (when conditions met)
+
+**Testing & Verification**:
+- Screenshot tests of Maintenance UI
+- E2E tests for turn end
+- Screenshot tests of victory screen
+- Tests for status displays
+
+**Acceptance Criteria**:
+- Victory conditions are checked each turn
+- Maintenance phase completes correctly
+- Turn transitions to next player or ends game
+- Victory screen displays when game ends
+- All tests pass
+
+**Dependencies**: Phase 7, Phase 11
+
+**Estimated Complexity**: Medium
+
+---
+
+### Phase 13: Scenario System
+
+**Objective**: Implement support for multiple scenarios with different objectives and setups.
+
+**Components**:
+
+#### 13.1: Scenario Data Structure
+- Scenario definitions
+- Map configurations per scenario
+- Initial ship placements
+- Victory conditions per scenario
+- Special rules per scenario
+
+**Testing & Verification**:
+- Unit tests for scenario data
+- Tests for scenario validation
+- Tests for different scenario types
+
+#### 13.2: Scenario Selection UI
+- Scenario list display
+- Scenario details preview
+- Scenario selection
+- Scenario initialization
+- Transition from config to scenario selection
+
+**Testing & Verification**:
+- Screenshot tests of scenario selection
+- E2E tests for scenario selection flow
+- Tests for scenario initialization
+
+#### 13.3: Scenario Implementation
+- Racing scenarios
+- Combat scenarios
+- Mixed objective scenarios
+- Tutorial scenarios
+- Checkpoint/gate implementation for racing
+
+**Testing & Verification**:
+- Integration tests for each scenario type
+- E2E tests for complete scenario playthrough
+- Tests for scenario-specific mechanics
+
+**Acceptance Criteria**:
+- Multiple scenarios are available
+- Players can select scenarios
+- Each scenario has correct setup
+- Victory conditions match scenario type
+- All scenario types work correctly
+- All tests pass
+
+**Dependencies**: Phase 12, Phase 1
+
+**Estimated Complexity**: Medium
+
+---
+
+### Phase 14: Advanced Ship Features
+
+**Objective**: Implement advanced ship systems and features.
+
+**Components**:
+
+#### 14.1: Ship Customization
+- Ship template system
+- Customizable ship attributes
+- Point allocation system
+- Ship specialization options
+- Ship validation
+
+**Testing & Verification**:
+- Unit tests for customization system
+- Tests for point allocation
+- Tests for validation rules
+
+#### 14.2: Special Systems
+- Shield systems
+- Sensor systems
+- Cargo systems
+- Docking systems
+- System damage tracking
+
+**Testing & Verification**:
+- Unit tests for each system type
+- Integration tests for system interaction
+- Tests for system damage
+
+#### 14.3: Docking Mechanics
+- Docking initiation
+- Velocity matching requirement
+- Docking completion
+- Refueling implementation
+- Cargo transfer
+- Repair implementation
+
+**Testing & Verification**:
+- Unit tests for docking logic
+- E2E tests for docking sequence
+- Tests for refuel/repair mechanics
+
+**Acceptance Criteria**:
+- Ships can be customized
+- Special systems function correctly
+- Docking works as designed
+- Refueling and repairs work
+- All tests pass
+
+**Dependencies**: Phase 5, Phase 6
+
+**Estimated Complexity**: High
+
+---
+
+### Phase 15: Game Polish and UX Improvements
+
+**Objective**: Enhance the user experience with polish and quality-of-life features.
+
+**Components**:
+
+#### 15.1: UI Polish
+- Improved visual styling
+- Consistent color scheme
+- Better font rendering
+- Icon set for common actions
+- Hover effects and tooltips
+- Smooth transitions
+
+**Testing & Verification**:
+- Screenshot tests of all UI states
+- Visual regression tests
+- E2E tests for interactions
+
+#### 15.2: Help and Tutorial System
+- In-game help overlay
+- Interactive tutorial scenario
+- Rule reference accessible in-game
+- Tooltips for UI elements
+- Phase-specific help
+
+**Testing & Verification**:
+- E2E tests for help system
+- Tests for tutorial completion
+- Screenshot tests of help displays
+
+#### 15.3: Quality of Life Features
+- Undo/redo for Plot Phase
+- Game state save/load
+- Keyboard shortcuts
+- Customizable controls
+- Animation speed control
+- Grid display options
+
+**Testing & Verification**:
+- Tests for undo/redo functionality
+- Tests for save/load
+- E2E tests for keyboard shortcuts
+- Tests for customization
+
+#### 15.4: Sound and Visual Effects
+- Sound effects for actions
+- Background music option
+- Enhanced particle effects
+- Screen shake for impacts
+- Visual feedback for all actions
+
+**Testing & Verification**:
+- Tests for sound playback
+- Visual tests for effects
+- Tests for effect toggles
+
+**Acceptance Criteria**:
+- UI is polished and consistent
+- Help system is accessible and useful
+- Quality of life features work correctly
+- Sound and effects enhance experience
+- All tests pass
+
+**Dependencies**: All previous phases
+
+**Estimated Complexity**: Medium
+
+---
+
+### Phase 16: Performance Optimization
+
+**Objective**: Optimize rendering and gameplay performance.
+
+**Components**:
+
+#### 16.1: Rendering Optimization
+- Canvas rendering performance profiling
+- Draw call reduction
+- Offscreen canvas for static elements
+- Sprite caching
+- Efficient redraw strategies
+- Level-of-detail rendering
+
+**Testing & Verification**:
+- Performance benchmarks
+- Frame rate monitoring
+- Stress tests with many ships
+- Memory usage tests
+
+#### 16.2: State Management Optimization
+- Redux state structure optimization
+- Selector memoization
+- Action batching where appropriate
+- Unnecessary re-render prevention
+- State normalization
+
+**Testing & Verification**:
+- Performance tests for state updates
+- Re-render count monitoring
+- Tests for state consistency
+
+#### 16.3: Asset Loading and Management
+- Asset preloading
+- Lazy loading for large assets
+- Asset caching strategy
+- Loading screen implementation
+- Progress indication
+
+**Testing & Verification**:
+- Tests for loading performance
+- Tests for cache effectiveness
+- E2E tests for loading screens
+
+**Acceptance Criteria**:
+- Game runs smoothly at 60fps
+- State updates are performant
+- Assets load efficiently
+- No memory leaks
+- Performance metrics meet targets
+- All tests pass
+
+**Dependencies**: All previous phases
+
+**Estimated Complexity**: Medium
+
+---
+
+### Phase 17: Multi-device Support
+
+**Objective**: Ensure the game works well on various devices and screen sizes.
+
+**Components**:
+
+#### 17.1: Responsive Layout
+- Dynamic canvas sizing
+- Responsive UI element sizing
+- Orientation change handling
+- Different screen size layouts
+- Minimum size constraints
+
+**Testing & Verification**:
+- Tests on various screen sizes
+- Tests for orientation changes
+- Screenshot tests at different resolutions
+
+#### 17.2: Touch Optimization
+- Touch gesture recognition
+- Multi-touch support
+- Touch target size optimization
+- Touch feedback
+- Touch vs mouse input handling
+
+**Testing & Verification**:
+- Touch interaction tests
+- Gesture recognition tests
+- Tests for touch targets
+
+#### 17.3: Mobile Performance
+- Mobile-specific optimizations
+- Reduced visual effects on mobile
+- Battery usage optimization
+- Network optimization (for future online play)
+
+**Testing & Verification**:
+- Performance tests on mobile devices
+- Battery usage monitoring
+- Mobile-specific E2E tests
+
+**Acceptance Criteria**:
+- Game works on desktop and mobile
+- Touch controls are responsive
+- Performance is good on mobile
+- UI adapts to screen size
+- All tests pass
+
+**Dependencies**: Phase 15, Phase 16
+
+**Estimated Complexity**: Medium
+
+---
+
+### Phase 18: Campaign Mode
+
+**Objective**: Implement campaign mode with linked scenarios and progression.
+
+**Components**:
+
+#### 18.1: Campaign Data Structure
+- Campaign definition format
+- Campaign progression tracking
+- Persistent ship state between scenarios
+- Victory points system
+- Campaign save state
+
+**Testing & Verification**:
+- Unit tests for campaign data
+- Tests for progression logic
+- Tests for state persistence
+
+#### 18.2: Ship Persistence and Upgrades
+- Carry ship damage between missions
+- Ship upgrade system
+- Experience/skill system
+- Resource accumulation
+- Fleet management between missions
+
+**Testing & Verification**:
+- Tests for ship persistence
+- Tests for upgrade application
+- Tests for resource management
+
+#### 18.3: Campaign UI
+- Campaign map/progression display
+- Mission briefing screens
+- Post-mission summary
+- Upgrade/repair interface
+- Campaign status display
+
+**Testing & Verification**:
+- Screenshot tests of campaign UI
+- E2E tests for campaign flow
+- Tests for mission transitions
+
+**Acceptance Criteria**:
+- Campaign scenarios can be linked
+- Ship state persists between missions
+- Upgrades can be applied
+- Campaign progression is tracked
+- All tests pass
+
+**Dependencies**: Phase 13, Phase 14
+
+**Estimated Complexity**: High
+
+---
+
+### Phase 19: Testing and Quality Assurance
+
+**Objective**: Comprehensive testing and bug fixing before release.
+
+**Components**:
+
+#### 19.1: Test Coverage Expansion
+- Increase unit test coverage to >90%
+- Comprehensive E2E test suite
+- Edge case testing
+- Error condition testing
+- Integration test expansion
+
+**Testing & Verification**:
+- Code coverage metrics
+- All tests passing
+- No regressions found
+
+#### 19.2: Bug Fixing
+- Address all known bugs
+- Fix issues found in testing
+- Resolve edge cases
+- Performance issue fixes
+- UI/UX issue fixes
+
+**Testing & Verification**:
+- Bug tracking
+- Regression tests for fixed bugs
+- Verification of all fixes
+
+#### 19.3: Cross-browser Testing
+- Test in Chrome
+- Test in Firefox
+- Test in Safari
+- Test in Edge
+- Test on mobile browsers
+
+**Testing & Verification**:
+- Browser compatibility matrix
+- Cross-browser E2E tests
+- Visual consistency verification
+
+#### 19.4: User Acceptance Testing
+- Playtest sessions
+- Usability testing
+- Accessibility review
+- Performance validation
+- Collect and address feedback
+
+**Testing & Verification**:
+- UAT checklist completion
+- Feedback incorporation
+- Final acceptance sign-off
+
+**Acceptance Criteria**:
+- All tests pass on all browsers
+- Test coverage exceeds 90%
+- No critical or high-priority bugs
+- UAT feedback addressed
+- Game is ready for release
+
+**Dependencies**: All previous phases
+
+**Estimated Complexity**: High
+
+---
+
+### Phase 20: Documentation and Deployment
+
+**Objective**: Complete documentation and deploy the game.
+
+**Components**:
+
+#### 20.1: User Documentation
+- Complete game rules documentation
+- How-to-play guide
+- Tutorial walkthrough documentation
+- FAQ
+- Troubleshooting guide
+
+**Testing & Verification**:
+- Documentation review
+- Accuracy verification
+- Completeness check
+
+#### 20.2: Developer Documentation
+- Code documentation
+- Architecture documentation
+- API documentation (if applicable)
+- Contributing guidelines
+- Development setup guide
+
+**Testing & Verification**:
+- Documentation completeness
+- Technical accuracy
+- Code example verification
+
+#### 20.3: Deployment Setup
+- Production build optimization
+- Deployment pipeline setup
+- Hosting configuration
+- Domain setup
+- Analytics integration (if desired)
+
+**Testing & Verification**:
+- Production build testing
+- Deployment verification
+- Live site monitoring
+
+#### 20.4: Release
+- Version tagging
+- Release notes
+- Public announcement
+- Monitor initial usage
+- Address immediate issues
+
+**Testing & Verification**:
+- Release checklist completion
+- Live site functionality
+- User feedback monitoring
+
+**Acceptance Criteria**:
+- All documentation is complete
+- Deployment is successful
+- Game is publicly accessible
+- No critical issues in production
+- Release is announced
+
+**Dependencies**: Phase 19
+
+**Estimated Complexity**: Low
+
+---
+
+## Implementation Timeline Estimates
+
+Based on a solo developer or small team:
+
+- **Phase 1**: COMPLETED
+- **Phase 2**: 2-3 weeks
+- **Phase 3**: 1-2 weeks
+- **Phase 4**: 1-2 weeks
+- **Phase 5**: 1-2 weeks
+- **Phase 6**: 3-4 weeks (most complex)
+- **Phase 7**: 1-2 weeks
+- **Phase 8**: 2-3 weeks
+- **Phase 9**: 2-3 weeks
+- **Phase 10**: 1-2 weeks
+- **Phase 11**: 2-3 weeks
+- **Phase 12**: 1-2 weeks
+- **Phase 13**: 1-2 weeks
+- **Phase 14**: 2-3 weeks
+- **Phase 15**: 2-3 weeks
+- **Phase 16**: 1-2 weeks
+- **Phase 17**: 1-2 weeks
+- **Phase 18**: 2-3 weeks
+- **Phase 19**: 2-3 weeks
+- **Phase 20**: 1 week
+
+**Total Estimated Timeline**: 6-9 months for complete implementation
+
+## Critical Path
+
+The critical path for core gameplay functionality:
+1. Phase 1 (Foundation) ✓
+2. Phase 2 (Game Board)
+3. Phase 3 (Celestial Bodies)
+4. Phase 4 (Ship Data)
+5. Phase 5 (Ship Rendering)
+6. Phase 6 (Physics)
+7. Phase 7 (Turn Management)
+8. Phase 8 (Plot Phase)
+9. Phase 9 (Movement Phase)
+10. Phase 11 (Combat Phase)
+11. Phase 12 (Victory Conditions)
+
+These phases represent the minimum viable game that can be played.
+
+## Parallel Development Opportunities
+
+Some phases can be developed in parallel by different team members:
+- Phase 3 (Celestial Bodies) can be done alongside Phase 4 (Ship Data)
+- Phase 10 (Ordnance) can be done alongside Phase 11 (Combat)
+- Phase 13 (Scenarios) can be started once Phase 12 is complete
+- Phase 15 (Polish) can be incremental throughout development
+- Phase 16 (Performance) can be addressed throughout development
+
+## Risk Mitigation
+
+**Technical Risks**:
+- **Physics Complexity**: Phase 6 is the most complex; allocate extra time and consider using existing physics libraries
+- **Performance**: Regular performance testing throughout development to catch issues early
+- **Cross-browser Issues**: Test on multiple browsers from Phase 2 onwards
+
+**Scope Risks**:
+- **Feature Creep**: Stick to phase definitions; new features go into future phases
+- **Timeline Slip**: Each phase has acceptance criteria; don't proceed until criteria are met
+- **Over-engineering**: Focus on working functionality first, refactor later if needed
+
+## Testing Strategy Summary
+
+Each phase includes:
+1. **Unit Tests**: For all logic and calculations
+2. **Integration Tests**: For component interaction
+3. **E2E Tests**: For user workflows
+4. **Visual Tests**: Screenshot comparisons for UI
+5. **Performance Tests**: Where applicable
+6. **Manual Testing**: For gameplay feel and balance
+
+## Success Metrics
+
+For each phase:
+- All tests passing
+- Code review completed
+- Acceptance criteria met
+- No blocking bugs
+- Documentation updated
+- Demo/screenshot available
+
+For the overall project:
+- Playable game matching original Triplanetary rules
+- Smooth 60fps performance
+- >90% test coverage
+- Works on desktop and mobile
+- Positive user feedback
+
+## Maintenance and Future Enhancements
+
+Post-release phases (beyond scope of this plan):
+- Online multiplayer
+- AI opponents
+- Additional scenarios
+- Mod support
+- Community features
+- Advanced campaign modes
+- Tournament mode
+
+## Conclusion
+
+This implementation plan provides a structured, testable path from the current foundation to a complete, polished Triplanetary game. Each phase builds incrementally on previous work, with clear acceptance criteria and independent verification. The modular approach allows for flexibility in scheduling and resource allocation while maintaining a clear path to completion.
