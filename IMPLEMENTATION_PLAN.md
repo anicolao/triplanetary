@@ -76,12 +76,12 @@ This document outlines the complete implementation plan for the Triplanetary web
 - Layered rendering system (background, grid, objects, UI)
 
 **Testing & Verification**:
-- Visual tests of hex grid at different zoom levels
+- Visual tests of hex grid rendering
 - Screenshot tests of coordinate system
 - Unit tests for rendering boundaries
 - Performance tests for large grids
 
-#### 2.3: Pan and Zoom Controls
+#### 2.3: Pan and Zoom Controls **(OPTIONAL - NOT IN MVP)**
 - Mouse-based panning implementation
 - Touch-based panning for mobile
 - Zoom in/out functionality
@@ -89,7 +89,9 @@ This document outlines the complete implementation plan for the Triplanetary web
 - Smooth animation for pan/zoom
 - Reset view to default position
 
-**Testing & Verification**:
+**Note**: This feature is marked as optional and will not be implemented as part of the MVP. The game will use a fixed view of the game board that encompasses all gameplay elements.
+
+**Testing & Verification** (when implemented):
 - E2E tests for mouse panning
 - E2E tests for touch panning
 - E2E tests for zoom controls
@@ -99,10 +101,10 @@ This document outlines the complete implementation plan for the Triplanetary web
 **Acceptance Criteria**:
 - Hexagonal grid renders correctly
 - Coordinates are accurate and labeled
-- Pan and zoom work smoothly
-- Grid scales appropriately at all zoom levels
-- Touch and mouse controls both function
+- Grid displays the full game area at an appropriate scale
 - All tests pass
+
+**Note**: Pan and zoom controls (section 2.3) are optional features not included in the MVP.
 
 **Dependencies**: Phase 1
 
@@ -134,7 +136,7 @@ This document outlines the complete implementation plan for the Triplanetary web
 - Orbital path visualization
 - Gravity well zone visualization
 - Visual distinction for different planets
-- Scaling relative to zoom level
+- Appropriate scaling for fixed view display
 
 **Testing & Verification**:
 - Screenshot tests of solar system layout
@@ -158,8 +160,7 @@ This document outlines the complete implementation plan for the Triplanetary web
 - Solar system map renders accurately
 - Planets appear on correct orbits
 - Gravity wells are visualized
-- Map scales properly with zoom
-- All celestial bodies are positioned correctly
+- All celestial bodies are positioned correctly and visible in fixed view
 - All tests pass
 
 **Dependencies**: Phase 2
@@ -235,12 +236,12 @@ This document outlines the complete implementation plan for the Triplanetary web
 - Color-coded ship display (using player colors)
 - Ship position on hex grid
 - Ship orientation visualization
-- Ship scaling with zoom
+- Appropriate scaling for fixed view display
 
 **Testing & Verification**:
 - Screenshot tests of ship rendering
 - Tests for color application
-- Visual verification at different zoom levels
+- Visual verification of ship display
 
 #### 5.2: Velocity Vector Visualization
 - Velocity arrow rendering
@@ -271,7 +272,6 @@ This document outlines the complete implementation plan for the Triplanetary web
 - Each ship displays in correct player color
 - Velocity vectors are visible and accurate
 - Ship status is clearly indicated
-- Ships scale properly with zoom
 - All tests pass
 
 **Dependencies**: Phase 4, Phase 2
