@@ -2,12 +2,15 @@
 
 import { GameState, PLAYER_COLORS } from '../redux/types';
 import { UILayout, Button, PlayerEntry, calculateLayout } from './layout';
+import { GridRenderer } from './gridRenderer';
+import { HexLayout } from '../hex/types';
 
 export class Renderer {
   private ctx: CanvasRenderingContext2D;
   private canvas: HTMLCanvasElement;
   private colorPickerPlayerId: string | null = null;
   private onRenderNeeded: (() => void) | null = null;
+  private gridRenderer: GridRenderer;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -16,6 +19,7 @@ export class Renderer {
       throw new Error('Failed to get 2D context');
     }
     this.ctx = ctx;
+    this.gridRenderer = new GridRenderer(ctx);
     this.resizeCanvas();
   }
 
@@ -91,26 +95,36 @@ export class Renderer {
   }
 
   private renderGameplayScreen(state: GameState): UILayout {
-    // Placeholder for gameplay screen
-    this.ctx.fillStyle = '#ffffff';
-    this.ctx.font = '48px sans-serif';
-    this.ctx.textAlign = 'center';
-    this.ctx.textBaseline = 'middle';
-    this.ctx.fillText(
-      'Gameplay Screen (Coming Soon)',
-      this.canvas.width / 2,
-      this.canvas.height / 2
-    );
+    // Define hex layout for the game board
+    const hexSize = 30; // Size of each hex in pixels
+    const layout: HexLayout = {
+      size: hexSize,
+      origin: {
+        x: this.canvas.width / 2,
+        y: this.canvas.height / 2,
+      },
+      orientation: 'pointy',
+    };
 
-    // Show player list
-    this.ctx.font = '24px sans-serif';
+    // Render the hex grid with a radius of 10 hexes
+    const gridRadius = 10;
+    this.gridRenderer.renderGameBoard(layout, gridRadius, this.canvas.width, this.canvas.height);
+
+    // Render UI overlay showing player information
+    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    this.ctx.fillRect(10, 10, 200, 60 + state.players.length * 25);
+
+    this.ctx.fillStyle = '#ffffff';
+    this.ctx.font = '16px sans-serif';
+    this.ctx.textAlign = 'left';
+    this.ctx.textBaseline = 'top';
+    this.ctx.fillText('Players:', 20, 20);
+
     state.players.forEach((player, index) => {
       this.ctx.fillStyle = player.color;
-      this.ctx.fillText(
-        `Player ${index + 1}`,
-        this.canvas.width / 2,
-        this.canvas.height / 2 + 60 + index * 30
-      );
+      this.ctx.fillRect(20, 45 + index * 25, 15, 15);
+      this.ctx.fillStyle = '#ffffff';
+      this.ctx.fillText(`Player ${index + 1}`, 40, 45 + index * 25);
     });
 
     return this.createEmptyLayout();
