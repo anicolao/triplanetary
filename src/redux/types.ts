@@ -1,5 +1,7 @@
 // State structure for the Triplanetary game
 
+import { AnyCelestialBody } from '../celestial/types';
+
 export type Screen = 'configuration' | 'gameplay';
 
 export interface Player {
@@ -10,6 +12,7 @@ export interface Player {
 export interface GameState {
   screen: Screen;
   players: Player[];
+  celestialBodies: AnyCelestialBody[];
 }
 
 // Available color-blind friendly palette

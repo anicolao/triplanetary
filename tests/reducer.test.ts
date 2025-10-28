@@ -12,6 +12,37 @@ import {
 import { MAX_PLAYERS, PLAYER_COLORS } from '../src/redux/types';
 
 describe('gameReducer', () => {
+  describe('Initial State', () => {
+    it('should have celestial bodies initialized', () => {
+      expect(initialState.celestialBodies).toBeDefined();
+      expect(initialState.celestialBodies.length).toBe(5); // Sun + 4 planets
+    });
+
+    it('should include the Sun at origin', () => {
+      const sun = initialState.celestialBodies.find(body => body.type === 'sun');
+      expect(sun).toBeDefined();
+      expect(sun?.position.q).toBe(0);
+      expect(sun?.position.r).toBe(0);
+    });
+
+    it('should include all four inner planets', () => {
+      const planets = initialState.celestialBodies.filter(body => body.type === 'planet');
+      expect(planets.length).toBe(4);
+      
+      const planetNames = planets.map(p => p.name).sort();
+      expect(planetNames).toEqual(['Earth', 'Mars', 'Mercury', 'Venus']);
+    });
+
+    it('should have planets with calculated positions', () => {
+      const planets = initialState.celestialBodies.filter(body => body.type === 'planet');
+      planets.forEach(planet => {
+        expect(planet.position).toBeDefined();
+        expect(typeof planet.position.q).toBe('number');
+        expect(typeof planet.position.r).toBe('number');
+      });
+    });
+  });
+
   describe('ADD_PLAYER', () => {
     it('should add a player to empty list', () => {
       const state = gameReducer(initialState, addPlayer());
@@ -38,6 +69,11 @@ describe('gameReducer', () => {
       }
 
       expect(state.players.length).toBe(MAX_PLAYERS);
+    });
+
+    it('should preserve celestial bodies when adding players', () => {
+      const state = gameReducer(initialState, addPlayer());
+      expect(state.celestialBodies).toEqual(initialState.celestialBodies);
     });
   });
 
