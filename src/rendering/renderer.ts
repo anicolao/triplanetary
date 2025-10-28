@@ -3,7 +3,10 @@
 import { GameState, PLAYER_COLORS } from '../redux/types';
 import { UILayout, Button, PlayerEntry, calculateLayout } from './layout';
 import { GridRenderer } from './gridRenderer';
+import { CelestialRenderer } from './celestialRenderer';
 import { HexLayout } from '../hex/types';
+import { CELESTIAL_BODIES } from '../celestial/data';
+import { initializePlanetPositions } from '../celestial/orbital';
 
 export class Renderer {
   private ctx: CanvasRenderingContext2D;
@@ -11,6 +14,7 @@ export class Renderer {
   private colorPickerPlayerId: string | null = null;
   private onRenderNeeded: (() => void) | null = null;
   private gridRenderer: GridRenderer;
+  private celestialRenderer: CelestialRenderer;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -20,6 +24,7 @@ export class Renderer {
     }
     this.ctx = ctx;
     this.gridRenderer = new GridRenderer(ctx);
+    this.celestialRenderer = new CelestialRenderer(ctx);
     this.resizeCanvas();
   }
 
@@ -109,6 +114,16 @@ export class Renderer {
     // Render the hex grid with a radius of 10 hexes
     const gridRadius = 10;
     this.gridRenderer.renderGameBoard(layout, gridRadius, this.canvas.width, this.canvas.height);
+
+    // Initialize planet positions based on their current orbital angles
+    const celestialBodies = initializePlanetPositions(
+      CELESTIAL_BODIES.filter(body => body.type === 'planet') as any[]
+    );
+    // Add the Sun back to the array
+    const allBodies = [CELESTIAL_BODIES.find(body => body.type === 'sun')!, ...celestialBodies];
+
+    // Render celestial bodies (Sun, planets, orbits, gravity wells)
+    this.celestialRenderer.renderCelestialBodies(allBodies, layout);
 
     // Render UI overlay showing player information
     this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
