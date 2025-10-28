@@ -135,6 +135,58 @@ describe('Hex Coordinate System', () => {
       const neighbor2 = hexNeighbor(hex, 6);
       expect(hexEquals(neighbor1, neighbor2)).toBe(true);
     });
+
+    it('should have reflexive adjacency for all directions (even column)', () => {
+      // Test from an even column (q is even)
+      const hex = createHex(2, 3);
+      
+      // For each direction, moving forward then backward should return to origin
+      for (let direction = 0; direction < 6; direction++) {
+        const oppositeDirection = (direction + 3) % 6;
+        const forward = hexNeighbor(hex, direction);
+        const back = hexNeighbor(forward, oppositeDirection);
+        expect(hexEquals(hex, back)).toBe(true);
+      }
+    });
+
+    it('should have reflexive adjacency for all directions (odd column)', () => {
+      // Test from an odd column (q is odd)
+      const hex = createHex(3, 2);
+      
+      // For each direction, moving forward then backward should return to origin
+      for (let direction = 0; direction < 6; direction++) {
+        const oppositeDirection = (direction + 3) % 6;
+        const forward = hexNeighbor(hex, direction);
+        const back = hexNeighbor(forward, oppositeDirection);
+        expect(hexEquals(hex, back)).toBe(true);
+      }
+    });
+
+    it('should have reflexive adjacency at origin', () => {
+      // Test from the origin for completeness
+      const hex = createHex(0, 0);
+      
+      // For each direction, moving forward then backward should return to origin
+      for (let direction = 0; direction < 6; direction++) {
+        const oppositeDirection = (direction + 3) % 6;
+        const forward = hexNeighbor(hex, direction);
+        const back = hexNeighbor(forward, oppositeDirection);
+        expect(hexEquals(hex, back)).toBe(true);
+      }
+    });
+
+    it('should have reflexive adjacency for negative coordinates', () => {
+      // Test with negative coordinates
+      const hex = createHex(-5, 4);
+      
+      // For each direction, moving forward then backward should return to origin
+      for (let direction = 0; direction < 6; direction++) {
+        const oppositeDirection = (direction + 3) % 6;
+        const forward = hexNeighbor(hex, direction);
+        const back = hexNeighbor(forward, oppositeDirection);
+        expect(hexEquals(hex, back)).toBe(true);
+      }
+    });
   });
 
   describe('hexNeighbors', () => {
