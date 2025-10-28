@@ -5,8 +5,6 @@ import { UILayout, Button, PlayerEntry, calculateLayout } from './layout';
 import { GridRenderer } from './gridRenderer';
 import { CelestialRenderer } from './celestialRenderer';
 import { HexLayout } from '../hex/types';
-import { CELESTIAL_BODIES } from '../celestial/data';
-import { initializePlanetPositions } from '../celestial/orbital';
 
 export class Renderer {
   private ctx: CanvasRenderingContext2D;
@@ -119,15 +117,8 @@ export class Renderer {
       showCoordinates: false, // Hide coordinates for cleaner view at this zoom level
     });
 
-    // Initialize planet positions based on their current orbital angles
-    const celestialBodies = initializePlanetPositions(
-      CELESTIAL_BODIES.filter(body => body.type === 'planet') as any[]
-    );
-    // Add the Sun back to the array
-    const allBodies = [CELESTIAL_BODIES.find(body => body.type === 'sun')!, ...celestialBodies];
-
-    // Render celestial bodies (Sun, planets, orbits, gravity wells)
-    this.celestialRenderer.renderCelestialBodies(allBodies, layout);
+    // Render all map objects (celestial bodies, stations, asteroids)
+    this.celestialRenderer.renderCelestialBodies(state.mapObjects, layout);
 
     // Render UI overlay showing player information
     this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
