@@ -2,13 +2,19 @@
 
 import { MapObject } from '../celestial/types';
 import { Scenario, MapBounds } from '../celestial/scenario';
-import { Ship } from '../ship/types';
+import { Ship, VelocityVector } from '../ship/types';
 
 export type Screen = 'configuration' | 'gameplay';
 
 export interface Player {
   id: string;
   color: string;
+}
+
+export interface PlottedMove {
+  shipId: string;
+  newVelocity: VelocityVector;
+  thrustUsed: number;
 }
 
 export interface GameState {
@@ -19,6 +25,9 @@ export interface GameState {
   mapObjects: MapObject[];
   currentScenario: Scenario;
   mapBounds: MapBounds;
+  // Plot Phase state
+  plottedMoves: Map<string, PlottedMove>;
+  showReachableHexes: boolean;
 }
 
 // Available color-blind friendly palette

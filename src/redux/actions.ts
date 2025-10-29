@@ -19,6 +19,12 @@ export const UPDATE_SHIP_THRUST = 'UPDATE_SHIP_THRUST';
 export const DESTROY_SHIP = 'DESTROY_SHIP';
 export const SELECT_SHIP = 'SELECT_SHIP';
 
+// Plot Phase action types
+export const PLOT_SHIP_MOVE = 'PLOT_SHIP_MOVE';
+export const CLEAR_PLOT = 'CLEAR_PLOT';
+export const CLEAR_ALL_PLOTS = 'CLEAR_ALL_PLOTS';
+export const TOGGLE_REACHABLE_HEXES = 'TOGGLE_REACHABLE_HEXES';
+
 export interface AddPlayerAction {
   type: typeof ADD_PLAYER;
 }
@@ -107,6 +113,31 @@ export interface SelectShipAction {
   };
 }
 
+// Plot Phase action interfaces
+export interface PlotShipMoveAction {
+  type: typeof PLOT_SHIP_MOVE;
+  payload: {
+    shipId: string;
+    newVelocity: VelocityVector;
+    thrustUsed: number;
+  };
+}
+
+export interface ClearPlotAction {
+  type: typeof CLEAR_PLOT;
+  payload: {
+    shipId: string;
+  };
+}
+
+export interface ClearAllPlotsAction {
+  type: typeof CLEAR_ALL_PLOTS;
+}
+
+export interface ToggleReachableHexesAction {
+  type: typeof TOGGLE_REACHABLE_HEXES;
+}
+
 export type GameAction =
   | AddPlayerAction
   | RemovePlayerAction
@@ -120,7 +151,11 @@ export type GameAction =
   | UpdateShipHullAction
   | UpdateShipThrustAction
   | DestroyShipAction
-  | SelectShipAction;
+  | SelectShipAction
+  | PlotShipMoveAction
+  | ClearPlotAction
+  | ClearAllPlotsAction
+  | ToggleReachableHexesAction;
 
 // Action creators
 export const addPlayer = (): AddPlayerAction => ({
@@ -199,4 +234,27 @@ export const destroyShip = (shipId: string): DestroyShipAction => ({
 export const selectShip = (shipId: string | null): SelectShipAction => ({
   type: SELECT_SHIP,
   payload: { shipId },
+});
+
+// Plot Phase action creators
+export const plotShipMove = (
+  shipId: string,
+  newVelocity: VelocityVector,
+  thrustUsed: number
+): PlotShipMoveAction => ({
+  type: PLOT_SHIP_MOVE,
+  payload: { shipId, newVelocity, thrustUsed },
+});
+
+export const clearPlot = (shipId: string): ClearPlotAction => ({
+  type: CLEAR_PLOT,
+  payload: { shipId },
+});
+
+export const clearAllPlots = (): ClearAllPlotsAction => ({
+  type: CLEAR_ALL_PLOTS,
+});
+
+export const toggleReachableHexes = (): ToggleReachableHexesAction => ({
+  type: TOGGLE_REACHABLE_HEXES,
 });

@@ -16,6 +16,10 @@ import {
   UPDATE_SHIP_THRUST,
   DESTROY_SHIP,
   SELECT_SHIP,
+  PLOT_SHIP_MOVE,
+  CLEAR_PLOT,
+  CLEAR_ALL_PLOTS,
+  TOGGLE_REACHABLE_HEXES,
 } from './actions';
 import { DEFAULT_SCENARIO, initializeMap } from '../celestial';
 import { getDefaultPlacements, createShipsFromPlacements } from '../ship/placement';
@@ -29,6 +33,8 @@ export const initialState: GameState = {
   mapObjects: initializeMap(DEFAULT_SCENARIO),
   currentScenario: DEFAULT_SCENARIO,
   mapBounds: DEFAULT_SCENARIO.bounds,
+  plottedMoves: new Map(),
+  showReachableHexes: true,
 };
 
 // Helper function to get next available color
@@ -214,6 +220,40 @@ export function gameReducer(
       return {
         ...state,
         selectedShipId: shipId,
+      };
+    }
+
+    case PLOT_SHIP_MOVE: {
+      const { shipId, newVelocity, thrustUsed } = action.payload;
+      const newPlottedMoves = new Map(state.plottedMoves);
+      newPlottedMoves.set(shipId, { shipId, newVelocity, thrustUsed });
+      return {
+        ...state,
+        plottedMoves: newPlottedMoves,
+      };
+    }
+
+    case CLEAR_PLOT: {
+      const { shipId } = action.payload;
+      const newPlottedMoves = new Map(state.plottedMoves);
+      newPlottedMoves.delete(shipId);
+      return {
+        ...state,
+        plottedMoves: newPlottedMoves,
+      };
+    }
+
+    case CLEAR_ALL_PLOTS: {
+      return {
+        ...state,
+        plottedMoves: new Map(),
+      };
+    }
+
+    case TOGGLE_REACHABLE_HEXES: {
+      return {
+        ...state,
+        showReachableHexes: !state.showReachableHexes,
       };
     }
 
