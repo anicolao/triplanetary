@@ -2,6 +2,7 @@
 
 import { MapObject } from '../celestial/types';
 import { Scenario, MapBounds } from '../celestial/scenario';
+import { Ship } from '../ship/types';
 
 export type Screen = 'configuration' | 'gameplay';
 
@@ -13,6 +14,8 @@ export interface Player {
 export interface GameState {
   screen: Screen;
   players: Player[];
+  ships: Ship[];
+  selectedShipId: string | null;
   mapObjects: MapObject[];
   currentScenario: Scenario;
   mapBounds: MapBounds;
