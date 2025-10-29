@@ -202,7 +202,7 @@ export class InputHandler {
     const state = store.getState();
     if (!state.selectedShipId) return;
 
-    const selectedShip = state.ships.find(s => s.id === state.selectedShipId);
+    const selectedShip = state.ships.find((s) => s.id === state.selectedShipId);
     if (!selectedShip || selectedShip.destroyed) return;
 
     // Get current velocity (from plotted move if exists, otherwise from ship)
