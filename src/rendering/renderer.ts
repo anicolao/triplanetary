@@ -4,6 +4,7 @@ import { GameState, PLAYER_COLORS } from '../redux/types';
 import { UILayout, Button, PlayerEntry, calculateLayout } from './layout';
 import { GridRenderer } from './gridRenderer';
 import { CelestialRenderer } from './celestialRenderer';
+import { ShipRenderer } from './shipRenderer';
 import { HexLayout } from '../hex/types';
 
 export class Renderer {
@@ -13,6 +14,7 @@ export class Renderer {
   private onRenderNeeded: (() => void) | null = null;
   private gridRenderer: GridRenderer;
   private celestialRenderer: CelestialRenderer;
+  private shipRenderer: ShipRenderer;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -23,6 +25,7 @@ export class Renderer {
     this.ctx = ctx;
     this.gridRenderer = new GridRenderer(ctx);
     this.celestialRenderer = new CelestialRenderer(ctx);
+    this.shipRenderer = new ShipRenderer(ctx);
     this.resizeCanvas();
   }
 
@@ -119,6 +122,19 @@ export class Renderer {
 
     // Render all map objects (celestial bodies, stations, asteroids)
     this.celestialRenderer.renderCelestialBodies(state.mapObjects, layout);
+
+    // Create player color map for ship rendering
+    const playerColors = new Map<string, string>();
+    state.players.forEach((player) => {
+      playerColors.set(player.id, player.color);
+    });
+
+    // Render all ships
+    this.shipRenderer.renderShips(state.ships, layout, playerColors, {
+      showVelocity: true,
+      showStatus: true,
+      selectedShipId: state.selectedShipId,
+    });
 
     // Render UI overlay showing player information
     this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
