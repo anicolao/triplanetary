@@ -18,6 +18,7 @@ import {
   SELECT_SHIP,
 } from './actions';
 import { DEFAULT_SCENARIO, initializeMap } from '../celestial';
+import { getDefaultPlacements, createShipsFromPlacements } from '../ship/placement';
 
 // Initial state
 export const initialState: GameState = {
@@ -118,9 +119,15 @@ export function gameReducer(
         return state;
       }
 
+      // Initialize ships for all players based on default scenario
+      const playerIds = state.players.map((p) => p.id);
+      const placements = getDefaultPlacements(playerIds, state.currentScenario);
+      const ships = createShipsFromPlacements(placements, state.currentScenario);
+
       return {
         ...state,
         screen: 'gameplay',
+        ships,
       };
     }
 
@@ -128,6 +135,7 @@ export function gameReducer(
       return {
         ...state,
         screen: 'configuration',
+        ships: [], // Clear ships when returning to config
       };
     }
 
