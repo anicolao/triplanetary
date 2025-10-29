@@ -156,9 +156,14 @@ export function calculateReachableHexes(
   const reachable = new Map<string, { hex: HexCoordinate; thrustRequired: number; resultingVelocity: VelocityVector }>();
   
   // Try all possible thrust applications within the available thrust
+  // We need to check all combinations within a hexagonal range
   for (let dq = -availableThrust; dq <= availableThrust; dq++) {
     for (let dr = -availableThrust; dr <= availableThrust; dr++) {
-      const thrustMagnitude = Math.abs(dq) + Math.abs(dr);
+      // Calculate the hex distance for this thrust vector
+      // In cube coordinates: q, r, s where s = -q - r
+      // Distance = (|dq| + |dr| + |ds|) / 2 where ds = -dq - dr
+      const ds = -dq - dr;
+      const thrustMagnitude = (Math.abs(dq) + Math.abs(dr) + Math.abs(ds)) / 2;
       
       if (thrustMagnitude <= availableThrust) {
         const resultingVelocity: VelocityVector = {

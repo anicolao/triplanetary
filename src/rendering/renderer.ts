@@ -5,7 +5,9 @@ import { UILayout, Button, PlayerEntry, calculateLayout } from './layout';
 import { GridRenderer } from './gridRenderer';
 import { CelestialRenderer } from './celestialRenderer';
 import { ShipRenderer } from './shipRenderer';
+import { PlotRenderer, createPlotUIElements, PlotUIElements } from './plotRenderer';
 import { HexLayout } from '../hex/types';
+import { calculateReachableHexes } from '../physics/movement';
 
 export class Renderer {
   private ctx: CanvasRenderingContext2D;
@@ -15,6 +17,8 @@ export class Renderer {
   private gridRenderer: GridRenderer;
   private celestialRenderer: CelestialRenderer;
   private shipRenderer: ShipRenderer;
+  private plotRenderer: PlotRenderer;
+  private currentPlotUIElements: PlotUIElements | null = null;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -26,6 +30,7 @@ export class Renderer {
     this.gridRenderer = new GridRenderer(ctx);
     this.celestialRenderer = new CelestialRenderer(ctx);
     this.shipRenderer = new ShipRenderer(ctx);
+    this.plotRenderer = new PlotRenderer(ctx);
     this.resizeCanvas();
   }
 
@@ -123,6 +128,35 @@ export class Renderer {
     // Render all map objects (celestial bodies, stations, asteroids)
     this.celestialRenderer.renderCelestialBodies(state.mapObjects, layout);
 
+    // If a ship is selected and we should show reachable hexes, render them
+    if (state.selectedShipId && state.showReachableHexes) {
+      const selectedShip = state.ships.find(s => s.id === state.selectedShipId);
+      if (selectedShip && !selectedShip.destroyed) {
+        // Check if there's a plotted move for this ship
+        const plottedMove = state.plottedMoves.get(state.selectedShipId);
+        const currentVelocity = plottedMove ? plottedMove.newVelocity : selectedShip.velocity;
+        const remainingThrust = plottedMove 
+          ? selectedShip.stats.maxThrust - plottedMove.thrustUsed 
+          : selectedShip.remainingThrust;
+        
+        const reachableHexes = calculateReachableHexes(
+          selectedShip.position,
+          currentVelocity,
+          remainingThrust
+        );
+        this.plotRenderer.renderReachableHexes(reachableHexes, layout);
+        
+        // If there's a plotted move, show preview
+        if (plottedMove) {
+          this.plotRenderer.renderVelocityPreview(
+            selectedShip.position,
+            plottedMove.newVelocity,
+            layout
+          );
+        }
+      }
+    }
+
     // Create player color map for ship rendering
     const playerColors = new Map<string, string>();
     state.players.forEach((player) => {
@@ -135,6 +169,25 @@ export class Renderer {
       showStatus: true,
       selectedShipId: state.selectedShipId,
     });
+
+    // Render Plot Phase UI if a ship is selected
+    if (state.selectedShipId) {
+      const selectedShip = state.ships.find(s => s.id === state.selectedShipId);
+      if (selectedShip && !selectedShip.destroyed) {
+        const hasPlottedMove = state.plottedMoves.has(state.selectedShipId);
+        this.currentPlotUIElements = createPlotUIElements(
+          selectedShip,
+          this.canvas.width,
+          this.canvas.height,
+          hasPlottedMove
+        );
+        this.plotRenderer.renderPlotUI(
+          this.currentPlotUIElements
+        );
+      }
+    } else {
+      this.currentPlotUIElements = null;
+    }
 
     // Render UI overlay showing player information
     this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
@@ -334,5 +387,9 @@ export class Renderer {
 
   getCanvasHeight(): number {
     return this.canvas.height;
+  }
+
+  getCurrentPlotUIElements(): PlotUIElements | null {
+    return this.currentPlotUIElements;
   }
 }

@@ -426,46 +426,46 @@ This document outlines the complete implementation plan for the Triplanetary web
 
 **Components**:
 
-#### 8.1: Plot Phase UI
-- Ship selection interface
-- Current ship highlighting
-- Available thrust display
-- Velocity plotting interface
-- Thrust application controls
-- Plot confirmation UI
+#### 8.1: Plot Phase UI ✓ COMPLETED
+- Ship selection interface ✓
+- Current ship highlighting ✓
+- Available thrust display ✓
+- Velocity plotting interface ✓
+- Thrust application controls ✓
+- Plot confirmation UI ✓
 
 **Testing & Verification**:
-- Screenshot tests of Plot Phase UI
-- E2E tests for ship selection
-- Tests for UI state during plotting
+- Screenshot tests of Plot Phase UI ✓
+- E2E tests for ship selection ✓
+- Tests for UI state during plotting ✓
 
-#### 8.2: Thrust Application
-- Directional thrust controls
-- Thrust point expenditure
-- Velocity vector modification preview
-- Undo/redo for thrust application
-- Invalid thrust rejection
-
-**Testing & Verification**:
-- E2E tests for thrust application
-- Tests for thrust limits
-- Tests for vector preview
-- Tests for undo/redo
-
-#### 8.3: Reachable Hex Highlighting
-- Calculate all reachable hexes given current velocity and thrust
-- Visual highlighting of reachable hexes
-- Thrust requirement display for each hex
-- Resulting velocity preview for each reachable hex
-- Toggle highlighting on/off
-- Highlight style configuration
+#### 8.2: Thrust Application ✓ COMPLETED
+- Directional thrust controls ✓
+- Thrust point expenditure ✓
+- Velocity vector modification preview ✓
+- Undo/redo for thrust application ✓
+- Invalid thrust rejection ✓
 
 **Testing & Verification**:
-- Unit tests for reachable hex calculation
-- Screenshot tests of highlighting
-- Tests for thrust requirement accuracy
-- E2E tests for hex selection
-- Tests for highlight toggle
+- E2E tests for thrust application ✓
+- Tests for thrust limits ✓
+- Tests for vector preview ✓
+- Tests for undo/redo ✓
+
+#### 8.3: Reachable Hex Highlighting ✓ COMPLETED
+- Calculate all reachable hexes given current velocity and thrust ✓
+- Visual highlighting of reachable hexes ✓
+- Thrust requirement display for each hex ✓
+- Resulting velocity preview for each reachable hex ✓
+- Toggle highlighting on/off ✓
+- Highlight style configuration ✓
+
+**Testing & Verification**:
+- Unit tests for reachable hex calculation ✓
+- Screenshot tests of highlighting ✓
+- Tests for thrust requirement accuracy ✓
+- E2E tests for hex selection ✓
+- Tests for highlight toggle ✓
 
 #### 8.4: Plot Queue Management
 - Store plotted moves temporarily
@@ -481,13 +481,15 @@ This document outlines the complete implementation plan for the Triplanetary web
 - Integration tests for complete plotting
 
 **Acceptance Criteria**:
-- Ships can be selected for plotting
-- Thrust can be applied to modify velocity
-- Reachable hexes are highlighted correctly
-- Players can see resulting velocity for each option
-- Plot queue tracks all plotted moves
-- Phase cannot end until all ships plotted
-- All tests pass
+- Ships can be selected for plotting ✓
+- Thrust can be applied to modify velocity ✓
+- Reachable hexes are highlighted correctly ✓
+- Players can see resulting velocity for each option ✓
+- Plot queue tracks all plotted moves ✓
+- Phase cannot end until all ships plotted (pending 8.4)
+- All tests pass ✓
+
+**Status**: Sections 8.1, 8.2, and 8.3 COMPLETED
 
 **Dependencies**: Phase 5, Phase 6, Phase 7
 

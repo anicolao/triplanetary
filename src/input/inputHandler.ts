@@ -9,7 +9,15 @@ import {
   removePlayer,
   changePlayerColor,
   startGame,
+  selectShip,
+  plotShipMove,
+  clearPlot,
+  toggleReachableHexes,
 } from '../redux/actions';
+import { pixelToHex } from '../hex/operations';
+import { HexLayout } from '../hex/types';
+import { calculateRequiredThrust } from '../physics/velocity';
+import { vectorAdd } from '../physics/vector';
 
 export class InputHandler {
   private renderer: Renderer;
@@ -50,12 +58,21 @@ export class InputHandler {
     const x = (clientX - rect.left) * scaleX;
     const y = (clientY - rect.top) * scaleY;
 
+    const state = store.getState();
+
     // Check if color picker is visible
     if (this.currentLayout.colorPicker?.visible) {
       this.handleColorPickerClick(x, y);
       return;
     }
 
+    // Handle gameplay screen clicks
+    if (state.screen === 'gameplay') {
+      this.handleGameplayClick(x, y);
+      return;
+    }
+
+    // Handle configuration screen clicks
     // Check for button clicks
     if (this.isPointInButton(x, y, this.currentLayout.addPlayerButton)) {
       if (this.currentLayout.addPlayerButton.enabled) {
@@ -96,6 +113,117 @@ export class InputHandler {
         this.renderer.showColorPicker(entry.player.id);
         return;
       }
+    }
+  }
+
+  private handleGameplayClick(x: number, y: number): void {
+    const state = store.getState();
+    const plotUI = this.renderer.getCurrentPlotUIElements();
+
+    // Check for Plot UI button clicks if available
+    if (plotUI) {
+      // Check toggle highlight button
+      if (this.isPointInRect(
+        x, y,
+        plotUI.toggleHighlightButton.x,
+        plotUI.toggleHighlightButton.y,
+        plotUI.toggleHighlightButton.width,
+        plotUI.toggleHighlightButton.height
+      )) {
+        store.dispatch(toggleReachableHexes());
+        return;
+      }
+
+      // Check undo button
+      if (plotUI.undoButton && this.isPointInRect(
+        x, y,
+        plotUI.undoButton.x,
+        plotUI.undoButton.y,
+        plotUI.undoButton.width,
+        plotUI.undoButton.height
+      )) {
+        if (state.selectedShipId) {
+          store.dispatch(clearPlot(state.selectedShipId));
+        }
+        return;
+      }
+
+      // Check confirm button
+      if (plotUI.confirmButton && this.isPointInRect(
+        x, y,
+        plotUI.confirmButton.x,
+        plotUI.confirmButton.y,
+        plotUI.confirmButton.width,
+        plotUI.confirmButton.height
+      )) {
+        // For now, just clear selection
+        // In full implementation, this would move to next phase
+        store.dispatch(selectShip(null));
+        return;
+      }
+
+      // Check thrust direction buttons
+      for (const button of plotUI.thrustButtons) {
+        if (button.enabled && this.isPointInRect(
+          x, y, button.x, button.y, button.width, button.height
+        )) {
+          this.handleThrustButtonClick(button.direction);
+          return;
+        }
+      }
+    }
+
+    // Check for ship clicks to select them
+    const hexSize = 10;
+    const layout: HexLayout = {
+      size: hexSize,
+      origin: {
+        x: this.renderer.getCanvasWidth() / 2,
+        y: this.renderer.getCanvasHeight() / 2,
+      },
+      orientation: 'pointy',
+    };
+
+    const clickedHex = pixelToHex({ x, y }, layout);
+    
+    // Find ship at clicked hex
+    for (const ship of state.ships) {
+      if (ship.position.q === clickedHex.q && ship.position.r === clickedHex.r && !ship.destroyed) {
+        store.dispatch(selectShip(ship.id));
+        return;
+      }
+    }
+
+    // If no ship clicked, deselect
+    store.dispatch(selectShip(null));
+  }
+
+  private handleThrustButtonClick(direction: { q: number; r: number }): void {
+    const state = store.getState();
+    if (!state.selectedShipId) return;
+
+    const selectedShip = state.ships.find((s) => s.id === state.selectedShipId);
+    if (!selectedShip || selectedShip.destroyed) return;
+
+    // Get current velocity (from plotted move if exists, otherwise from ship)
+    const plottedMove = state.plottedMoves.get(state.selectedShipId);
+    const currentVelocity = plottedMove ? plottedMove.newVelocity : selectedShip.velocity;
+    const thrustAlreadyUsed = plottedMove ? plottedMove.thrustUsed : 0;
+    const remainingThrust = selectedShip.stats.maxThrust - thrustAlreadyUsed;
+
+    // Apply thrust in the clicked direction
+    const newVelocity = vectorAdd(currentVelocity, direction);
+    
+    // Calculate thrust required for this change
+    const { thrustRequired } = calculateRequiredThrust(currentVelocity, newVelocity);
+
+    // Check if we have enough thrust
+    if (thrustRequired <= remainingThrust) {
+      store.dispatch(plotShipMove(
+        state.selectedShipId,
+        newVelocity,
+        thrustAlreadyUsed + thrustRequired
+      ));
     }
   }
 
