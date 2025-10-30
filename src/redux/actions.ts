@@ -2,6 +2,7 @@
 
 import { Ship, VelocityVector } from '../ship/types';
 import { HexCoordinate } from '../hex/types';
+import { GamePhase } from './types';
 
 export const ADD_PLAYER = 'ADD_PLAYER';
 export const REMOVE_PLAYER = 'REMOVE_PLAYER';
@@ -24,6 +25,12 @@ export const PLOT_SHIP_MOVE = 'PLOT_SHIP_MOVE';
 export const CLEAR_PLOT = 'CLEAR_PLOT';
 export const CLEAR_ALL_PLOTS = 'CLEAR_ALL_PLOTS';
 export const TOGGLE_REACHABLE_HEXES = 'TOGGLE_REACHABLE_HEXES';
+
+// Turn management action types
+export const NEXT_PHASE = 'NEXT_PHASE';
+export const NEXT_TURN = 'NEXT_TURN';
+export const SET_PHASE = 'SET_PHASE';
+export const INITIALIZE_TURN_ORDER = 'INITIALIZE_TURN_ORDER';
 
 export interface AddPlayerAction {
   type: typeof ADD_PLAYER;
@@ -138,6 +145,26 @@ export interface ToggleReachableHexesAction {
   type: typeof TOGGLE_REACHABLE_HEXES;
 }
 
+// Turn management action interfaces
+export interface NextPhaseAction {
+  type: typeof NEXT_PHASE;
+}
+
+export interface NextTurnAction {
+  type: typeof NEXT_TURN;
+}
+
+export interface SetPhaseAction {
+  type: typeof SET_PHASE;
+  payload: {
+    phase: GamePhase;
+  };
+}
+
+export interface InitializeTurnOrderAction {
+  type: typeof INITIALIZE_TURN_ORDER;
+}
+
 export type GameAction =
   | AddPlayerAction
   | RemovePlayerAction
@@ -155,7 +182,11 @@ export type GameAction =
   | PlotShipMoveAction
   | ClearPlotAction
   | ClearAllPlotsAction
-  | ToggleReachableHexesAction;
+  | ToggleReachableHexesAction
+  | NextPhaseAction
+  | NextTurnAction
+  | SetPhaseAction
+  | InitializeTurnOrderAction;
 
 // Action creators
 export const addPlayer = (): AddPlayerAction => ({
@@ -257,4 +288,22 @@ export const clearAllPlots = (): ClearAllPlotsAction => ({
 
 export const toggleReachableHexes = (): ToggleReachableHexesAction => ({
   type: TOGGLE_REACHABLE_HEXES,
+});
+
+// Turn management action creators
+export const nextPhase = (): NextPhaseAction => ({
+  type: NEXT_PHASE,
+});
+
+export const nextTurn = (): NextTurnAction => ({
+  type: NEXT_TURN,
+});
+
+export const setPhase = (phase: GamePhase): SetPhaseAction => ({
+  type: SET_PHASE,
+  payload: { phase },
+});
+
+export const initializeTurnOrder = (): InitializeTurnOrderAction => ({
+  type: INITIALIZE_TURN_ORDER,
 });
