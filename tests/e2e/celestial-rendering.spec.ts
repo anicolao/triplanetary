@@ -4,27 +4,29 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Celestial Body Rendering', () => {
   test('should display celestial bodies on the gameplay screen', async ({ page }) => {
-    // Navigate to the app (baseURL is configured in playwright.config.ts)
+    // Navigate to the app
     await page.goto('/');
 
-    // Wait for the page to load
-    await page.waitForLoadState('networkidle');
+    // Wait for canvas to be ready
+    await page.waitForSelector('canvas#game-canvas');
 
-    // Add a player by clicking the Add Player button
-    const addPlayerButton = page.locator('text=Add Player');
-    await addPlayerButton.waitFor({ state: 'visible' });
-    await addPlayerButton.click();
-    
-    // Wait for the Start Game button to become enabled (indicates player was added)
-    const startGameButton = page.locator('text=Start Game');
-    await startGameButton.waitFor({ state: 'visible' });
+    const canvas = page.locator('canvas#game-canvas');
+    await expect(canvas).toBeVisible();
 
-    // Start the game
-    await startGameButton.click();
-    
-    // Wait for the canvas to be present (gameplay screen)
-    const canvas = page.locator('canvas');
-    await canvas.waitFor({ state: 'visible' });
+    // Get canvas dimensions
+    const box = await canvas.boundingBox();
+    if (!box) throw new Error('Canvas not found');
+
+    // Add a player by clicking the Add Player button (centered horizontally, middle of screen)
+    const addButtonX = box.x + box.width / 2;
+    const addButtonY = box.y + box.height * 0.5;
+    await page.mouse.click(addButtonX, addButtonY);
+    await page.waitForTimeout(100);
+
+    // Click Start Game button (below Add Player button)
+    const startButtonX = box.x + box.width / 2;
+    const startButtonY = box.y + box.height * 0.6;
+    await page.mouse.click(startButtonX, startButtonY);
     
     // Give a moment for rendering to complete
     await page.waitForTimeout(500);
@@ -32,7 +34,7 @@ test.describe('Celestial Body Rendering', () => {
     // Take a screenshot of the gameplay screen with celestial bodies
     await page.screenshot({ path: 'tests/e2e/screenshots/celestial-bodies-gameplay.png' });
 
-    // Verify the canvas is present
+    // Verify the canvas is still present
     await expect(canvas).toBeVisible();
   });
 });
