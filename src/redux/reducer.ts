@@ -72,11 +72,6 @@ function getNextPhase(currentPhase: GamePhase): GamePhase {
   return phaseOrder[nextIndex];
 }
 
-// Helper function to check if phase is the last phase of turn
-function isLastPhase(phase: GamePhase): boolean {
-  return phase === GamePhase.Maintenance;
-}
-
 // Reducer function
 export function gameReducer(
   state: GameState = initialState,

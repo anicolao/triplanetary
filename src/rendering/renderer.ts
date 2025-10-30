@@ -6,6 +6,8 @@ import { GridRenderer } from './gridRenderer';
 import { CelestialRenderer } from './celestialRenderer';
 import { ShipRenderer } from './shipRenderer';
 import { PlotRenderer, createPlotUIElements, PlotUIElements } from './plotRenderer';
+import { TurnRenderer } from './turnRenderer';
+import { createTurnUILayout, TurnUILayout } from './turnUI';
 import { HexLayout } from '../hex/types';
 import { calculateReachableHexes } from '../physics/movement';
 
@@ -18,7 +20,9 @@ export class Renderer {
   private celestialRenderer: CelestialRenderer;
   private shipRenderer: ShipRenderer;
   private plotRenderer: PlotRenderer;
+  private turnRenderer: TurnRenderer;
   private currentPlotUIElements: PlotUIElements | null = null;
+  private currentTurnUILayout: TurnUILayout | null = null;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -31,6 +35,7 @@ export class Renderer {
     this.celestialRenderer = new CelestialRenderer(ctx);
     this.shipRenderer = new ShipRenderer(ctx);
     this.plotRenderer = new PlotRenderer(ctx);
+    this.turnRenderer = new TurnRenderer(ctx);
     this.resizeCanvas();
   }
 
@@ -59,6 +64,10 @@ export class Renderer {
 
   getColorPickerPlayerId(): string | null {
     return this.colorPickerPlayerId;
+  }
+
+  getTurnUILayout(): TurnUILayout | null {
+    return this.currentTurnUILayout;
   }
 
   render(state: GameState): UILayout {
@@ -205,6 +214,23 @@ export class Renderer {
       this.ctx.fillStyle = '#ffffff';
       this.ctx.fillText(`Player ${index + 1}`, 40, 45 + index * 25);
     });
+
+    // Render turn management UI
+    const currentPlayer = state.players[state.currentPlayerIndex];
+    if (currentPlayer) {
+      this.currentTurnUILayout = createTurnUILayout(
+        this.canvas.width,
+        this.canvas.height,
+        state.currentPhase,
+        state.currentPlayerIndex,
+        state.players.length,
+        state.roundNumber,
+        currentPlayer.color
+      );
+      this.turnRenderer.renderTurnUI(this.currentTurnUILayout);
+    } else {
+      this.currentTurnUILayout = null;
+    }
 
     return this.createEmptyLayout();
   }
