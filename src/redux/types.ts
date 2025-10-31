@@ -34,6 +34,14 @@ export interface TurnHistoryEntry {
   timestamp: number;
 }
 
+// Notification for game events
+export interface GameNotification {
+  id: string;
+  message: string;
+  type: 'info' | 'warning' | 'collision' | 'destruction';
+  timestamp: number;
+}
+
 export interface GameState {
   screen: Screen;
   players: Player[];
@@ -51,6 +59,8 @@ export interface GameState {
   currentPhase: GamePhase;
   roundNumber: number;
   turnHistory: TurnHistoryEntry[];
+  // Notifications
+  notifications: GameNotification[];
 }
 
 // Available color-blind friendly palette

@@ -26,6 +26,9 @@ import {
   INITIALIZE_TURN_ORDER,
   EXECUTE_MOVEMENT,
   APPLY_COLLISION_DAMAGE,
+  ADD_NOTIFICATION,
+  CLEAR_NOTIFICATION,
+  CLEAR_ALL_NOTIFICATIONS,
 } from './actions';
 import { DEFAULT_SCENARIO, initializeMap } from '../celestial';
 import { getDefaultPlacements, createShipsFromPlacements } from '../ship/placement';
@@ -47,6 +50,7 @@ export const initialState: GameState = {
   currentPhase: GamePhase.Plot,
   roundNumber: 1,
   turnHistory: [],
+  notifications: [],
 };
 
 // Helper function to get next available color
@@ -299,11 +303,61 @@ export function gameReducer(
         timestamp: Date.now(),
       };
 
-      return {
+      let newState = {
         ...state,
         currentPhase: nextPhase,
         turnHistory: [...state.turnHistory, historyEntry],
       };
+
+      // Auto-execute movement when entering Movement phase
+      if (nextPhase === GamePhase.Movement) {
+        const { ships, collisions } = executeMovementPhase(
+          state.ships,
+          state.plottedMoves,
+          state.mapObjects
+        );
+        
+        // Generate notifications for collisions and destroyed ships
+        const newNotifications = [...newState.notifications];
+        
+        for (const [shipId1, shipId2] of collisions) {
+          const ship1 = ships.find(s => s.id === shipId1);
+          const ship2 = ships.find(s => s.id === shipId2);
+          if (ship1 && ship2) {
+            newNotifications.push({
+              id: `collision-${Date.now()}-${Math.random()}`,
+              message: `Collision: ${ship1.name} and ${ship2.name}`,
+              type: 'collision',
+              timestamp: Date.now(),
+            });
+          }
+        }
+        
+        // Check for destroyed ships
+        for (const ship of ships) {
+          if (ship.destroyed) {
+            const oldShip = state.ships.find(s => s.id === ship.id);
+            if (oldShip && !oldShip.destroyed) {
+              newNotifications.push({
+                id: `destroyed-${Date.now()}-${Math.random()}`,
+                message: `${ship.name} was destroyed!`,
+                type: 'destruction',
+                timestamp: Date.now(),
+              });
+            }
+          }
+        }
+        
+        newState = {
+          ...newState,
+          ships,
+          plottedMoves: new Map(), // Clear plotted moves after execution
+          selectedShipId: null, // Clear selection after movement
+          notifications: newNotifications,
+        };
+      }
+
+      return newState;
     }
 
     case NEXT_TURN: {
@@ -376,6 +430,36 @@ export function gameReducer(
       return {
         ...state,
         ships: updatedShips,
+      };
+    }
+
+    case ADD_NOTIFICATION: {
+      const { message, type } = action.payload;
+      const newNotification = {
+        id: `notification-${Date.now()}-${Math.random()}`,
+        message,
+        type,
+        timestamp: Date.now(),
+      };
+      
+      return {
+        ...state,
+        notifications: [...state.notifications, newNotification],
+      };
+    }
+
+    case CLEAR_NOTIFICATION: {
+      const { notificationId } = action.payload;
+      return {
+        ...state,
+        notifications: state.notifications.filter(n => n.id !== notificationId),
+      };
+    }
+
+    case CLEAR_ALL_NOTIFICATIONS: {
+      return {
+        ...state,
+        notifications: [],
       };
     }
 
