@@ -3,6 +3,7 @@
 import { Ship, VelocityVector } from '../ship/types';
 import { HexCoordinate } from '../hex/types';
 import { GamePhase } from './types';
+import { Ordnance, OrdnanceType } from '../ordnance/types';
 
 export const ADD_PLAYER = 'ADD_PLAYER';
 export const REMOVE_PLAYER = 'REMOVE_PLAYER';
@@ -40,6 +41,14 @@ export const APPLY_COLLISION_DAMAGE = 'APPLY_COLLISION_DAMAGE';
 export const ADD_NOTIFICATION = 'ADD_NOTIFICATION';
 export const CLEAR_NOTIFICATION = 'CLEAR_NOTIFICATION';
 export const CLEAR_ALL_NOTIFICATIONS = 'CLEAR_ALL_NOTIFICATIONS';
+
+// Ordnance action types
+export const LAUNCH_ORDNANCE = 'LAUNCH_ORDNANCE';
+export const REMOVE_ORDNANCE = 'REMOVE_ORDNANCE';
+export const UPDATE_ORDNANCE_POSITION = 'UPDATE_ORDNANCE_POSITION';
+export const UPDATE_ORDNANCE_VELOCITY = 'UPDATE_ORDNANCE_VELOCITY';
+export const DETONATE_ORDNANCE = 'DETONATE_ORDNANCE';
+export const UPDATE_SHIP_ORDNANCE = 'UPDATE_SHIP_ORDNANCE';
 
 export interface AddPlayerAction {
   type: typeof ADD_PLAYER;
@@ -206,6 +215,53 @@ export interface ClearAllNotificationsAction {
   type: typeof CLEAR_ALL_NOTIFICATIONS;
 }
 
+// Ordnance action interfaces
+export interface LaunchOrdnanceAction {
+  type: typeof LAUNCH_ORDNANCE;
+  payload: {
+    ordnance: Ordnance;
+  };
+}
+
+export interface RemoveOrdnanceAction {
+  type: typeof REMOVE_ORDNANCE;
+  payload: {
+    ordnanceId: string;
+  };
+}
+
+export interface UpdateOrdnancePositionAction {
+  type: typeof UPDATE_ORDNANCE_POSITION;
+  payload: {
+    ordnanceId: string;
+    position: HexCoordinate;
+  };
+}
+
+export interface UpdateOrdnanceVelocityAction {
+  type: typeof UPDATE_ORDNANCE_VELOCITY;
+  payload: {
+    ordnanceId: string;
+    velocity: VelocityVector;
+  };
+}
+
+export interface DetonateOrdnanceAction {
+  type: typeof DETONATE_ORDNANCE;
+  payload: {
+    ordnanceId: string;
+  };
+}
+
+export interface UpdateShipOrdnanceAction {
+  type: typeof UPDATE_SHIP_ORDNANCE;
+  payload: {
+    shipId: string;
+    ordnanceType: OrdnanceType;
+    count: number;
+  };
+}
+
 export type GameAction =
   | AddPlayerAction
   | RemovePlayerAction
@@ -232,7 +288,13 @@ export type GameAction =
   | ApplyCollisionDamageAction
   | AddNotificationAction
   | ClearNotificationAction
-  | ClearAllNotificationsAction;
+  | ClearAllNotificationsAction
+  | LaunchOrdnanceAction
+  | RemoveOrdnanceAction
+  | UpdateOrdnancePositionAction
+  | UpdateOrdnanceVelocityAction
+  | DetonateOrdnanceAction
+  | UpdateShipOrdnanceAction;
 
 // Action creators
 export const addPlayer = (): AddPlayerAction => ({
@@ -382,4 +444,45 @@ export const clearNotification = (notificationId: string): ClearNotificationActi
 
 export const clearAllNotifications = (): ClearAllNotificationsAction => ({
   type: CLEAR_ALL_NOTIFICATIONS,
+});
+
+// Ordnance action creators
+export const launchOrdnance = (ordnance: Ordnance): LaunchOrdnanceAction => ({
+  type: LAUNCH_ORDNANCE,
+  payload: { ordnance },
+});
+
+export const removeOrdnance = (ordnanceId: string): RemoveOrdnanceAction => ({
+  type: REMOVE_ORDNANCE,
+  payload: { ordnanceId },
+});
+
+export const updateOrdnancePosition = (
+  ordnanceId: string,
+  position: HexCoordinate
+): UpdateOrdnancePositionAction => ({
+  type: UPDATE_ORDNANCE_POSITION,
+  payload: { ordnanceId, position },
+});
+
+export const updateOrdnanceVelocity = (
+  ordnanceId: string,
+  velocity: VelocityVector
+): UpdateOrdnanceVelocityAction => ({
+  type: UPDATE_ORDNANCE_VELOCITY,
+  payload: { ordnanceId, velocity },
+});
+
+export const detonateOrdnance = (ordnanceId: string): DetonateOrdnanceAction => ({
+  type: DETONATE_ORDNANCE,
+  payload: { ordnanceId },
+});
+
+export const updateShipOrdnance = (
+  shipId: string,
+  ordnanceType: OrdnanceType,
+  count: number
+): UpdateShipOrdnanceAction => ({
+  type: UPDATE_SHIP_ORDNANCE,
+  payload: { shipId, ordnanceType, count },
 });

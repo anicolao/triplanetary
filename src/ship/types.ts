@@ -1,6 +1,7 @@
 // Type definitions for ships in the Triplanetary game
 
 import { HexCoordinate } from '../hex/types';
+import { OrdnanceInventory, createDefaultInventory } from '../ordnance/types';
 
 /**
  * Velocity vector representation.
@@ -52,6 +53,8 @@ export interface Ship {
   remainingThrust: number;
   /** Whether this ship is destroyed */
   destroyed: boolean;
+  /** Ordnance inventory */
+  ordnance: OrdnanceInventory;
 }
 
 /**
@@ -86,6 +89,7 @@ export function createShip(
     stats: shipStats,
     remainingThrust: shipStats.maxThrust,
     destroyed: false,
+    ordnance: createDefaultInventory(),
   };
 }
 
