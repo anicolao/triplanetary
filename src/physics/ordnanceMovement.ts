@@ -27,6 +27,11 @@ export function moveOrdnance(ordnance: Ordnance[], currentRound: number): Ordnan
       };
     })
     .filter((ord) => {
+      // Remove detonated ordnance
+      if (ord.detonated) {
+        return false;
+      }
+
       // Remove ordnance that has exceeded its lifetime
       if (ord.lifetime === -1) {
         // Indefinite lifetime (e.g., mines)
@@ -34,7 +39,7 @@ export function moveOrdnance(ordnance: Ordnance[], currentRound: number): Ordnan
       }
 
       const age = currentRound - ord.launchedTurn;
-      return age <= ord.lifetime && !ord.detonated;
+      return age < ord.lifetime; // Changed from <= to < to fix off-by-one
     });
 }
 
