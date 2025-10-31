@@ -24,9 +24,12 @@ import {
   NEXT_TURN,
   SET_PHASE,
   INITIALIZE_TURN_ORDER,
+  EXECUTE_MOVEMENT,
+  APPLY_COLLISION_DAMAGE,
 } from './actions';
 import { DEFAULT_SCENARIO, initializeMap } from '../celestial';
 import { getDefaultPlacements, createShipsFromPlacements } from '../ship/placement';
+import { executeMovementPhase } from '../physics/movementExecution';
 
 // Initial state
 export const initialState: GameState = {
@@ -344,6 +347,35 @@ export function gameReducer(
         currentPhase: GamePhase.Plot,
         roundNumber: 1,
         turnHistory: [],
+      };
+    }
+
+    case EXECUTE_MOVEMENT: {
+      // Execute the complete movement phase
+      const { ships } = executeMovementPhase(
+        state.ships,
+        state.plottedMoves,
+        state.mapObjects
+      );
+
+      return {
+        ...state,
+        ships,
+        plottedMoves: new Map(), // Clear plotted moves after execution
+        selectedShipId: null, // Clear selection after movement
+      };
+    }
+
+    case APPLY_COLLISION_DAMAGE: {
+      // This action is kept separate for testing purposes
+      // In normal gameplay, collisions are handled by EXECUTE_MOVEMENT
+      const { collisions } = action.payload;
+      const { processCollisions } = require('../physics/movementExecution');
+      const updatedShips = processCollisions(state.ships, collisions);
+      
+      return {
+        ...state,
+        ships: updatedShips,
       };
     }
 
