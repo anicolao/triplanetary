@@ -127,10 +127,13 @@ export class InputHandler {
     if (turnUI) {
       const button = turnUI.nextPhaseButton;
       if (this.isPointInRect(x, y, button.x, button.y, button.width, button.height)) {
-        if (button.action === 'next-phase') {
-          store.dispatch(nextPhase());
-        } else if (button.action === 'next-turn') {
-          store.dispatch(nextTurn());
+        // Only dispatch action if button is enabled
+        if (button.enabled) {
+          if (button.action === 'next-phase') {
+            store.dispatch(nextPhase());
+          } else if (button.action === 'next-turn') {
+            store.dispatch(nextTurn());
+          }
         }
         return;
       }

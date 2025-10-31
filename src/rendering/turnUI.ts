@@ -46,7 +46,8 @@ export function createTurnUILayout(
   currentPlayerIndex: number,
   playerCount: number,
   roundNumber: number,
-  playerColor: string
+  playerColor: string,
+  allShipsPlotted: boolean = true
 ): TurnUILayout {
   // UI will be positioned in the top-right corner
   const padding = 10;
@@ -75,13 +76,15 @@ export function createTurnUILayout(
   // Next phase button
   const buttonWidth = boxWidth;
   const buttonHeight = 40;
+  // In Plot phase, button is only enabled if all ships are plotted
+  const isEnabled = currentPhase === GamePhase.Plot ? allShipsPlotted : true;
   const nextPhaseButton: TurnUIButton = {
     x: phaseBoxX,
     y: roundBoxY + boxHeight + spacing * 2,
     width: buttonWidth,
     height: buttonHeight,
-    text: getNextPhaseButtonText(currentPhase),
-    enabled: true,
+    text: getNextPhaseButtonText(currentPhase, allShipsPlotted),
+    enabled: isEnabled,
     action: currentPhase === GamePhase.Maintenance ? 'next-turn' : 'next-phase',
   };
   
@@ -106,10 +109,10 @@ export function createTurnUILayout(
   };
 }
 
-function getNextPhaseButtonText(currentPhase: GamePhase): string {
+function getNextPhaseButtonText(currentPhase: GamePhase, allShipsPlotted: boolean = true): string {
   switch (currentPhase) {
     case GamePhase.Plot:
-      return 'Next: Ordnance';
+      return allShipsPlotted ? 'Next: Ordnance' : 'Plot All Ships';
     case GamePhase.Ordnance:
       return 'Next: Movement';
     case GamePhase.Movement:
