@@ -469,18 +469,18 @@ This document outlines the complete implementation plan for the Triplanetary web
 - E2E tests for hex selection ✓
 - Tests for highlight toggle ✓
 
-#### 8.4: Plot Queue Management
-- Store plotted moves temporarily
-- Track which ships have been plotted
-- Allow plot modification before confirmation
-- Clear plots if needed
-- Validate all ships are plotted before phase end
+#### 8.4: Plot Queue Management ✓ COMPLETED
+- Store plotted moves temporarily ✓
+- Track which ships have been plotted ✓
+- Allow plot modification before confirmation ✓
+- Clear plots if needed ✓
+- Validate all ships are plotted before phase end ✓
 
 **Testing & Verification**:
-- Unit tests for plot queue
-- Tests for plot validation
-- Tests for partial plotting
-- Integration tests for complete plotting
+- Unit tests for plot queue ✓
+- Tests for plot validation ✓
+- Tests for partial plotting ✓
+- Integration tests for complete plotting ✓
 
 **Acceptance Criteria**:
 - Ships can be selected for plotting ✓
@@ -488,10 +488,10 @@ This document outlines the complete implementation plan for the Triplanetary web
 - Reachable hexes are highlighted correctly ✓
 - Players can see resulting velocity for each option ✓
 - Plot queue tracks all plotted moves ✓
-- Phase cannot end until all ships plotted (pending 8.4)
+- Phase cannot end until all ships plotted ✓
 - All tests pass ✓
 
-**Status**: Sections 8.1, 8.2, and 8.3 COMPLETED
+**Status**: COMPLETED
 
 **Dependencies**: Phase 5, Phase 6, Phase 7
 
@@ -499,62 +499,64 @@ This document outlines the complete implementation plan for the Triplanetary web
 
 ---
 
-### Phase 9: Movement Phase Implementation
+### Phase 9: Movement Phase Implementation ✓ COMPLETED
 
 **Objective**: Implement the Movement Phase where ships execute their plotted moves.
 
 **Components**:
 
-#### 9.1: Movement Execution
-- Execute plotted moves from queue
-- Update ship positions
-- Update ship velocities
-- Apply gravity effects
-- Handle collisions
-- Clear plot queue after execution
+#### 9.1: Movement Execution ✓ COMPLETED
+- Execute plotted moves from queue ✓
+- Update ship positions ✓
+- Update ship velocities ✓
+- Apply gravity effects ✓
+- Handle collisions ✓
+- Clear plot queue after execution ✓
 
 **Testing & Verification**:
-- Unit tests for movement execution
-- Tests for position updates
-- Tests for velocity updates
-- Integration tests for full movement cycle
+- Unit tests for movement execution ✓
+- Tests for position updates ✓
+- Tests for velocity updates ✓
+- Integration tests for full movement cycle ✓
 
-#### 9.2: Movement Animation
-- Smooth ship movement animation
-- Path visualization during movement
-- Gravity effect animation
-- Collision animation
-- Configurable animation speed
-- Skip animation option
+#### 9.2: Movement Animation (SIMPLIFIED FOR MVP)
+- Smooth ship movement animation (deferred - instant movement for MVP)
+- Path visualization during movement (deferred)
+- Gravity effect animation (deferred)
+- Collision animation (deferred)
+- Configurable animation speed (deferred)
+- Skip animation option (deferred)
 
-**Testing & Verification**:
-- Visual tests of movement animation
-- Tests for animation completion
-- E2E tests for skip functionality
-- Performance tests for animation
-
-#### 9.3: Collision Resolution
-- Detect ships in same hex after movement
-- Calculate collision damage
-- Apply damage to hull points
-- Display collision notification
-- Update ship status after collision
-- Handle ship destruction from collisions
+**Note**: For the MVP, movement is executed instantly when entering the Movement phase. Animation system can be added in future enhancement phases.
 
 **Testing & Verification**:
-- Unit tests for collision detection
-- Tests for damage calculation
-- Tests for ship destruction
-- E2E tests for collision scenarios
+- Movement executes correctly without animation ✓
+- E2E tests for movement phase ✓
+
+#### 9.3: Collision Resolution ✓ COMPLETED
+- Detect ships in same hex after movement ✓
+- Calculate collision damage ✓
+- Apply damage to hull points ✓
+- Display collision notification ✓
+- Update ship status after collision ✓
+- Handle ship destruction from collisions ✓
+
+**Testing & Verification**:
+- Unit tests for collision detection ✓
+- Tests for damage calculation ✓
+- Tests for ship destruction ✓
+- E2E tests for collision scenarios ✓
 
 **Acceptance Criteria**:
-- Ships move to plotted destinations
-- Movement is animated smoothly
-- Gravity effects are applied correctly
-- Collisions are detected and resolved
-- Damage is calculated and applied
-- Animation can be skipped
-- All tests pass
+- Ships move to plotted destinations ✓
+- Movement executes when phase begins ✓
+- Gravity effects are applied correctly ✓
+- Collisions are detected and resolved ✓
+- Damage is calculated and applied ✓
+- Notifications shown for collisions and destruction ✓
+- All tests pass ✓
+
+**Status**: COMPLETED (animation deferred to post-MVP)
 
 **Dependencies**: Phase 6, Phase 8
 

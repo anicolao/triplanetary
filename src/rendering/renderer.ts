@@ -1,6 +1,6 @@
 // Canvas rendering functions
 
-import { GameState, PLAYER_COLORS } from '../redux/types';
+import { GameState, PLAYER_COLORS, GamePhase } from '../redux/types';
 import { UILayout, Button, PlayerEntry, calculateLayout } from './layout';
 import { GridRenderer } from './gridRenderer';
 import { CelestialRenderer } from './celestialRenderer';
@@ -10,6 +10,7 @@ import { TurnRenderer } from './turnRenderer';
 import { createTurnUILayout, TurnUILayout } from './turnUI';
 import { HexLayout } from '../hex/types';
 import { calculateReachableHexes } from '../physics/movement';
+import { areAllShipsPlotted } from '../physics/plotQueue';
 
 export class Renderer {
   private ctx: CanvasRenderingContext2D;
@@ -218,6 +219,11 @@ export class Renderer {
     // Render turn management UI
     const currentPlayer = state.players[state.currentPlayerIndex];
     if (currentPlayer) {
+      // Check if all ships are plotted (only relevant in Plot phase)
+      const allShipsPlotted = state.currentPhase === GamePhase.Plot
+        ? areAllShipsPlotted(state.ships, state.plottedMoves, currentPlayer.id)
+        : true;
+      
       this.currentTurnUILayout = createTurnUILayout(
         this.canvas.width,
         this.canvas.height,
@@ -225,7 +231,8 @@ export class Renderer {
         state.currentPlayerIndex,
         state.players.length,
         state.roundNumber,
-        currentPlayer.color
+        currentPlayer.color,
+        allShipsPlotted
       );
       this.turnRenderer.renderTurnUI(this.currentTurnUILayout);
     } else {

@@ -32,6 +32,15 @@ export const NEXT_TURN = 'NEXT_TURN';
 export const SET_PHASE = 'SET_PHASE';
 export const INITIALIZE_TURN_ORDER = 'INITIALIZE_TURN_ORDER';
 
+// Movement execution action types
+export const EXECUTE_MOVEMENT = 'EXECUTE_MOVEMENT';
+export const APPLY_COLLISION_DAMAGE = 'APPLY_COLLISION_DAMAGE';
+
+// Notification action types
+export const ADD_NOTIFICATION = 'ADD_NOTIFICATION';
+export const CLEAR_NOTIFICATION = 'CLEAR_NOTIFICATION';
+export const CLEAR_ALL_NOTIFICATIONS = 'CLEAR_ALL_NOTIFICATIONS';
+
 export interface AddPlayerAction {
   type: typeof ADD_PLAYER;
 }
@@ -165,6 +174,38 @@ export interface InitializeTurnOrderAction {
   type: typeof INITIALIZE_TURN_ORDER;
 }
 
+// Movement execution action interfaces
+export interface ExecuteMovementAction {
+  type: typeof EXECUTE_MOVEMENT;
+}
+
+export interface ApplyCollisionDamageAction {
+  type: typeof APPLY_COLLISION_DAMAGE;
+  payload: {
+    collisions: Array<[string, string]>;
+  };
+}
+
+// Notification action interfaces
+export interface AddNotificationAction {
+  type: typeof ADD_NOTIFICATION;
+  payload: {
+    message: string;
+    type: 'info' | 'warning' | 'collision' | 'destruction';
+  };
+}
+
+export interface ClearNotificationAction {
+  type: typeof CLEAR_NOTIFICATION;
+  payload: {
+    notificationId: string;
+  };
+}
+
+export interface ClearAllNotificationsAction {
+  type: typeof CLEAR_ALL_NOTIFICATIONS;
+}
+
 export type GameAction =
   | AddPlayerAction
   | RemovePlayerAction
@@ -186,7 +227,12 @@ export type GameAction =
   | NextPhaseAction
   | NextTurnAction
   | SetPhaseAction
-  | InitializeTurnOrderAction;
+  | InitializeTurnOrderAction
+  | ExecuteMovementAction
+  | ApplyCollisionDamageAction
+  | AddNotificationAction
+  | ClearNotificationAction
+  | ClearAllNotificationsAction;
 
 // Action creators
 export const addPlayer = (): AddPlayerAction => ({
@@ -306,4 +352,34 @@ export const setPhase = (phase: GamePhase): SetPhaseAction => ({
 
 export const initializeTurnOrder = (): InitializeTurnOrderAction => ({
   type: INITIALIZE_TURN_ORDER,
+});
+
+// Movement execution action creators
+export const executeMovement = (): ExecuteMovementAction => ({
+  type: EXECUTE_MOVEMENT,
+});
+
+export const applyCollisionDamage = (
+  collisions: Array<[string, string]>
+): ApplyCollisionDamageAction => ({
+  type: APPLY_COLLISION_DAMAGE,
+  payload: { collisions },
+});
+
+// Notification action creators
+export const addNotification = (
+  message: string,
+  type: 'info' | 'warning' | 'collision' | 'destruction' = 'info'
+): AddNotificationAction => ({
+  type: ADD_NOTIFICATION,
+  payload: { message, type },
+});
+
+export const clearNotification = (notificationId: string): ClearNotificationAction => ({
+  type: CLEAR_NOTIFICATION,
+  payload: { notificationId },
+});
+
+export const clearAllNotifications = (): ClearAllNotificationsAction => ({
+  type: CLEAR_ALL_NOTIFICATIONS,
 });
