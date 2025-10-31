@@ -276,6 +276,20 @@ export class InputHandler {
     }
   }
 
+  private getOrdnanceInfo(
+    ship: { velocity: { q: number; r: number }; ordnance: { mines: number; torpedoes: number; missiles: number } },
+    ordnanceType: OrdnanceType
+  ): { currentCount: number; velocity: { q: number; r: number } } {
+    switch (ordnanceType) {
+      case OrdnanceType.Mine:
+        return { currentCount: ship.ordnance.mines, velocity: { q: 0, r: 0 } };
+      case OrdnanceType.Torpedo:
+        return { currentCount: ship.ordnance.torpedoes, velocity: { ...ship.velocity } };
+      case OrdnanceType.Missile:
+        return { currentCount: ship.ordnance.missiles, velocity: { ...ship.velocity } };
+    }
+  }
+
   private handleOrdnanceButtonClick(ordnanceType: OrdnanceType): void {
     const state = store.getState();
     if (!state.selectedShipId) return;
@@ -283,32 +297,10 @@ export class InputHandler {
     const selectedShip = state.ships.find((s) => s.id === state.selectedShipId);
     if (!selectedShip || selectedShip.destroyed) return;
 
-    // Check if ship has ordnance of this type
-    let hasOrdnance = false;
-    let currentCount = 0;
-    switch (ordnanceType) {
-      case OrdnanceType.Mine:
-        hasOrdnance = selectedShip.ordnance.mines > 0;
-        currentCount = selectedShip.ordnance.mines;
-        break;
-      case OrdnanceType.Torpedo:
-        hasOrdnance = selectedShip.ordnance.torpedoes > 0;
-        currentCount = selectedShip.ordnance.torpedoes;
-        break;
-      case OrdnanceType.Missile:
-        hasOrdnance = selectedShip.ordnance.missiles > 0;
-        currentCount = selectedShip.ordnance.missiles;
-        break;
-    }
+    // Get ordnance count and determine velocity
+    const { currentCount, velocity } = this.getOrdnanceInfo(selectedShip, ordnanceType);
 
-    if (!hasOrdnance) return;
-
-    // Create ordnance at ship's position
-    // For mines, velocity is 0; for torpedoes/missiles, use ship's velocity
-    let velocity = { q: 0, r: 0 };
-    if (ordnanceType === OrdnanceType.Torpedo || ordnanceType === OrdnanceType.Missile) {
-      velocity = { ...selectedShip.velocity };
-    }
+    if (currentCount === 0) return;
 
     const ordnance = createOrdnance(
       generateOrdnanceId(),

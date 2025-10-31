@@ -14,6 +14,15 @@ export interface OrdnanceButton {
   count: number;
 }
 
+/**
+ * Helper function to create ordnance button label
+ */
+function createOrdnanceLabel(type: OrdnanceType, count: number): string {
+  const typeName = type === OrdnanceType.Mine ? 'Mine' : 
+                   type === OrdnanceType.Torpedo ? 'Torpedo' : 'Missile';
+  return `Launch ${typeName} (${count})`;
+}
+
 export interface OrdnanceUIElements {
   ship: Ship;
   title: string;
@@ -49,7 +58,7 @@ export function createOrdnanceUIElements(
     y: topY,
     width: buttonWidth,
     height: buttonHeight,
-    label: `Launch Mine (${ship.ordnance.mines})`,
+    label: createOrdnanceLabel(OrdnanceType.Mine, ship.ordnance.mines),
     ordnanceType: OrdnanceType.Mine,
     enabled: ship.ordnance.mines > 0,
     count: ship.ordnance.mines,
@@ -61,7 +70,7 @@ export function createOrdnanceUIElements(
     y: topY + buttonHeight + spacing,
     width: buttonWidth,
     height: buttonHeight,
-    label: `Launch Torpedo (${ship.ordnance.torpedoes})`,
+    label: createOrdnanceLabel(OrdnanceType.Torpedo, ship.ordnance.torpedoes),
     ordnanceType: OrdnanceType.Torpedo,
     enabled: ship.ordnance.torpedoes > 0,
     count: ship.ordnance.torpedoes,
@@ -73,7 +82,7 @@ export function createOrdnanceUIElements(
     y: topY + (buttonHeight + spacing) * 2,
     width: buttonWidth,
     height: buttonHeight,
-    label: `Launch Missile (${ship.ordnance.missiles})`,
+    label: createOrdnanceLabel(OrdnanceType.Missile, ship.ordnance.missiles),
     ordnanceType: OrdnanceType.Missile,
     enabled: ship.ordnance.missiles > 0,
     count: ship.ordnance.missiles,

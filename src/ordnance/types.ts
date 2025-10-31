@@ -92,7 +92,7 @@ export function createOrdnance(
  * Helper function to generate unique ordnance ID
  */
 export function generateOrdnanceId(): string {
-  return `ordnance-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  return `ordnance-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
 }
 
 /**

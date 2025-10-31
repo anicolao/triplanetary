@@ -39,6 +39,7 @@ import {
 import { DEFAULT_SCENARIO, initializeMap } from '../celestial';
 import { getDefaultPlacements, createShipsFromPlacements } from '../ship/placement';
 import { moveOrdnance, checkOrdnanceCollisions } from '../physics/ordnanceMovement';
+import { OrdnanceType } from '../ordnance/types';
 import { executeMovementPhase, processCollisions } from '../physics/movementExecution';
 
 // Initial state
@@ -566,13 +567,13 @@ export function gameReducer(
           
           const newOrdnance = { ...ship.ordnance };
           switch (ordnanceType) {
-            case 'Mine':
+            case OrdnanceType.Mine:
               newOrdnance.mines = count;
               break;
-            case 'Torpedo':
+            case OrdnanceType.Torpedo:
               newOrdnance.torpedoes = count;
               break;
-            case 'Missile':
+            case OrdnanceType.Missile:
               newOrdnance.missiles = count;
               break;
           }
