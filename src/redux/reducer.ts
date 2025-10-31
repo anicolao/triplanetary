@@ -32,7 +32,7 @@ import {
 } from './actions';
 import { DEFAULT_SCENARIO, initializeMap } from '../celestial';
 import { getDefaultPlacements, createShipsFromPlacements } from '../ship/placement';
-import { executeMovementPhase } from '../physics/movementExecution';
+import { executeMovementPhase, processCollisions } from '../physics/movementExecution';
 
 // Initial state
 export const initialState: GameState = {
@@ -424,7 +424,6 @@ export function gameReducer(
       // This action is kept separate for testing purposes
       // In normal gameplay, collisions are handled by EXECUTE_MOVEMENT
       const { collisions } = action.payload;
-      const { processCollisions } = require('../physics/movementExecution');
       const updatedShips = processCollisions(state.ships, collisions);
       
       return {
