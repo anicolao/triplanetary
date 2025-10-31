@@ -17,6 +17,23 @@ export interface PlottedMove {
   thrustUsed: number;
 }
 
+// Game phases following Triplanetary rules
+export enum GamePhase {
+  Plot = 'Plot',
+  Ordnance = 'Ordnance',
+  Movement = 'Movement',
+  Combat = 'Combat',
+  Maintenance = 'Maintenance',
+}
+
+// Turn history entry
+export interface TurnHistoryEntry {
+  roundNumber: number;
+  playerIndex: number;
+  phase: GamePhase;
+  timestamp: number;
+}
+
 export interface GameState {
   screen: Screen;
   players: Player[];
@@ -28,6 +45,12 @@ export interface GameState {
   // Plot Phase state
   plottedMoves: Map<string, PlottedMove>;
   showReachableHexes: boolean;
+  // Turn management state
+  currentPlayerIndex: number;
+  turnOrder: string[]; // Player IDs in turn order
+  currentPhase: GamePhase;
+  roundNumber: number;
+  turnHistory: TurnHistoryEntry[];
 }
 
 // Available color-blind friendly palette

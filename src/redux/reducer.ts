@@ -1,6 +1,6 @@
 // Redux reducer for game state management
 
-import { GameState, Player, PLAYER_COLORS, MAX_PLAYERS } from './types';
+import { GameState, Player, PLAYER_COLORS, MAX_PLAYERS, GamePhase } from './types';
 import {
   GameAction,
   ADD_PLAYER,
@@ -20,6 +20,10 @@ import {
   CLEAR_PLOT,
   CLEAR_ALL_PLOTS,
   TOGGLE_REACHABLE_HEXES,
+  NEXT_PHASE,
+  NEXT_TURN,
+  SET_PHASE,
+  INITIALIZE_TURN_ORDER,
 } from './actions';
 import { DEFAULT_SCENARIO, initializeMap } from '../celestial';
 import { getDefaultPlacements, createShipsFromPlacements } from '../ship/placement';
@@ -35,6 +39,11 @@ export const initialState: GameState = {
   mapBounds: DEFAULT_SCENARIO.bounds,
   plottedMoves: new Map(),
   showReachableHexes: true,
+  currentPlayerIndex: 0,
+  turnOrder: [],
+  currentPhase: GamePhase.Plot,
+  roundNumber: 1,
+  turnHistory: [],
 };
 
 // Helper function to get next available color
@@ -47,6 +56,20 @@ function getNextAvailableColor(existingPlayers: Player[]): string {
 // Helper function to generate unique player ID
 function generatePlayerId(): string {
   return `player-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+}
+
+// Helper function to get the next phase in the sequence
+function getNextPhase(currentPhase: GamePhase): GamePhase {
+  const phaseOrder = [
+    GamePhase.Plot,
+    GamePhase.Ordnance,
+    GamePhase.Movement,
+    GamePhase.Combat,
+    GamePhase.Maintenance,
+  ];
+  const currentIndex = phaseOrder.indexOf(currentPhase);
+  const nextIndex = (currentIndex + 1) % phaseOrder.length;
+  return phaseOrder[nextIndex];
 }
 
 // Reducer function
@@ -134,6 +157,11 @@ export function gameReducer(
         ...state,
         screen: 'gameplay',
         ships,
+        turnOrder: playerIds,
+        currentPlayerIndex: 0,
+        currentPhase: GamePhase.Plot,
+        roundNumber: 1,
+        turnHistory: [],
       };
     }
 
@@ -254,6 +282,68 @@ export function gameReducer(
       return {
         ...state,
         showReachableHexes: !state.showReachableHexes,
+      };
+    }
+
+    case NEXT_PHASE: {
+      const nextPhase = getNextPhase(state.currentPhase);
+      
+      // Add to history
+      const historyEntry = {
+        roundNumber: state.roundNumber,
+        playerIndex: state.currentPlayerIndex,
+        phase: state.currentPhase,
+        timestamp: Date.now(),
+      };
+
+      return {
+        ...state,
+        currentPhase: nextPhase,
+        turnHistory: [...state.turnHistory, historyEntry],
+      };
+    }
+
+    case NEXT_TURN: {
+      // Move to the next player
+      const nextPlayerIndex = (state.currentPlayerIndex + 1) % state.turnOrder.length;
+      const isNewRound = nextPlayerIndex === 0;
+      
+      // Add to history
+      const historyEntry = {
+        roundNumber: state.roundNumber,
+        playerIndex: state.currentPlayerIndex,
+        phase: state.currentPhase,
+        timestamp: Date.now(),
+      };
+
+      return {
+        ...state,
+        currentPlayerIndex: nextPlayerIndex,
+        currentPhase: GamePhase.Plot, // Start of a new turn
+        roundNumber: isNewRound ? state.roundNumber + 1 : state.roundNumber,
+        turnHistory: [...state.turnHistory, historyEntry],
+        // Clear plotted moves at the start of a new turn
+        plottedMoves: new Map(),
+      };
+    }
+
+    case SET_PHASE: {
+      const { phase } = action.payload;
+      return {
+        ...state,
+        currentPhase: phase,
+      };
+    }
+
+    case INITIALIZE_TURN_ORDER: {
+      const playerIds = state.players.map((p) => p.id);
+      return {
+        ...state,
+        turnOrder: playerIds,
+        currentPlayerIndex: 0,
+        currentPhase: GamePhase.Plot,
+        roundNumber: 1,
+        turnHistory: [],
       };
     }
 

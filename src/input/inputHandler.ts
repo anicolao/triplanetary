@@ -13,6 +13,8 @@ import {
   plotShipMove,
   clearPlot,
   toggleReachableHexes,
+  nextPhase,
+  nextTurn,
 } from '../redux/actions';
 import { pixelToHex } from '../hex/operations';
 import { HexLayout } from '../hex/types';
@@ -118,7 +120,21 @@ export class InputHandler {
 
   private handleGameplayClick(x: number, y: number): void {
     const state = store.getState();
+    const turnUI = this.renderer.getTurnUILayout();
     const plotUI = this.renderer.getCurrentPlotUIElements();
+
+    // Check for Turn UI button clicks if available
+    if (turnUI) {
+      const button = turnUI.nextPhaseButton;
+      if (this.isPointInRect(x, y, button.x, button.y, button.width, button.height)) {
+        if (button.action === 'next-phase') {
+          store.dispatch(nextPhase());
+        } else if (button.action === 'next-turn') {
+          store.dispatch(nextTurn());
+        }
+        return;
+      }
+    }
 
     // Check for Plot UI button clicks if available
     if (plotUI) {
