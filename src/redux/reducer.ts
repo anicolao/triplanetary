@@ -38,6 +38,7 @@ import {
 } from './actions';
 import { DEFAULT_SCENARIO, initializeMap } from '../celestial';
 import { getDefaultPlacements, createShipsFromPlacements } from '../ship/placement';
+import { moveOrdnance, checkOrdnanceCollisions } from '../physics/ordnanceMovement';
 import { executeMovementPhase, processCollisions } from '../physics/movementExecution';
 
 // Initial state
@@ -419,9 +420,50 @@ export function gameReducer(
         state.mapObjects
       );
 
+      // Move ordnance
+      let updatedOrdnance = moveOrdnance(state.ordnance, state.roundNumber);
+
+      // Check for ordnance collisions with ships
+      const ordnanceToDetonate = checkOrdnanceCollisions(updatedOrdnance, ships);
+
+      // Mark colliding ordnance as detonated and apply damage
+      let finalShips = ships;
+      if (ordnanceToDetonate.length > 0) {
+        updatedOrdnance = updatedOrdnance.map((ord) => {
+          if (ordnanceToDetonate.includes(ord.id)) {
+            return { ...ord, detonated: true };
+          }
+          return ord;
+        });
+
+        // Apply damage to ships hit by ordnance
+        finalShips = ships.map((ship) => {
+          let newHull = ship.stats.currentHull;
+          
+          updatedOrdnance.forEach((ord) => {
+            if (ord.detonated && 
+                ship.position.q === ord.position.q && 
+                ship.position.r === ord.position.r) {
+              newHull -= ord.damage;
+            }
+          });
+
+          if (newHull <= 0) {
+            return { ...ship, destroyed: true, stats: { ...ship.stats, currentHull: 0 } };
+          } else if (newHull !== ship.stats.currentHull) {
+            return { ...ship, stats: { ...ship.stats, currentHull: newHull } };
+          }
+          return ship;
+        });
+
+        // Remove detonated ordnance
+        updatedOrdnance = updatedOrdnance.filter((ord) => !ord.detonated);
+      }
+
       return {
         ...state,
-        ships,
+        ships: finalShips,
+        ordnance: updatedOrdnance,
         plottedMoves: new Map(), // Clear plotted moves after execution
         selectedShipId: null, // Clear selection after movement
       };

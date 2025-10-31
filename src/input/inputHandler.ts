@@ -15,11 +15,14 @@ import {
   toggleReachableHexes,
   nextPhase,
   nextTurn,
+  launchOrdnance,
+  updateShipOrdnance,
 } from '../redux/actions';
 import { pixelToHex } from '../hex/operations';
 import { HexLayout } from '../hex/types';
 import { calculateRequiredThrust } from '../physics/velocity';
 import { vectorAdd } from '../physics/vector';
+import { createOrdnance, generateOrdnanceId, OrdnanceType } from '../ordnance/types';
 
 export class InputHandler {
   private renderer: Renderer;
@@ -122,6 +125,7 @@ export class InputHandler {
     const state = store.getState();
     const turnUI = this.renderer.getTurnUILayout();
     const plotUI = this.renderer.getCurrentPlotUIElements();
+    const ordnanceUI = this.renderer.getCurrentOrdnanceUIElements();
 
     // Check for Turn UI button clicks if available
     if (turnUI) {
@@ -192,6 +196,32 @@ export class InputHandler {
       }
     }
 
+    // Check for Ordnance UI button clicks if available
+    if (ordnanceUI) {
+      // Check ordnance launch buttons
+      for (const button of ordnanceUI.ordnanceButtons) {
+        if (button.enabled && this.isPointInRect(
+          x, y, button.x, button.y, button.width, button.height
+        )) {
+          this.handleOrdnanceButtonClick(button.ordnanceType);
+          return;
+        }
+      }
+
+      // Check skip button
+      if (this.isPointInRect(
+        x, y,
+        ordnanceUI.skipButton.x,
+        ordnanceUI.skipButton.y,
+        ordnanceUI.skipButton.width,
+        ordnanceUI.skipButton.height
+      )) {
+        // Deselect ship when skipping
+        store.dispatch(selectShip(null));
+        return;
+      }
+    }
+
     // Check for ship clicks to select them
     const hexSize = 10;
     const layout: HexLayout = {
@@ -244,6 +274,63 @@ export class InputHandler {
         thrustAlreadyUsed + thrustRequired
       ));
     }
+  }
+
+  private handleOrdnanceButtonClick(ordnanceType: OrdnanceType): void {
+    const state = store.getState();
+    if (!state.selectedShipId) return;
+
+    const selectedShip = state.ships.find((s) => s.id === state.selectedShipId);
+    if (!selectedShip || selectedShip.destroyed) return;
+
+    // Check if ship has ordnance of this type
+    let hasOrdnance = false;
+    let currentCount = 0;
+    switch (ordnanceType) {
+      case OrdnanceType.Mine:
+        hasOrdnance = selectedShip.ordnance.mines > 0;
+        currentCount = selectedShip.ordnance.mines;
+        break;
+      case OrdnanceType.Torpedo:
+        hasOrdnance = selectedShip.ordnance.torpedoes > 0;
+        currentCount = selectedShip.ordnance.torpedoes;
+        break;
+      case OrdnanceType.Missile:
+        hasOrdnance = selectedShip.ordnance.missiles > 0;
+        currentCount = selectedShip.ordnance.missiles;
+        break;
+    }
+
+    if (!hasOrdnance) return;
+
+    // Create ordnance at ship's position
+    // For mines, velocity is 0; for torpedoes/missiles, use ship's velocity
+    let velocity = { q: 0, r: 0 };
+    if (ordnanceType === OrdnanceType.Torpedo || ordnanceType === OrdnanceType.Missile) {
+      velocity = { ...selectedShip.velocity };
+    }
+
+    const ordnance = createOrdnance(
+      generateOrdnanceId(),
+      ordnanceType,
+      selectedShip.playerId,
+      { ...selectedShip.position },
+      velocity,
+      state.roundNumber
+    );
+
+    // Launch the ordnance
+    store.dispatch(launchOrdnance(ordnance));
+
+    // Decrease ship's ordnance count
+    store.dispatch(updateShipOrdnance(
+      selectedShip.id,
+      ordnanceType,
+      currentCount - 1
+    ));
+
+    // Deselect ship after launching
+    store.dispatch(selectShip(null));
   }
 
   private handleColorPickerClick(x: number, y: number): void {
