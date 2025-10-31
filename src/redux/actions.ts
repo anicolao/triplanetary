@@ -3,7 +3,7 @@
 import { Ship, VelocityVector } from '../ship/types';
 import { HexCoordinate } from '../hex/types';
 import { GamePhase } from './types';
-import { DeclaredAttack, WeaponType } from '../combat/types';
+import { DeclaredAttack } from '../combat/types';
 
 export const ADD_PLAYER = 'ADD_PLAYER';
 export const REMOVE_PLAYER = 'REMOVE_PLAYER';
@@ -47,7 +47,6 @@ export const DECLARE_ATTACK = 'DECLARE_ATTACK';
 export const CANCEL_ATTACK = 'CANCEL_ATTACK';
 export const EXECUTE_COMBAT = 'EXECUTE_COMBAT';
 export const CLEAR_COMBAT_LOG = 'CLEAR_COMBAT_LOG';
-export const SELECT_WEAPON = 'SELECT_WEAPON';
 export const SELECT_TARGET = 'SELECT_TARGET';
 
 export interface AddPlayerAction {
@@ -238,13 +237,6 @@ export interface ClearCombatLogAction {
   type: typeof CLEAR_COMBAT_LOG;
 }
 
-export interface SelectWeaponAction {
-  type: typeof SELECT_WEAPON;
-  payload: {
-    weaponType: WeaponType | null;
-  };
-}
-
 export interface SelectTargetAction {
   type: typeof SELECT_TARGET;
   payload: {
@@ -283,7 +275,6 @@ export type GameAction =
   | CancelAttackAction
   | ExecuteCombatAction
   | ClearCombatLogAction
-  | SelectWeaponAction
   | SelectTargetAction;
 
 // Action creators
@@ -453,11 +444,6 @@ export const executeCombat = (): ExecuteCombatAction => ({
 
 export const clearCombatLog = (): ClearCombatLogAction => ({
   type: CLEAR_COMBAT_LOG,
-});
-
-export const selectWeapon = (weaponType: WeaponType | null): SelectWeaponAction => ({
-  type: SELECT_WEAPON,
-  payload: { weaponType },
 });
 
 export const selectTarget = (targetId: string | null): SelectTargetAction => ({

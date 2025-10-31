@@ -33,7 +33,6 @@ import {
   CANCEL_ATTACK,
   EXECUTE_COMBAT,
   CLEAR_COMBAT_LOG,
-  SELECT_WEAPON,
   SELECT_TARGET,
 } from './actions';
 import { DEFAULT_SCENARIO, initializeMap } from '../celestial';
@@ -60,7 +59,6 @@ export const initialState: GameState = {
   notifications: [],
   declaredAttacks: new Map(),
   combatLog: [],
-  selectedWeapon: null,
   selectedTargetId: null,
 };
 
@@ -324,7 +322,6 @@ export function gameReducer(
       if (state.currentPhase === GamePhase.Combat) {
         newState = {
           ...newState,
-          selectedWeapon: null,
           selectedTargetId: null,
           declaredAttacks: new Map(),
         };
@@ -539,14 +536,6 @@ export function gameReducer(
       return {
         ...state,
         combatLog: [],
-      };
-    }
-
-    case SELECT_WEAPON: {
-      const { weaponType } = action.payload;
-      return {
-        ...state,
-        selectedWeapon: weaponType,
       };
     }
 

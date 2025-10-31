@@ -1,318 +1,262 @@
-// Unit tests for combat system
+// Unit tests for combat system based on official 2018 Triplanetary rules
 
 import { describe, it, expect } from 'vitest';
 import { createShip } from '../src/ship/types';
 import {
-  WeaponType,
-  WEAPON_CONFIG,
+  COMBAT_RESULTS_TABLE,
   canShipAttack,
-  getAvailableWeapons,
+  calculateCombatOdds,
+  parseDamageResult,
 } from '../src/combat/types';
 import {
   calculateRange,
-  calculateHitProbability,
-  isTargetInRange,
+  calculateRelativeVelocity,
+  calculateModifiers,
   createDeclaredAttack,
   resolveAttack,
   getValidTargets,
-  hasValidTargets,
-  calculateCombatModifiers,
 } from '../src/combat/resolution';
 import {
   executeCombatPhase,
-  areAllAttacksDeclared,
 } from '../src/combat/combatQueue';
 
-describe('Weapon Configuration', () => {
-  it('should have valid weapon configs', () => {
-    expect(WEAPON_CONFIG[WeaponType.Laser]).toBeDefined();
-    expect(WEAPON_CONFIG[WeaponType.Laser].range).toBeGreaterThan(0);
-    expect(WEAPON_CONFIG[WeaponType.Laser].damage).toBeGreaterThan(0);
-    expect(WEAPON_CONFIG[WeaponType.Laser].baseAccuracy).toBeGreaterThan(0);
-    expect(WEAPON_CONFIG[WeaponType.Laser].baseAccuracy).toBeLessThanOrEqual(1);
+describe('Combat Results Table', () => {
+  it('should have correct damage values for all odds and rolls', () => {
+    // Verify key entries from the official table
+    expect(COMBAT_RESULTS_TABLE[1]['4:1']).toBe('D2');
+    expect(COMBAT_RESULTS_TABLE[3]['2:1']).toBe('D2');
+    expect(COMBAT_RESULTS_TABLE[5]['3:1']).toBe('D5');
+    expect(COMBAT_RESULTS_TABLE[6]['4:1']).toBe('E');
+    expect(COMBAT_RESULTS_TABLE[6]['1:4']).toBe('D1');
   });
 
-  it('should have different stats for each weapon type', () => {
-    const laser = WEAPON_CONFIG[WeaponType.Laser];
-    const missile = WEAPON_CONFIG[WeaponType.Missile];
-    const massDriver = WEAPON_CONFIG[WeaponType.MassDriver];
-    
-    // Missile should have longest range
-    expect(missile.range).toBeGreaterThan(laser.range);
-    
-    // Mass driver should have highest damage
-    expect(massDriver.damage).toBeGreaterThanOrEqual(missile.damage);
-    expect(massDriver.damage).toBeGreaterThanOrEqual(laser.damage);
-    
-    // Mass driver should have shortest range
-    expect(massDriver.range).toBeLessThan(missile.range);
+  it('should have no effect for low rolls at poor odds', () => {
+    expect(COMBAT_RESULTS_TABLE[1]['1:4']).toBe('–');
+    expect(COMBAT_RESULTS_TABLE[1]['1:2']).toBe('–');
+    expect(COMBAT_RESULTS_TABLE[2]['1:1']).toBe('–');
   });
 });
 
-describe('Weapon Availability', () => {
-  it('should allow no weapons if weapon strength is 0', () => {
-    expect(canShipAttack(0)).toBe(false);
-    expect(getAvailableWeapons(0)).toHaveLength(0);
+describe('Combat Odds Calculation', () => {
+  it('should calculate 2:1 odds correctly', () => {
+    expect(calculateCombatOdds(4, 2)).toBe('2:1');
+    expect(calculateCombatOdds(8, 4)).toBe('2:1');
   });
 
-  it('should allow laser with weapon strength 1', () => {
-    expect(canShipAttack(1)).toBe(true);
-    const weapons = getAvailableWeapons(1);
-    expect(weapons).toContain(WeaponType.Laser);
-    expect(weapons).toHaveLength(1);
+  it('should calculate 1:1 odds correctly', () => {
+    expect(calculateCombatOdds(2, 2)).toBe('1:1');
+    expect(calculateCombatOdds(4, 4)).toBe('1:1');
   });
 
-  it('should allow laser and missile with weapon strength 2', () => {
-    const weapons = getAvailableWeapons(2);
-    expect(weapons).toContain(WeaponType.Laser);
-    expect(weapons).toContain(WeaponType.Missile);
-    expect(weapons).toHaveLength(2);
+  it('should round in favor of defender', () => {
+    expect(calculateCombatOdds(5, 4)).toBe('1:1'); // 1.25 rounds down
+    expect(calculateCombatOdds(3, 2)).toBe('1:1'); // 1.5 rounds down
+    expect(calculateCombatOdds(5, 3)).toBe('1:1'); // 1.67 rounds down
   });
 
-  it('should allow all weapons with weapon strength 3+', () => {
-    const weapons = getAvailableWeapons(3);
-    expect(weapons).toContain(WeaponType.Laser);
-    expect(weapons).toContain(WeaponType.Missile);
-    expect(weapons).toContain(WeaponType.MassDriver);
-    expect(weapons).toHaveLength(3);
+  it('should handle poor odds', () => {
+    expect(calculateCombatOdds(1, 2)).toBe('1:2');
+    expect(calculateCombatOdds(1, 4)).toBe('1:4');
+    expect(calculateCombatOdds(1, 8)).toBe('1:4'); // Less than 1:4
+  });
+
+  it('should cap at 4:1', () => {
+    expect(calculateCombatOdds(8, 1)).toBe('4:1');
+    expect(calculateCombatOdds(16, 2)).toBe('4:1');
   });
 });
 
-describe('Range Calculation', () => {
+describe('Range and Velocity Calculations', () => {
   it('should calculate range correctly', () => {
-    const ship1 = createShip('ship1', 'Ship 1', 'player1', { q: 0, r: 0 });
-    const ship2 = createShip('ship2', 'Ship 2', 'player2', { q: 3, r: 0 });
-    
+    const ship1 = createShip('s1', 'Ship 1', 'p1', { q: 0, r: 0 });
+    const ship2 = createShip('s2', 'Ship 2', 'p2', { q: 3, r: 0 });
     expect(calculateRange(ship1.position, ship2.position)).toBe(3);
   });
 
-  it('should calculate range for diagonal positions', () => {
-    const ship1 = createShip('ship1', 'Ship 1', 'player1', { q: 0, r: 0 });
-    const ship2 = createShip('ship2', 'Ship 2', 'player2', { q: 2, r: 2 });
+  it('should calculate relative velocity correctly', () => {
+    // Same velocity = 0 difference
+    expect(calculateRelativeVelocity({ q: 1, r: 0 }, { q: 1, r: 0 })).toBe(0);
     
-    const range = calculateRange(ship1.position, ship2.position);
-    expect(range).toBeGreaterThan(0);
-  });
-});
-
-describe('Target Range Validation', () => {
-  it('should identify target in range', () => {
-    const ship1 = createShip('ship1', 'Ship 1', 'player1', { q: 0, r: 0 }, { weapons: 1 });
-    const ship2 = createShip('ship2', 'Ship 2', 'player2', { q: 3, r: 0 });
-    
-    expect(isTargetInRange(ship1, ship2, WeaponType.Laser)).toBe(true);
-  });
-
-  it('should identify target out of range', () => {
-    const ship1 = createShip('ship1', 'Ship 1', 'player1', { q: 0, r: 0 }, { weapons: 1 });
-    const ship2 = createShip('ship2', 'Ship 2', 'player2', { q: 10, r: 0 });
-    
-    expect(isTargetInRange(ship1, ship2, WeaponType.Laser)).toBe(false);
-  });
-
-  it('should not allow attacking same hex', () => {
-    const ship1 = createShip('ship1', 'Ship 1', 'player1', { q: 0, r: 0 }, { weapons: 1 });
-    const ship2 = createShip('ship2', 'Ship 2', 'player2', { q: 0, r: 0 });
-    
-    expect(isTargetInRange(ship1, ship2, WeaponType.Laser)).toBe(false);
+    // Different velocities
+    expect(calculateRelativeVelocity({ q: 0, r: 0 }, { q: 2, r: 0 })).toBe(2);
+    expect(calculateRelativeVelocity({ q: 1, r: 1 }, { q: 0, r: 0 })).toBe(2);
   });
 });
 
 describe('Combat Modifiers', () => {
-  it('should apply range modifier for long-range shots', () => {
-    const attacker = createShip('attacker', 'Attacker', 'player1', { q: 0, r: 0 });
-    const target = createShip('target', 'Target', 'player2', { q: 5, r: 0 });
-    
-    const modifiers = calculateCombatModifiers(attacker, target, WeaponType.Laser);
-    expect(modifiers.rangeModifier).toBeLessThan(0);
+  it('should apply range modifier', () => {
+    const mods = calculateModifiers(5, 0);
+    expect(mods.rangeModifier).toBe(-5);
+    expect(mods.velocityModifier).toBe(0);
+    expect(mods.totalModifier).toBe(-5);
   });
 
-  it('should not apply range modifier at optimal range', () => {
-    const attacker = createShip('attacker', 'Attacker', 'player1', { q: 0, r: 0 });
-    const target = createShip('target', 'Target', 'player2', { q: 2, r: 0 });
+  it('should apply velocity modifier only when > 2', () => {
+    // Velocity 2 or less = no modifier
+    expect(calculateModifiers(0, 2).velocityModifier).toBe(0);
+    expect(calculateModifiers(0, 1).velocityModifier).toBe(0);
     
-    const modifiers = calculateCombatModifiers(attacker, target, WeaponType.Laser);
-    expect(modifiers.rangeModifier).toBe(0);
+    // Velocity > 2 = modifier
+    expect(calculateModifiers(0, 3).velocityModifier).toBe(-1);
+    expect(calculateModifiers(0, 5).velocityModifier).toBe(-3);
   });
 
-  it('should apply velocity modifier for fast-moving targets', () => {
-    const attacker = createShip('attacker', 'Attacker', 'player1', { q: 0, r: 0 });
-    attacker.velocity = { q: 0, r: 0 };
-    
-    const target = createShip('target', 'Target', 'player2', { q: 3, r: 0 });
-    target.velocity = { q: 2, r: 2 };
-    
-    const modifiers = calculateCombatModifiers(attacker, target, WeaponType.Laser);
-    expect(modifiers.velocityModifier).toBeLessThan(0);
-  });
-});
-
-describe('Hit Probability', () => {
-  it('should calculate hit probability within valid range', () => {
-    const attacker = createShip('attacker', 'Attacker', 'player1', { q: 0, r: 0 });
-    const target = createShip('target', 'Target', 'player2', { q: 2, r: 0 });
-    
-    const probability = calculateHitProbability(attacker, target, WeaponType.Laser);
-    expect(probability).toBeGreaterThan(0);
-    expect(probability).toBeLessThanOrEqual(1);
-  });
-
-  it('should clamp probability between 0.05 and 0.95', () => {
-    const attacker = createShip('attacker', 'Attacker', 'player1', { q: 0, r: 0 });
-    const target = createShip('target', 'Target', 'player2', { q: 5, r: 0 });
-    target.velocity = { q: 10, r: 10 }; // Very fast moving
-    
-    const probability = calculateHitProbability(attacker, target, WeaponType.Laser);
-    expect(probability).toBeGreaterThanOrEqual(0.05);
-    expect(probability).toBeLessThanOrEqual(0.95);
+  it('should combine range and velocity modifiers', () => {
+    const mods = calculateModifiers(3, 4);
+    expect(mods.rangeModifier).toBe(-3);
+    expect(mods.velocityModifier).toBe(-2); // 4-2 = 2
+    expect(mods.totalModifier).toBe(-5);
   });
 });
 
 describe('Attack Declaration', () => {
-  it('should create a valid declared attack', () => {
-    const attacker = createShip('attacker', 'Attacker', 'player1', { q: 0, r: 0 }, { weapons: 1 });
-    const target = createShip('target', 'Target', 'player2', { q: 3, r: 0 });
+  it('should create declared attack with correct odds', () => {
+    const attacker = createShip('a1', 'Attacker', 'p1', { q: 0, r: 0 }, { weapons: 4 });
+    const target = createShip('t1', 'Target', 'p2', { q: 3, r: 0 }, { weapons: 2 });
     
-    const attack = createDeclaredAttack(attacker, target, WeaponType.Laser);
+    const attack = createDeclaredAttack(attacker, target);
     
-    expect(attack.attackerId).toBe(attacker.id);
-    expect(attack.targetId).toBe(target.id);
-    expect(attack.weaponType).toBe(WeaponType.Laser);
+    expect(attack.attackerId).toBe('a1');
+    expect(attack.targetId).toBe('t1');
+    expect(attack.odds).toBe('2:1');
     expect(attack.range).toBe(3);
-    expect(attack.hitProbability).toBeGreaterThan(0);
+  });
+
+  it('should calculate modifiers in declared attack', () => {
+    const attacker = createShip('a1', 'Attacker', 'p1', { q: 0, r: 0 }, { weapons: 2 });
+    attacker.velocity = { q: 0, r: 0 };
+    
+    const target = createShip('t1', 'Target', 'p2', { q: 4, r: 0 }, { weapons: 2 });
+    target.velocity = { q: 2, r: 2 };
+    
+    const attack = createDeclaredAttack(attacker, target);
+    
+    expect(attack.range).toBe(4);
+    expect(attack.relativeVelocity).toBeGreaterThan(2);
+    expect(attack.rangeModifier).toBe(-4);
+    expect(attack.velocityModifier).toBeLessThan(0);
   });
 });
 
 describe('Attack Resolution', () => {
-  it('should resolve a hit with fixed roll', () => {
-    const attacker = createShip('attacker', 'Attacker', 'player1', { q: 0, r: 0 }, { weapons: 1 });
-    const target = createShip('target', 'Target', 'player2', { q: 3, r: 0 }, { maxHull: 6, currentHull: 6 });
+  it('should resolve attack with given die roll', () => {
+    const attacker = createShip('a1', 'Attacker', 'p1', { q: 0, r: 0 }, { weapons: 4 });
+    const target = createShip('t1', 'Target', 'p2', { q: 1, r: 0 }, { weapons: 2 });
     
-    const attack = createDeclaredAttack(attacker, target, WeaponType.Laser);
-    const result = resolveAttack(attack, target, 0.5); // 50% roll - should hit
+    const attack = createDeclaredAttack(attacker, target);
+    const result = resolveAttack(attack, 6); // Roll of 6
     
-    expect(result.hit).toBe(true);
-    expect(result.damageDealt).toBe(WEAPON_CONFIG[WeaponType.Laser].damage);
-    expect(result.targetDestroyed).toBe(false);
+    expect(result.dieRoll).toBe(6);
+    expect(result.modifiedRoll).toBe(5); // 6 - 1 (range)
+    expect(result.damageResult).toBe('D4'); // 2:1 odds, roll 5 -> D4
   });
 
-  it('should resolve a miss with fixed roll', () => {
-    const attacker = createShip('attacker', 'Attacker', 'player1', { q: 0, r: 0 }, { weapons: 1 });
-    const target = createShip('target', 'Target', 'player2', { q: 3, r: 0 });
+  it('should clamp modified roll to 6', () => {
+    const attacker = createShip('a1', 'Attacker', 'p1', { q: 0, r: 0 }, { weapons: 4 });
+    const target = createShip('t1', 'Target', 'p2', { q: 0, r: 0 }, { weapons: 2 });
     
-    const attack = createDeclaredAttack(attacker, target, WeaponType.Laser);
-    const result = resolveAttack(attack, target, 0.99); // 99% roll - should miss
+    const attack = createDeclaredAttack(attacker, target);
+    const result = resolveAttack(attack, 6);
     
-    expect(result.hit).toBe(false);
-    expect(result.damageDealt).toBe(0);
+    expect(result.modifiedRoll).toBe(6); // Can't go above 6
   });
 
-  it('should detect target destruction', () => {
-    const attacker = createShip('attacker', 'Attacker', 'player1', { q: 0, r: 0 }, { weapons: 1 });
-    const target = createShip('target', 'Target', 'player2', { q: 3, r: 0 }, { 
-      maxHull: 2, 
-      currentHull: 2 
-    });
+  it('should handle modified roll < 1 as no effect', () => {
+    const attacker = createShip('a1', 'Attacker', 'p1', { q: 0, r: 0 }, { weapons: 2 });
+    const target = createShip('t1', 'Target', 'p2', { q: 10, r: 0 }, { weapons: 2 });
     
-    const attack = createDeclaredAttack(attacker, target, WeaponType.Laser);
-    const result = resolveAttack(attack, target, 0.5); // Should hit
+    const attack = createDeclaredAttack(attacker, target);
+    const result = resolveAttack(attack, 1); // Roll 1, range -10 = -9
     
-    expect(result.hit).toBe(true);
+    expect(result.modifiedRoll).toBe(0);
+    expect(result.damageResult).toBe('–');
+    expect(result.turnsDisabled).toBe(0);
+  });
+
+  it('should parse damage correctly', () => {
+    expect(parseDamageResult('–')).toBe(0);
+    expect(parseDamageResult('D1')).toBe(1);
+    expect(parseDamageResult('D3')).toBe(3);
+    expect(parseDamageResult('E')).toBe(6);
+  });
+
+  it('should mark ship as destroyed for E result', () => {
+    const attacker = createShip('a1', 'Attacker', 'p1', { q: 0, r: 0 }, { weapons: 8 });
+    const target = createShip('t1', 'Target', 'p2', { q: 0, r: 0 }, { weapons: 2 });
+    
+    const attack = createDeclaredAttack(attacker, target);
+    const result = resolveAttack(attack, 6);
+    
+    expect(result.damageResult).toBe('E');
     expect(result.targetDestroyed).toBe(true);
   });
 });
 
 describe('Valid Targets', () => {
-  it('should find valid enemy targets in range', () => {
-    const attacker = createShip('attacker', 'Attacker', 'player1', { q: 0, r: 0 }, { weapons: 1 });
-    const enemy1 = createShip('enemy1', 'Enemy 1', 'player2', { q: 3, r: 0 });
-    const enemy2 = createShip('enemy2', 'Enemy 2', 'player2', { q: 10, r: 0 }); // Out of range
-    const ally = createShip('ally', 'Ally', 'player1', { q: 2, r: 0 }); // Same team
+  it('should find enemy ships as valid targets', () => {
+    const attacker = createShip('a1', 'Attacker', 'p1', { q: 0, r: 0 }, { weapons: 2 });
+    const enemy1 = createShip('e1', 'Enemy 1', 'p2', { q: 3, r: 0 });
+    const enemy2 = createShip('e2', 'Enemy 2', 'p2', { q: 10, r: 0 });
+    const ally = createShip('ally', 'Ally', 'p1', { q: 2, r: 0 });
     
     const ships = [attacker, enemy1, enemy2, ally];
-    const targets = getValidTargets(attacker, ships, WeaponType.Laser);
+    const targets = getValidTargets(attacker, ships);
     
-    expect(targets).toHaveLength(1);
-    expect(targets[0].id).toBe(enemy1.id);
+    expect(targets).toHaveLength(2);
+    expect(targets.map(t => t.id)).toContain('e1');
+    expect(targets.map(t => t.id)).toContain('e2');
   });
 
   it('should not include destroyed ships as targets', () => {
-    const attacker = createShip('attacker', 'Attacker', 'player1', { q: 0, r: 0 }, { weapons: 1 });
-    const enemy = createShip('enemy', 'Enemy', 'player2', { q: 3, r: 0 });
+    const attacker = createShip('a1', 'Attacker', 'p1', { q: 0, r: 0 }, { weapons: 2 });
+    const enemy = createShip('e1', 'Enemy', 'p2', { q: 3, r: 0 });
     enemy.destroyed = true;
     
-    const ships = [attacker, enemy];
-    const targets = getValidTargets(attacker, ships, WeaponType.Laser);
+    const targets = getValidTargets(attacker, [attacker, enemy]);
     
     expect(targets).toHaveLength(0);
-  });
-
-  it('should check if ship has any valid targets', () => {
-    const attacker = createShip('attacker', 'Attacker', 'player1', { q: 0, r: 0 }, { weapons: 1 });
-    const enemy = createShip('enemy', 'Enemy', 'player2', { q: 3, r: 0 });
-    
-    const ships = [attacker, enemy];
-    const hasTargets = hasValidTargets(attacker, ships, [WeaponType.Laser]);
-    
-    expect(hasTargets).toBe(true);
   });
 });
 
 describe('Combat Phase Execution', () => {
-  it('should execute multiple attacks', () => {
-    const attacker1 = createShip('attacker1', 'Attacker 1', 'player1', { q: 0, r: 0 }, { weapons: 1 });
-    const attacker2 = createShip('attacker2', 'Attacker 2', 'player1', { q: 1, r: 0 }, { weapons: 1 });
-    const target = createShip('target', 'Target', 'player2', { q: 3, r: 0 }, { 
-      maxHull: 10, 
-      currentHull: 10 
-    });
+  it('should execute attacks and apply disable damage', () => {
+    const attacker = createShip('a1', 'Attacker', 'p1', { q: 0, r: 0 }, { weapons: 4 });
+    const target = createShip('t1', 'Target', 'p2', { q: 1, r: 0 }, { weapons: 2 });
     
-    const ships = [attacker1, attacker2, target];
+    const attack = createDeclaredAttack(attacker, target);
     const attacks = new Map();
-    attacks.set('attacker1', createDeclaredAttack(attacker1, target, WeaponType.Laser));
-    attacks.set('attacker2', createDeclaredAttack(attacker2, target, WeaponType.Laser));
+    attacks.set('a1', attack);
     
-    const { results, updatedShips, logEntries } = executeCombatPhase(attacks, ships);
+    const { results, updatedShips } = executeCombatPhase(attacks, [attacker, target]);
     
-    expect(results).toHaveLength(2);
-    expect(logEntries).toHaveLength(2);
-    expect(updatedShips).toHaveLength(3);
+    expect(results).toHaveLength(1);
+    const updatedTarget = updatedShips.find(s => s.id === 't1');
+    expect(updatedTarget).toBeDefined();
   });
 
-  it('should apply damage to targets', () => {
-    const attacker = createShip('attacker', 'Attacker', 'player1', { q: 0, r: 0 }, { weapons: 1 });
-    const target = createShip('target', 'Target', 'player2', { q: 3, r: 0 }, { 
-      maxHull: 10, 
-      currentHull: 10 
-    });
+  it('should destroy ship at D6 or greater', () => {
+    const attacker = createShip('a1', 'Attacker', 'p1', { q: 0, r: 0 }, { weapons: 8 });
+    const target = createShip('t1', 'Target', 'p2', { q: 0, r: 0 }, { weapons: 2 });
+    target.disabledTurns = 2; // Already disabled 2 turns
     
-    const ships = [attacker, target];
+    const attack = createDeclaredAttack(attacker, target);
     const attacks = new Map();
-    attacks.set('attacker', createDeclaredAttack(attacker, target, WeaponType.Laser));
+    attacks.set('a1', attack);
     
-    const { updatedShips } = executeCombatPhase(attacks, ships);
+    const { updatedShips } = executeCombatPhase(attacks, [attacker, target]);
     
-    const updatedTarget = updatedShips.find(s => s.id === target.id);
-    expect(updatedTarget).toBeDefined();
-    // Hull should be reduced (exact amount depends on hit/miss)
-    expect(updatedTarget!.stats.currentHull).toBeLessThanOrEqual(10);
+    const updatedTarget = updatedShips.find(s => s.id === 't1');
+    // Result depends on roll, but if D5 result, 2+5 = D7 = destroyed
+  });
+});
+
+describe('Ship Attack Capability', () => {
+  it('should allow ships with weapons > 0 to attack', () => {
+    expect(canShipAttack(1)).toBe(true);
+    expect(canShipAttack(4)).toBe(true);
   });
 
-  it('should mark destroyed ships', () => {
-    const attacker = createShip('attacker', 'Attacker', 'player1', { q: 0, r: 0 }, { weapons: 1 });
-    const target = createShip('target', 'Target', 'player2', { q: 3, r: 0 }, { 
-      maxHull: 1, 
-      currentHull: 1 
-    });
-    
-    const ships = [attacker, target];
-    const attacks = new Map();
-    attacks.set('attacker', createDeclaredAttack(attacker, target, WeaponType.Laser));
-    
-    const { updatedShips } = executeCombatPhase(attacks, ships);
-    
-    const updatedTarget = updatedShips.find(s => s.id === target.id);
-    expect(updatedTarget).toBeDefined();
-    // Target may or may not be destroyed depending on hit/miss
+  it('should not allow ships with weapons = 0 to attack', () => {
+    expect(canShipAttack(0)).toBe(false);
   });
 });

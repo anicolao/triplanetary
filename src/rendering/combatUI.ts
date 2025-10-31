@@ -1,7 +1,7 @@
 // UI elements for Combat Phase display
 
 import { Ship } from '../ship/types';
-import { WeaponType, DeclaredAttack, CombatLogEntry } from '../combat/types';
+import { DeclaredAttack, CombatLogEntry } from '../combat/types';
 
 export interface CombatUIButton {
   x: number;
@@ -10,8 +10,7 @@ export interface CombatUIButton {
   height: number;
   text: string;
   enabled: boolean;
-  action: 'declare-attack' | 'cancel-attack' | 'select-weapon' | 'end-combat';
-  weaponType?: WeaponType;
+  action: 'declare-attack' | 'cancel-attack' | 'end-combat';
 }
 
 export interface TargetIndicator {
@@ -29,9 +28,6 @@ export interface CombatUILayout {
   shipInfoY: number;
   shipInfoWidth: number;
   shipInfoHeight: number;
-  
-  // Weapon selection buttons
-  weaponButtons: CombatUIButton[];
   
   // Target selection
   targetIndicators: TargetIndicator[];
@@ -67,8 +63,6 @@ export function createCombatUILayout(
   canvasWidth: number,
   canvasHeight: number,
   selectedShip: Ship | null,
-  availableWeapons: WeaponType[],
-  selectedWeapon: WeaponType | null,
   potentialTargets: Ship[],
   selectedTarget: Ship | null,
   declaredAttack: DeclaredAttack | null,
@@ -81,26 +75,9 @@ export function createCombatUILayout(
   
   // Position ship info in bottom-left corner
   const shipInfoWidth = 250;
-  const shipInfoHeight = 200;
+  const shipInfoHeight = 150;
   const shipInfoX = padding;
   const shipInfoY = canvasHeight - shipInfoHeight - padding;
-  
-  // Weapon selection buttons below ship info
-  const weaponButtons: CombatUIButton[] = [];
-  if (selectedShip && availableWeapons.length > 0) {
-    availableWeapons.forEach((weaponType, index) => {
-      weaponButtons.push({
-        x: shipInfoX,
-        y: shipInfoY - (availableWeapons.length - index) * (buttonHeight + 5),
-        width: buttonWidth,
-        height: buttonHeight,
-        text: weaponType,
-        enabled: true,
-        action: 'select-weapon',
-        weaponType,
-      });
-    });
-  }
   
   // Target indicators for each potential target
   const targetIndicators: TargetIndicator[] = potentialTargets.map(target => {
@@ -110,17 +87,17 @@ export function createCombatUILayout(
       x: pos.x,
       y: pos.y,
       radius: 20,
-      inRange: true, // Already filtered by range
+      inRange: true,
       selected: selectedTarget?.id === target.id,
     };
   });
   
   // Attack info panel in bottom-center (visible when target selected)
-  const attackInfoWidth = 300;
-  const attackInfoHeight = 150;
+  const attackInfoWidth = 350;
+  const attackInfoHeight = 180;
   const attackInfoX = (canvasWidth - attackInfoWidth) / 2;
   const attackInfoY = canvasHeight - attackInfoHeight - padding;
-  const attackInfoVisible = selectedShip !== null && selectedTarget !== null && selectedWeapon !== null;
+  const attackInfoVisible = selectedShip !== null && selectedTarget !== null;
   
   // Declare attack button (visible when target and weapon selected, no attack declared yet)
   let declareAttackButton: CombatUIButton | null = null;
@@ -177,7 +154,6 @@ export function createCombatUILayout(
     shipInfoY,
     shipInfoWidth,
     shipInfoHeight,
-    weaponButtons,
     targetIndicators,
     attackInfoX,
     attackInfoY,
@@ -197,15 +173,20 @@ export function createCombatUILayout(
 
 /**
  * Get text for attack info panel
+ * Shows combat odds and modifiers per official Triplanetary rules
  */
 export function getAttackInfoText(attack: DeclaredAttack): string[] {
   const lines: string[] = [];
-  lines.push(`Weapon: ${attack.weaponType}`);
-  lines.push(`Range: ${attack.range} hexes`);
-  lines.push(`Hit Chance: ${Math.round(attack.hitProbability * 100)}%`);
+  lines.push(`Combat Odds: ${attack.odds}`);
+  lines.push(`Attacker Strength: ${attack.attackerStrength}`);
+  lines.push(`Defender Strength: ${attack.defenderStrength}`);
   lines.push('');
-  lines.push('Modifiers:');
-  lines.push(`  Range: ${attack.modifiers.rangeModifier >= 0 ? '+' : ''}${(attack.modifiers.rangeModifier * 100).toFixed(0)}%`);
-  lines.push(`  Velocity: ${attack.modifiers.velocityModifier >= 0 ? '+' : ''}${(attack.modifiers.velocityModifier * 100).toFixed(0)}%`);
+  lines.push(`Range: ${attack.range} hexes`);
+  lines.push(`Relative Velocity: ${attack.relativeVelocity.toFixed(1)} hexes`);
+  lines.push('');
+  lines.push('Die Roll Modifiers:');
+  lines.push(`  Range: ${attack.rangeModifier >= 0 ? '+' : ''}${attack.rangeModifier}`);
+  lines.push(`  Velocity: ${attack.velocityModifier >= 0 ? '+' : ''}${attack.velocityModifier}`);
+  lines.push(`  Total: ${attack.totalModifier >= 0 ? '+' : ''}${attack.totalModifier}`);
   return lines;
 }

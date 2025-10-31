@@ -32,6 +32,7 @@ export function areAllAttacksDeclared(
 
 /**
  * Execute all declared attacks and generate results
+ * Follows official Triplanetary combat rules
  */
 export function executeCombatPhase(
   declaredAttacks: Map<string, DeclaredAttack>,
@@ -55,17 +56,18 @@ export function executeCombatPhase(
       return; // Skip if target is already destroyed
     }
     
-    const result = resolveAttack(attack, target);
+    const result = resolveAttack(attack);
     results.push(result);
     
-    // Apply damage to target
-    if (result.hit) {
-      target.stats.currentHull -= result.damageDealt;
+    // Apply damage to target per official rules
+    // Damage is cumulative; adds to current disablement
+    if (result.turnsDisabled > 0) {
+      target.disabledTurns += result.turnsDisabled;
       
-      // Check if ship is destroyed
-      if (target.stats.currentHull <= 0) {
-        target.stats.currentHull = 0;
+      // If a ship ever reaches D6 or greater, it is destroyed
+      if (target.disabledTurns >= 6 || result.targetDestroyed) {
         target.destroyed = true;
+        target.disabledTurns = 0; // Destroyed ships are not "disabled"
       }
     }
     
@@ -92,14 +94,17 @@ function createCombatLogEntry(
 ): CombatLogEntry {
   let message: string;
   
-  if (result.hit) {
-    if (result.targetDestroyed) {
-      message = `${attackerName} destroyed ${targetName} with ${result.attack.weaponType}! (${result.damageDealt} damage)`;
-    } else {
-      message = `${attackerName} hit ${targetName} with ${result.attack.weaponType} for ${result.damageDealt} damage!`;
-    }
+  const odds = result.attack.odds;
+  const roll = result.dieRoll;
+  const modified = result.modifiedRoll;
+  const damage = result.damageResult;
+  
+  if (damage === '–') {
+    message = `${attackerName} (${odds}) missed ${targetName}. [Roll: ${roll}, Modified: ${modified}]`;
+  } else if (result.targetDestroyed) {
+    message = `${attackerName} (${odds}) DESTROYED ${targetName}! [${damage}, Roll: ${roll}, Modified: ${modified}]`;
   } else {
-    message = `${attackerName} missed ${targetName} with ${result.attack.weaponType}.`;
+    message = `${attackerName} (${odds}) hit ${targetName} for ${damage}. [Roll: ${roll}, Modified: ${modified}]`;
   }
   
   return {

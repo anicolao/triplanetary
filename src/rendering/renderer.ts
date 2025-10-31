@@ -14,7 +14,6 @@ import { HexLayout } from '../hex/types';
 import { hexToPixel } from '../hex/operations';
 import { calculateReachableHexes } from '../physics/movement';
 import { areAllShipsPlotted } from '../physics/plotQueue';
-import { getAvailableWeapons } from '../combat/types';
 import { getValidTargets } from '../combat/resolution';
 
 export class Renderer {
@@ -217,16 +216,10 @@ export class Renderer {
         ? state.ships.find(s => s.id === state.selectedShipId)
         : null;
       
-      // Get available weapons for selected ship
-      const availableWeapons = selectedShip 
-        ? getAvailableWeapons(selectedShip.stats.weapons)
+      // Get potential targets (all enemy ships)
+      const potentialTargets = selectedShip 
+        ? getValidTargets(selectedShip, state.ships)
         : [];
-      
-      // Get potential targets if weapon is selected
-      let potentialTargets: any[] = [];
-      if (selectedShip && state.selectedWeapon) {
-        potentialTargets = getValidTargets(selectedShip, state.ships, state.selectedWeapon);
-      }
       
       // Get selected target
       const selectedTarget = state.selectedTargetId
@@ -242,8 +235,6 @@ export class Renderer {
         this.canvas.width,
         this.canvas.height,
         selectedShip || null,
-        availableWeapons,
-        state.selectedWeapon,
         potentialTargets,
         selectedTarget,
         declaredAttack,

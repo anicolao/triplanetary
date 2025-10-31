@@ -16,9 +16,6 @@ export class CombatRenderer {
     // Render ship info panel
     this.renderShipInfoPanel(layout);
     
-    // Render weapon selection buttons
-    layout.weaponButtons.forEach(button => this.renderButton(button));
-    
     // Render target indicators on map
     layout.targetIndicators.forEach(indicator => this.renderTargetIndicator(indicator));
     
@@ -71,9 +68,9 @@ export class CombatRenderer {
     // Instructions
     this.ctx.font = '14px sans-serif';
     this.ctx.fillStyle = '#cccccc';
-    this.ctx.fillText('1. Select a weapon', shipInfoX + 10, shipInfoY + 45);
-    this.ctx.fillText('2. Click on a target ship', shipInfoX + 10, shipInfoY + 70);
-    this.ctx.fillText('3. Declare attack', shipInfoX + 10, shipInfoY + 95);
+    this.ctx.fillText('1. Click on target ship', shipInfoX + 10, shipInfoY + 45);
+    this.ctx.fillText('2. Declare attack', shipInfoX + 10, shipInfoY + 70);
+    this.ctx.fillText('3. End combat phase', shipInfoX + 10, shipInfoY + 95);
   }
 
   /**
@@ -111,9 +108,6 @@ export class CombatRenderer {
           break;
         case 'cancel-attack':
           this.ctx.fillStyle = '#f44336';
-          break;
-        case 'select-weapon':
-          this.ctx.fillStyle = '#2196F3';
           break;
         case 'end-combat':
           this.ctx.fillStyle = '#FF9800';
