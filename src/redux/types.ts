@@ -3,6 +3,7 @@
 import { MapObject } from '../celestial/types';
 import { Scenario, MapBounds } from '../celestial/scenario';
 import { Ship, VelocityVector } from '../ship/types';
+import { DeclaredAttack, CombatLogEntry, WeaponType } from '../combat/types';
 
 export type Screen = 'configuration' | 'gameplay';
 
@@ -61,6 +62,11 @@ export interface GameState {
   turnHistory: TurnHistoryEntry[];
   // Notifications
   notifications: GameNotification[];
+  // Combat Phase state
+  declaredAttacks: Map<string, DeclaredAttack>;
+  combatLog: CombatLogEntry[];
+  selectedWeapon: WeaponType | null;
+  selectedTargetId: string | null;
 }
 
 // Available color-blind friendly palette
