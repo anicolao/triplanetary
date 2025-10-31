@@ -29,10 +29,15 @@ import {
   ADD_NOTIFICATION,
   CLEAR_NOTIFICATION,
   CLEAR_ALL_NOTIFICATIONS,
+  DECLARE_ATTACK,
+  CANCEL_ATTACK,
+  EXECUTE_COMBAT,
+  CLEAR_COMBAT_LOG,
 } from './actions';
 import { DEFAULT_SCENARIO, initializeMap } from '../celestial';
 import { getDefaultPlacements, createShipsFromPlacements } from '../ship/placement';
 import { executeMovementPhase, processCollisions } from '../physics/movementExecution';
+import { executeCombatPhase } from '../combat/combatQueue';
 
 // Initial state
 export const initialState: GameState = {
@@ -51,6 +56,8 @@ export const initialState: GameState = {
   roundNumber: 1,
   turnHistory: [],
   notifications: [],
+  declaredAttacks: new Map(),
+  combatLog: [],
 };
 
 // Helper function to get next available color
@@ -459,6 +466,65 @@ export function gameReducer(
       return {
         ...state,
         notifications: [],
+      };
+    }
+
+    // Combat actions
+    case DECLARE_ATTACK: {
+      const { attack } = action.payload;
+      const newDeclaredAttacks = new Map(state.declaredAttacks);
+      newDeclaredAttacks.set(attack.attackerId, attack);
+      
+      return {
+        ...state,
+        declaredAttacks: newDeclaredAttacks,
+      };
+    }
+
+    case CANCEL_ATTACK: {
+      const { attackerId } = action.payload;
+      const newDeclaredAttacks = new Map(state.declaredAttacks);
+      newDeclaredAttacks.delete(attackerId);
+      
+      return {
+        ...state,
+        declaredAttacks: newDeclaredAttacks,
+      };
+    }
+
+    case EXECUTE_COMBAT: {
+      // Execute all declared attacks
+      const { results, updatedShips, logEntries } = executeCombatPhase(
+        state.declaredAttacks,
+        state.ships
+      );
+      
+      // Add destruction notifications
+      const destructionNotifications = results
+        .filter(result => result.targetDestroyed)
+        .map(result => {
+          const target = state.ships.find(s => s.id === result.attack.targetId);
+          return {
+            id: `notification-${Date.now()}-${Math.random()}`,
+            message: `${target?.name || 'Ship'} was destroyed!`,
+            type: 'destruction' as const,
+            timestamp: Date.now(),
+          };
+        });
+      
+      return {
+        ...state,
+        ships: updatedShips,
+        declaredAttacks: new Map(), // Clear attacks after execution
+        combatLog: [...state.combatLog, ...logEntries],
+        notifications: [...state.notifications, ...destructionNotifications],
+      };
+    }
+
+    case CLEAR_COMBAT_LOG: {
+      return {
+        ...state,
+        combatLog: [],
       };
     }
 

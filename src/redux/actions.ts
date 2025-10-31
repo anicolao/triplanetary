@@ -3,6 +3,7 @@
 import { Ship, VelocityVector } from '../ship/types';
 import { HexCoordinate } from '../hex/types';
 import { GamePhase } from './types';
+import { DeclaredAttack, WeaponType } from '../combat/types';
 
 export const ADD_PLAYER = 'ADD_PLAYER';
 export const REMOVE_PLAYER = 'REMOVE_PLAYER';
@@ -40,6 +41,12 @@ export const APPLY_COLLISION_DAMAGE = 'APPLY_COLLISION_DAMAGE';
 export const ADD_NOTIFICATION = 'ADD_NOTIFICATION';
 export const CLEAR_NOTIFICATION = 'CLEAR_NOTIFICATION';
 export const CLEAR_ALL_NOTIFICATIONS = 'CLEAR_ALL_NOTIFICATIONS';
+
+// Combat action types
+export const DECLARE_ATTACK = 'DECLARE_ATTACK';
+export const CANCEL_ATTACK = 'CANCEL_ATTACK';
+export const EXECUTE_COMBAT = 'EXECUTE_COMBAT';
+export const CLEAR_COMBAT_LOG = 'CLEAR_COMBAT_LOG';
 
 export interface AddPlayerAction {
   type: typeof ADD_PLAYER;
@@ -206,6 +213,29 @@ export interface ClearAllNotificationsAction {
   type: typeof CLEAR_ALL_NOTIFICATIONS;
 }
 
+// Combat action interfaces
+export interface DeclareAttackAction {
+  type: typeof DECLARE_ATTACK;
+  payload: {
+    attack: DeclaredAttack;
+  };
+}
+
+export interface CancelAttackAction {
+  type: typeof CANCEL_ATTACK;
+  payload: {
+    attackerId: string;
+  };
+}
+
+export interface ExecuteCombatAction {
+  type: typeof EXECUTE_COMBAT;
+}
+
+export interface ClearCombatLogAction {
+  type: typeof CLEAR_COMBAT_LOG;
+}
+
 export type GameAction =
   | AddPlayerAction
   | RemovePlayerAction
@@ -232,7 +262,11 @@ export type GameAction =
   | ApplyCollisionDamageAction
   | AddNotificationAction
   | ClearNotificationAction
-  | ClearAllNotificationsAction;
+  | ClearAllNotificationsAction
+  | DeclareAttackAction
+  | CancelAttackAction
+  | ExecuteCombatAction
+  | ClearCombatLogAction;
 
 // Action creators
 export const addPlayer = (): AddPlayerAction => ({
@@ -382,4 +416,23 @@ export const clearNotification = (notificationId: string): ClearNotificationActi
 
 export const clearAllNotifications = (): ClearAllNotificationsAction => ({
   type: CLEAR_ALL_NOTIFICATIONS,
+});
+
+// Combat action creators
+export const declareAttack = (attack: DeclaredAttack): DeclareAttackAction => ({
+  type: DECLARE_ATTACK,
+  payload: { attack },
+});
+
+export const cancelAttack = (attackerId: string): CancelAttackAction => ({
+  type: CANCEL_ATTACK,
+  payload: { attackerId },
+});
+
+export const executeCombat = (): ExecuteCombatAction => ({
+  type: EXECUTE_COMBAT,
+});
+
+export const clearCombatLog = (): ClearCombatLogAction => ({
+  type: CLEAR_COMBAT_LOG,
 });
