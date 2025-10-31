@@ -10,7 +10,7 @@ import { resolveAttack } from './resolution';
 export function areAllAttacksDeclared(
   ships: Ship[],
   currentPlayerId: string,
-  declaredAttacks: Map<string, DeclaredAttack>
+  _declaredAttacks: Map<string, DeclaredAttack>
 ): boolean {
   // Get all ships owned by current player that can attack
   const playerShips = ships.filter(
@@ -116,7 +116,7 @@ function createCombatLogEntry(
  * Clear all declared attacks (typically at end of phase)
  */
 export function clearCombatQueue(
-  declaredAttacks: Map<string, DeclaredAttack>
+  _declaredAttacks: Map<string, DeclaredAttack>
 ): Map<string, DeclaredAttack> {
   return new Map();
 }

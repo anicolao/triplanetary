@@ -1,7 +1,5 @@
 // Type definitions for combat system in Triplanetary
 
-import { HexCoordinate } from '../hex/types';
-
 /**
  * Weapon types available in the game
  */

@@ -33,6 +33,8 @@ import {
   CANCEL_ATTACK,
   EXECUTE_COMBAT,
   CLEAR_COMBAT_LOG,
+  SELECT_WEAPON,
+  SELECT_TARGET,
 } from './actions';
 import { DEFAULT_SCENARIO, initializeMap } from '../celestial';
 import { getDefaultPlacements, createShipsFromPlacements } from '../ship/placement';
@@ -58,6 +60,8 @@ export const initialState: GameState = {
   notifications: [],
   declaredAttacks: new Map(),
   combatLog: [],
+  selectedWeapon: null,
+  selectedTargetId: null,
 };
 
 // Helper function to get next available color
@@ -316,6 +320,16 @@ export function gameReducer(
         turnHistory: [...state.turnHistory, historyEntry],
       };
 
+      // Clear combat state when leaving Combat phase
+      if (state.currentPhase === GamePhase.Combat) {
+        newState = {
+          ...newState,
+          selectedWeapon: null,
+          selectedTargetId: null,
+          declaredAttacks: new Map(),
+        };
+      }
+
       // Auto-execute movement when entering Movement phase
       if (nextPhase === GamePhase.Movement) {
         const { ships, collisions } = executeMovementPhase(
@@ -525,6 +539,22 @@ export function gameReducer(
       return {
         ...state,
         combatLog: [],
+      };
+    }
+
+    case SELECT_WEAPON: {
+      const { weaponType } = action.payload;
+      return {
+        ...state,
+        selectedWeapon: weaponType,
+      };
+    }
+
+    case SELECT_TARGET: {
+      const { targetId } = action.payload;
+      return {
+        ...state,
+        selectedTargetId: targetId,
       };
     }
 

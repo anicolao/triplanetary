@@ -8,9 +8,14 @@ import { ShipRenderer } from './shipRenderer';
 import { PlotRenderer, createPlotUIElements, PlotUIElements } from './plotRenderer';
 import { TurnRenderer } from './turnRenderer';
 import { createTurnUILayout, TurnUILayout } from './turnUI';
+import { CombatRenderer } from './combatRenderer';
+import { createCombatUILayout, getAttackInfoText, CombatUILayout } from './combatUI';
 import { HexLayout } from '../hex/types';
+import { hexToPixel } from '../hex/operations';
 import { calculateReachableHexes } from '../physics/movement';
 import { areAllShipsPlotted } from '../physics/plotQueue';
+import { getAvailableWeapons } from '../combat/types';
+import { getValidTargets } from '../combat/resolution';
 
 export class Renderer {
   private ctx: CanvasRenderingContext2D;
@@ -22,8 +27,10 @@ export class Renderer {
   private shipRenderer: ShipRenderer;
   private plotRenderer: PlotRenderer;
   private turnRenderer: TurnRenderer;
+  private combatRenderer: CombatRenderer;
   private currentPlotUIElements: PlotUIElements | null = null;
   private currentTurnUILayout: TurnUILayout | null = null;
+  private currentCombatUILayout: CombatUILayout | null = null;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -37,6 +44,7 @@ export class Renderer {
     this.shipRenderer = new ShipRenderer(ctx);
     this.plotRenderer = new PlotRenderer(ctx);
     this.turnRenderer = new TurnRenderer(ctx);
+    this.combatRenderer = new CombatRenderer(ctx);
     this.resizeCanvas();
   }
 
@@ -69,6 +77,10 @@ export class Renderer {
 
   getTurnUILayout(): TurnUILayout | null {
     return this.currentTurnUILayout;
+  }
+
+  getCombatUILayout(): CombatUILayout | null {
+    return this.currentCombatUILayout;
   }
 
   render(state: GameState): UILayout {
@@ -180,8 +192,8 @@ export class Renderer {
       selectedShipId: state.selectedShipId,
     });
 
-    // Render Plot Phase UI if a ship is selected
-    if (state.selectedShipId) {
+    // Render Plot Phase UI if a ship is selected and in Plot phase
+    if (state.currentPhase === GamePhase.Plot && state.selectedShipId) {
       const selectedShip = state.ships.find(s => s.id === state.selectedShipId);
       if (selectedShip && !selectedShip.destroyed) {
         const hasPlottedMove = state.plottedMoves.has(state.selectedShipId);
@@ -197,6 +209,61 @@ export class Renderer {
       }
     } else {
       this.currentPlotUIElements = null;
+    }
+
+    // Render Combat Phase UI if in Combat phase
+    if (state.currentPhase === GamePhase.Combat) {
+      const selectedShip = state.selectedShipId 
+        ? state.ships.find(s => s.id === state.selectedShipId)
+        : null;
+      
+      // Get available weapons for selected ship
+      const availableWeapons = selectedShip 
+        ? getAvailableWeapons(selectedShip.stats.weapons)
+        : [];
+      
+      // Get potential targets if weapon is selected
+      let potentialTargets: any[] = [];
+      if (selectedShip && state.selectedWeapon) {
+        potentialTargets = getValidTargets(selectedShip, state.ships, state.selectedWeapon);
+      }
+      
+      // Get selected target
+      const selectedTarget = state.selectedTargetId
+        ? state.ships.find(s => s.id === state.selectedTargetId) || null
+        : null;
+      
+      // Get declared attack for current ship (if any)
+      const declaredAttack = state.selectedShipId 
+        ? state.declaredAttacks.get(state.selectedShipId) || null
+        : null;
+      
+      this.currentCombatUILayout = createCombatUILayout(
+        this.canvas.width,
+        this.canvas.height,
+        selectedShip || null,
+        availableWeapons,
+        state.selectedWeapon,
+        potentialTargets,
+        selectedTarget,
+        declaredAttack,
+        state.combatLog,
+        (q, r) => hexToPixel({ q, r }, layout)
+      );
+      
+      this.combatRenderer.renderCombatUI(this.currentCombatUILayout);
+      
+      // Render attack info if available
+      if (declaredAttack && this.currentCombatUILayout.attackInfoVisible) {
+        const infoLines = getAttackInfoText(declaredAttack);
+        this.combatRenderer.renderAttackInfo(
+          this.currentCombatUILayout.attackInfoX,
+          this.currentCombatUILayout.attackInfoY,
+          infoLines
+        );
+      }
+    } else {
+      this.currentCombatUILayout = null;
     }
 
     // Render UI overlay showing player information
