@@ -194,20 +194,6 @@ export class Renderer {
       selectedShipId: state.selectedShipId,
     });
 
-    // Render Plot Phase UI if a ship is selected and in Plot phase
-    if (state.currentPhase === GamePhase.Plot && state.selectedShipId) {
-      const selectedShip = state.ships.find(s => s.id === state.selectedShipId);
-      if (selectedShip && !selectedShip.destroyed) {
-        const hasPlottedMove = state.plottedMoves.has(state.selectedShipId);
-        this.currentPlotUIElements = createPlotUIElements(
-          selectedShip,
-          this.canvas.width,
-          this.canvas.height,
-          hasPlottedMove
-        );
-        this.plotRenderer.renderPlotUI(
-          this.currentPlotUIElements
-        );
     // Render all ordnance
     renderOrdnance(this.ctx, state, layout);
 
