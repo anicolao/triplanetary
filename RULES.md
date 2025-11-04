@@ -172,19 +172,25 @@ The velocity difference between attacker and defender affects accuracy:
 | 6    | D1  | D3  | D4  | D5  | E   | E   |
 
 **Damage Levels:**
-- **D1** - Slightly damaged. Ship recovers 1 D level per turn automatically.
-- **D2** - Lightly damaged. Ship recovers 1 D level per turn automatically.
-- **D3** - Moderately damaged. Ship recovers 1 D level per turn automatically.
-- **D4** - Heavily damaged. Ship recovers 1 D level per turn automatically.
-- **D5** - Severely damaged. Ship recovers 1 D level per turn automatically.
+- **D1** - Disabled for 1 turn. Ship recovers 1 D level per turn.
+- **D2** - Disabled for 2 turns. Ship recovers 1 D level per turn.
+- **D3** - Disabled for 3 turns. Ship recovers 1 D level per turn.
+- **D4** - Disabled for 4 turns. Ship recovers 1 D level per turn.
+- **D5** - Disabled for 5 turns. Ship recovers 1 D level per turn.
 - **E** - Eliminated. The target ship is destroyed.
 
-**Special Cases:**
+**Damage is cumulative:** If a ship is already disabled, new damage results are added to its current period of disablement. **If a ship ever reaches D6 or greater, it is destroyed.**
+
+**While Disabled (any D level):**
+A disabled ship cannot maneuver, launch ordnance, or attack. It may only drift on its current course. Disabled ships can be looted or captured.
+
+**Exceptions:**
 - Ships with "D" combat ratings (like transports, tankers, liners) may not attack or counterattack, though they still defend.
-- Dreadnaughts may still fire their guns even when damaged (at D1-D3 damage levels).
-- An orbital base may launch torpedoes, fire guns, and resupply friendly ships while slightly damaged (at D1).
-- Ships at D6 damage or worse are considered disabled and can be looted or captured.
-- A disabled ship cannot maneuver or fire.
+- Dreadnaughts may still fire their guns (only) even though disabled.
+- An orbital base may launch torpedoes, fire guns, and resupply friendly ships while slightly (D1) damaged.
+
+**Damage Recovery:**
+Ships recover at the rate of one D per turn at the end of the Resupply phase.
 
 ## Game Scenarios
 
