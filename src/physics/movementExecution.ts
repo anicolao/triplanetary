@@ -4,7 +4,7 @@ import { Ship } from '../ship/types';
 import { PlottedMove } from '../redux/types';
 import { MapObject, CelestialBody } from '../celestial/types';
 import { calculateDestination } from './movement';
-import { applyGravity } from './gravity';
+import { applyGravity, applyGravityEffects, detectGravityHexEntry, getAllGravityHexes } from './gravity';
 
 /**
  * Executes plotted moves for all ships.
@@ -40,8 +40,9 @@ export function executeAllPlottedMoves(
 }
 
 /**
- * Applies gravity effects to all ships based on their positions.
+ * Applies gravity effects to all ships based on their positions (legacy zone-based).
  * 
+ * @deprecated Use applyGravityEffectsToAllShips for new hex-based system
  * @param ships - Array of all ships
  * @param mapObjects - Array of map objects (includes celestial bodies with gravity)
  * @returns Updated array of ships with gravity-modified velocities
@@ -65,12 +66,53 @@ export function applyGravityToAllShips(
 }
 
 /**
- * Moves all ships to their destination based on their current velocity.
+ * Applies gravity effects from previously entered gravity hexes (one-turn delay).
+ * This is the new 2018 rules-compliant gravity system.
  * 
  * @param ships - Array of all ships
- * @returns Updated array of ships with new positions
+ * @param mapObjects - Array of map objects (includes celestial bodies with gravity)
+ * @param weakGravityChoices - Map of weak gravity choices (optional)
+ * @returns Updated array of ships with gravity effects applied
  */
-export function moveAllShips(ships: Ship[]): Ship[] {
+export function applyGravityEffectsToAllShips(
+  ships: Ship[],
+  mapObjects: MapObject[],
+  weakGravityChoices: Map<string, boolean> = new Map()
+): Ship[] {
+  // Filter for celestial bodies (Sun and Planets have gravity)
+  const celestialBodies = mapObjects.filter(
+    (obj) => obj.type === 'sun' || obj.type === 'planet'
+  ) as CelestialBody[];
+
+  // Apply gravity effects from previous turn to each ship
+  return ships.map((ship) => {
+    if (ship.destroyed) {
+      return ship;
+    }
+    return applyGravityEffects(ship, celestialBodies, weakGravityChoices);
+  });
+}
+
+/**
+ * Moves all ships to their destination based on their current velocity.
+ * Also tracks which gravity hexes ships enter (for one-turn delay effect).
+ * 
+ * @param ships - Array of all ships
+ * @param mapObjects - Array of map objects (to get gravity hexes) - optional for backward compatibility
+ * @returns Updated array of ships with new positions and tracked gravity hex entry
+ */
+export function moveAllShips(ships: Ship[], mapObjects?: MapObject[]): Ship[] {
+  // Get celestial bodies for gravity hex tracking
+  let allGravityHexes: ReturnType<typeof getAllGravityHexes> = [];
+  
+  if (mapObjects) {
+    const celestialBodies = mapObjects.filter(
+      (obj) => obj.type === 'sun' || obj.type === 'planet'
+    ) as CelestialBody[];
+    
+    allGravityHexes = getAllGravityHexes(celestialBodies);
+  }
+  
   return ships.map((ship) => {
     if (ship.destroyed) {
       return ship;
@@ -78,9 +120,15 @@ export function moveAllShips(ships: Ship[]): Ship[] {
 
     const newPosition = calculateDestination(ship.position, ship.velocity);
     
+    // Track which gravity hexes this ship entered
+    const gravityHexesEntered = mapObjects 
+      ? detectGravityHexEntry(newPosition, allGravityHexes)
+      : [];
+    
     return {
       ...ship,
       position: newPosition,
+      gravityHexesEntered,
     };
   });
 }
@@ -224,12 +272,9 @@ export function detectPositionCollisions(ships: Ship[]): Array<[string, string]>
 }
 
 /**
- * Executes the complete movement phase sequence.
+ * Executes the complete movement phase sequence (legacy zone-based gravity).
  * 
- * @param ships - Array of all ships
- * @param plottedMoves - Map of ship IDs to plotted moves
- * @param mapObjects - Array of celestial bodies
- * @returns Object containing updated ships and detected collisions
+ * @deprecated Use executeMovementPhaseWithNewGravity for 2018 rules
  */
 export function executeMovementPhase(
   ships: Ship[],
@@ -239,11 +284,50 @@ export function executeMovementPhase(
   // Step 1: Apply plotted velocities
   let updatedShips = executeAllPlottedMoves(ships, plottedMoves);
 
-  // Step 2: Apply gravity effects
+  // Step 2: Apply gravity effects (legacy)
   updatedShips = applyGravityToAllShips(updatedShips, mapObjects);
 
   // Step 3: Move ships to new positions
-  updatedShips = moveAllShips(updatedShips);
+  updatedShips = moveAllShips(updatedShips, mapObjects);
+
+  // Step 4: Detect collisions (ships that ended up in the same hex)
+  const collisions = detectPositionCollisions(updatedShips);
+
+  // Step 5: Apply collision damage
+  updatedShips = processCollisions(updatedShips, collisions);
+
+  // Step 6: Reset thrust for next turn
+  updatedShips = resetShipThrust(updatedShips);
+
+  return {
+    ships: updatedShips,
+    collisions,
+  };
+}
+
+/**
+ * Executes the complete movement phase sequence with new hex-based gravity (2018 rules).
+ * 
+ * @param ships - Array of all ships
+ * @param plottedMoves - Map of ship IDs to plotted moves
+ * @param mapObjects - Array of celestial bodies
+ * @param weakGravityChoices - Map of weak gravity choices
+ * @returns Object containing updated ships and detected collisions
+ */
+export function executeMovementPhaseWithNewGravity(
+  ships: Ship[],
+  plottedMoves: Map<string, PlottedMove>,
+  mapObjects: MapObject[],
+  weakGravityChoices: Map<string, boolean> = new Map()
+): { ships: Ship[]; collisions: Array<[string, string]> } {
+  // Step 1: Apply gravity effects from PREVIOUS turn (one-turn delay)
+  let updatedShips = applyGravityEffectsToAllShips(ships, mapObjects, weakGravityChoices);
+
+  // Step 2: Apply plotted velocities
+  updatedShips = executeAllPlottedMoves(updatedShips, plottedMoves);
+
+  // Step 3: Move ships to new positions and track gravity hex entry
+  updatedShips = moveAllShips(updatedShips, mapObjects);
 
   // Step 4: Detect collisions (ships that ended up in the same hex)
   const collisions = detectPositionCollisions(updatedShips);

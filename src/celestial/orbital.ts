@@ -2,6 +2,7 @@
 
 import { HexCoordinate } from '../hex/types';
 import { Planet, OrbitalProperties } from './types';
+import { generateGravityHexes } from './gravityHexes';
 
 /**
  * Calculate the position of a planet based on its orbital properties.
@@ -34,16 +35,19 @@ export function calculateOrbitalPosition(orbit: OrbitalProperties): HexCoordinat
 
 /**
  * Update a planet's position based on its current orbital angle.
- * This modifies the planet object in place.
+ * This also updates the gravity hexes to be adjacent to the new position.
  * 
  * @param planet - The planet to update
  * @returns The updated planet
  */
 export function updatePlanetPosition(planet: Planet): Planet {
   const newPosition = calculateOrbitalPosition(planet.orbit);
+  const isWeak = planet.name === 'Luna' || planet.name === 'Io';
+  
   return {
     ...planet,
     position: newPosition,
+    gravityHexes: generateGravityHexes(newPosition, isWeak),
   };
 }
 

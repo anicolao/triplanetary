@@ -57,6 +57,8 @@ export interface Ship {
   disabledTurns: number;
   /** Ordnance inventory */
   ordnance: OrdnanceInventory;
+  /** Gravity hexes entered on previous turn (for one-turn delay effect) */
+  gravityHexesEntered?: HexCoordinate[];
 }
 
 /**
@@ -93,6 +95,7 @@ export function createShip(
     destroyed: false,
     disabledTurns: 0,
     ordnance: createDefaultInventory(),
+    gravityHexesEntered: [],
   };
 }
 

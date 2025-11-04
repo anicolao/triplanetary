@@ -205,7 +205,8 @@ describe('CelestialRenderer', () => {
   describe('Default options', () => {
     it('should use default options when none provided', () => {
       expect(DEFAULT_CELESTIAL_OPTIONS.showOrbitalPaths).toBe(true);
-      expect(DEFAULT_CELESTIAL_OPTIONS.showGravityWells).toBe(true);
+      expect(DEFAULT_CELESTIAL_OPTIONS.showGravityWells).toBe(false); // Legacy - disabled by default
+      expect(DEFAULT_CELESTIAL_OPTIONS.showGravityArrows).toBe(true); // New 2018 rules - enabled
       expect(DEFAULT_CELESTIAL_OPTIONS.gravityWellOpacity).toBeGreaterThan(0);
     });
   });

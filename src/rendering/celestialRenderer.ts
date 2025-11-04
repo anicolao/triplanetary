@@ -11,27 +11,39 @@ export interface CelestialRenderOptions {
   orbitalPathColor: string;
   /** Orbital path line width */
   orbitalPathLineWidth: number;
-  /** Whether to show gravity well zones */
+  /** Whether to show gravity well zones (legacy) */
   showGravityWells: boolean;
-  /** Gravity well zone opacity (0-1) */
+  /** Gravity well zone opacity (0-1) (legacy) */
   gravityWellOpacity: number;
-  /** Inner zone color */
+  /** Inner zone color (legacy) */
   innerZoneColor: string;
-  /** Middle zone color */
+  /** Middle zone color (legacy) */
   middleZoneColor: string;
-  /** Outer zone color */
+  /** Outer zone color (legacy) */
   outerZoneColor: string;
+  /** Whether to show gravity arrows (2018 rules) */
+  showGravityArrows: boolean;
+  /** Gravity arrow color */
+  gravityArrowColor: string;
+  /** Weak gravity arrow color */
+  weakGravityArrowColor: string;
+  /** Gravity arrow line width */
+  gravityArrowLineWidth: number;
 }
 
 export const DEFAULT_CELESTIAL_OPTIONS: CelestialRenderOptions = {
   showOrbitalPaths: true,
   orbitalPathColor: '#444466',
   orbitalPathLineWidth: 1,
-  showGravityWells: true,
+  showGravityWells: false, // Legacy - disabled by default
   gravityWellOpacity: 0.1,
   innerZoneColor: '#ff4444',
   middleZoneColor: '#ffaa44',
   outerZoneColor: '#44aaff',
+  showGravityArrows: true, // New 2018 rules - enabled by default
+  gravityArrowColor: '#ff8800',
+  weakGravityArrowColor: '#88ff88',
+  gravityArrowLineWidth: 2,
 };
 
 export class CelestialRenderer {
@@ -57,13 +69,25 @@ export class CelestialRenderer {
     const stations = objects.filter(obj => obj.type === 'station') as SpaceStation[];
     const asteroids = objects.filter(obj => obj.type === 'asteroid') as Asteroid[];
 
-    // Layer 1: Gravity wells (rendered first, behind everything)
+    // Layer 1: Gravity wells (legacy - rendered first, behind everything)
     if (opts.showGravityWells) {
-      if (sun) {
+      if (sun && sun.gravityWells) {
         this.renderGravityWells(sun, layout, opts);
       }
       planets.forEach(planet => {
-        this.renderGravityWells(planet, layout, opts);
+        if (planet.gravityWells) {
+          this.renderGravityWells(planet, layout, opts);
+        }
+      });
+    }
+
+    // Layer 1b: Gravity arrows (2018 rules - rendered after zones but before other elements)
+    if (opts.showGravityArrows) {
+      if (sun) {
+        this.renderGravityArrows(sun, layout, opts);
+      }
+      planets.forEach(planet => {
+        this.renderGravityArrows(planet, layout, opts);
       });
     }
 
@@ -175,13 +199,17 @@ export class CelestialRenderer {
   }
 
   /**
-   * Renders gravity well zones for a celestial body.
+   * Renders gravity well zones for a celestial body (legacy).
    */
   private renderGravityWells(
     body: Sun | Planet,
     layout: HexLayout,
     options: CelestialRenderOptions
   ): void {
+    if (!body.gravityWells || body.gravityWells.length === 0) {
+      return;
+    }
+
     const center = hexToPixel(body.position, layout);
 
     // Render gravity wells from outer to inner (for proper layering)
@@ -199,6 +227,9 @@ export class CelestialRenderer {
           color = options.middleZoneColor;
           break;
         case 'outer':
+          color = options.outerZoneColor;
+          break;
+        default:
           color = options.outerZoneColor;
           break;
       }
@@ -281,6 +312,71 @@ export class CelestialRenderer {
     this.ctx.closePath();
     this.ctx.fill();
     this.ctx.stroke();
+  }
+
+  /**
+   * Renders gravity arrows for a celestial body (2018 rules).
+   * Arrows are in hexes adjacent to the body, pointing toward it.
+   */
+  private renderGravityArrows(
+    body: Sun | Planet,
+    layout: HexLayout,
+    options: CelestialRenderOptions
+  ): void {
+    if (!body.gravityHexes || body.gravityHexes.length === 0) {
+      return;
+    }
+
+    for (const gravityHex of body.gravityHexes) {
+      const hexCenter = hexToPixel(gravityHex.position, layout);
+      
+      // Calculate arrow direction (points toward the body)
+      const arrowEndOffset = {
+        x: gravityHex.direction.q * layout.size * 0.4,
+        y: gravityHex.direction.r * layout.size * 0.4,
+      };
+      
+      const arrowStart = {
+        x: hexCenter.x - arrowEndOffset.x,
+        y: hexCenter.y - arrowEndOffset.y,
+      };
+      
+      const arrowEnd = {
+        x: hexCenter.x + arrowEndOffset.x,
+        y: hexCenter.y + arrowEndOffset.y,
+      };
+      
+      // Choose color based on weak vs full gravity
+      const color = gravityHex.isWeak 
+        ? options.weakGravityArrowColor 
+        : options.gravityArrowColor;
+      
+      // Draw arrow line
+      this.ctx.strokeStyle = color;
+      this.ctx.lineWidth = options.gravityArrowLineWidth;
+      this.ctx.beginPath();
+      this.ctx.moveTo(arrowStart.x, arrowStart.y);
+      this.ctx.lineTo(arrowEnd.x, arrowEnd.y);
+      this.ctx.stroke();
+      
+      // Draw arrowhead
+      const arrowHeadLength = layout.size * 0.15;
+      const angle = Math.atan2(arrowEndOffset.y, arrowEndOffset.x);
+      
+      this.ctx.fillStyle = color;
+      this.ctx.beginPath();
+      this.ctx.moveTo(arrowEnd.x, arrowEnd.y);
+      this.ctx.lineTo(
+        arrowEnd.x - arrowHeadLength * Math.cos(angle - Math.PI / 6),
+        arrowEnd.y - arrowHeadLength * Math.sin(angle - Math.PI / 6)
+      );
+      this.ctx.lineTo(
+        arrowEnd.x - arrowHeadLength * Math.cos(angle + Math.PI / 6),
+        arrowEnd.y - arrowHeadLength * Math.sin(angle + Math.PI / 6)
+      );
+      this.ctx.closePath();
+      this.ctx.fill();
+    }
   }
 
   /**

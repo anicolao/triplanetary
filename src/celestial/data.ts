@@ -1,6 +1,7 @@
 // Celestial body data for the Triplanetary solar system
 
 import { Sun, Planet, AnyCelestialBody } from './types';
+import { generateGravityHexes } from './gravityHexes';
 
 /**
  * The Sun - central celestial body.
@@ -13,6 +14,7 @@ export const SUN: Sun = {
   position: { q: 0, r: 0 },
   visualRadius: 2, // Visual size in hexes
   color: '#FDB813', // Bright yellow/orange
+  gravityHexes: generateGravityHexes({ q: 0, r: 0 }, false),
   gravityWells: [
     {
       zone: 'inner',
@@ -49,6 +51,7 @@ export const MERCURY: Planet = {
     period: 20, // Game turns for one complete orbit
     currentAngle: 0, // Starting position
   },
+  gravityHexes: generateGravityHexes({ q: 0, r: 0 }, false),
   gravityWells: [
     {
       zone: 'inner',
@@ -80,6 +83,7 @@ export const VENUS: Planet = {
     period: 35, // Game turns for one complete orbit
     currentAngle: 90, // Starting at a different position
   },
+  gravityHexes: generateGravityHexes({ q: 0, r: 0 }, false),
   gravityWells: [
     {
       zone: 'inner',
@@ -111,6 +115,7 @@ export const EARTH: Planet = {
     period: 50, // Game turns for one complete orbit
     currentAngle: 180, // Starting opposite Mercury
   },
+  gravityHexes: generateGravityHexes({ q: 0, r: 0 }, false),
   gravityWells: [
     {
       zone: 'inner',
@@ -142,6 +147,7 @@ export const MARS: Planet = {
     period: 80, // Game turns for one complete orbit
     currentAngle: 270, // Starting at yet another position
   },
+  gravityHexes: generateGravityHexes({ q: 0, r: 0 }, false),
   gravityWells: [
     {
       zone: 'inner',
