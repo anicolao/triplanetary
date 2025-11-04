@@ -44,7 +44,7 @@ npm run dev              # Start development server (http://localhost:5173)
 
 ### Building and Testing
 ```bash
-npm run build            # TypeScript compile + Vite build
+npm run build            # Build for production (TypeScript compile + Vite build)
 npm test                 # Run unit tests with Vitest
 npm run test:ui          # Run tests with UI
 npm run test:e2e         # Run Playwright E2E tests
