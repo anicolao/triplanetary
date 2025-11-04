@@ -15,6 +15,8 @@ import { hexToPixel } from '../hex/operations';
 import { calculateReachableHexes } from '../physics/movement';
 import { areAllShipsPlotted } from '../physics/plotQueue';
 import { getValidTargets } from '../combat/resolution';
+import { renderOrdnance } from './ordnanceRenderer';
+import { createOrdnanceUIElements, renderOrdnanceUI, OrdnanceUIElements } from './ordnanceUI';
 
 export class Renderer {
   private ctx: CanvasRenderingContext2D;
@@ -30,6 +32,7 @@ export class Renderer {
   private currentPlotUIElements: PlotUIElements | null = null;
   private currentTurnUILayout: TurnUILayout | null = null;
   private currentCombatUILayout: CombatUILayout | null = null;
+  private currentOrdnanceUIElements: OrdnanceUIElements | null = null;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -205,9 +208,49 @@ export class Renderer {
         this.plotRenderer.renderPlotUI(
           this.currentPlotUIElements
         );
+    // Render all ordnance
+    renderOrdnance(this.ctx, state, layout);
+
+    // Render phase-specific UI
+    if (state.currentPhase === GamePhase.Plot) {
+      // Render Plot Phase UI if a ship is selected
+      if (state.selectedShipId) {
+        const selectedShip = state.ships.find(s => s.id === state.selectedShipId);
+        if (selectedShip && !selectedShip.destroyed) {
+          const hasPlottedMove = state.plottedMoves.has(state.selectedShipId);
+          this.currentPlotUIElements = createPlotUIElements(
+            selectedShip,
+            this.canvas.width,
+            this.canvas.height,
+            hasPlottedMove
+          );
+          this.plotRenderer.renderPlotUI(
+            this.currentPlotUIElements
+          );
+        }
+      } else {
+        this.currentPlotUIElements = null;
       }
-    } else {
+      this.currentOrdnanceUIElements = null;
+    } else if (state.currentPhase === GamePhase.Ordnance) {
+      // Render Ordnance Phase UI if a ship is selected
+      if (state.selectedShipId) {
+        const selectedShip = state.ships.find(s => s.id === state.selectedShipId);
+        if (selectedShip && !selectedShip.destroyed) {
+          this.currentOrdnanceUIElements = createOrdnanceUIElements(
+            selectedShip,
+            this.canvas.width
+          );
+          renderOrdnanceUI(this.ctx, this.currentOrdnanceUIElements);
+        }
+      } else {
+        this.currentOrdnanceUIElements = null;
+      }
       this.currentPlotUIElements = null;
+    } else {
+      // Clear UI elements for other phases
+      this.currentPlotUIElements = null;
+      this.currentOrdnanceUIElements = null;
     }
 
     // Render Combat Phase UI if in Combat phase
@@ -482,5 +525,9 @@ export class Renderer {
 
   getCurrentPlotUIElements(): PlotUIElements | null {
     return this.currentPlotUIElements;
+  }
+
+  getCurrentOrdnanceUIElements(): OrdnanceUIElements | null {
+    return this.currentOrdnanceUIElements;
   }
 }

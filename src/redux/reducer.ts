@@ -34,9 +34,17 @@ import {
   EXECUTE_COMBAT,
   CLEAR_COMBAT_LOG,
   SELECT_TARGET,
+  LAUNCH_ORDNANCE,
+  REMOVE_ORDNANCE,
+  UPDATE_ORDNANCE_POSITION,
+  UPDATE_ORDNANCE_VELOCITY,
+  DETONATE_ORDNANCE,
+  UPDATE_SHIP_ORDNANCE,
 } from './actions';
 import { DEFAULT_SCENARIO, initializeMap } from '../celestial';
 import { getDefaultPlacements, createShipsFromPlacements } from '../ship/placement';
+import { moveOrdnance, checkOrdnanceCollisions } from '../physics/ordnanceMovement';
+import { OrdnanceType } from '../ordnance/types';
 import { executeMovementPhase, processCollisions } from '../physics/movementExecution';
 import { executeCombatPhase } from '../combat/combatQueue';
 
@@ -56,6 +64,7 @@ export const initialState: GameState = {
   currentPhase: GamePhase.Plot,
   roundNumber: 1,
   turnHistory: [],
+  ordnance: [],
   notifications: [],
   declaredAttacks: new Map(),
   combatLog: [],
@@ -430,9 +439,50 @@ export function gameReducer(
         state.mapObjects
       );
 
+      // Move ordnance
+      let updatedOrdnance = moveOrdnance(state.ordnance, state.roundNumber);
+
+      // Check for ordnance collisions with ships
+      const ordnanceToDetonate = checkOrdnanceCollisions(updatedOrdnance, ships);
+
+      // Mark colliding ordnance as detonated and apply damage
+      let finalShips = ships;
+      if (ordnanceToDetonate.length > 0) {
+        updatedOrdnance = updatedOrdnance.map((ord) => {
+          if (ordnanceToDetonate.includes(ord.id)) {
+            return { ...ord, detonated: true };
+          }
+          return ord;
+        });
+
+        // Apply damage to ships hit by ordnance
+        finalShips = ships.map((ship) => {
+          let newHull = ship.stats.currentHull;
+          
+          updatedOrdnance.forEach((ord) => {
+            if (ord.detonated && 
+                ship.position.q === ord.position.q && 
+                ship.position.r === ord.position.r) {
+              newHull -= ord.damage;
+            }
+          });
+
+          if (newHull <= 0) {
+            return { ...ship, destroyed: true, stats: { ...ship.stats, currentHull: 0 } };
+          } else if (newHull !== ship.stats.currentHull) {
+            return { ...ship, stats: { ...ship.stats, currentHull: newHull } };
+          }
+          return ship;
+        });
+
+        // Remove detonated ordnance
+        updatedOrdnance = updatedOrdnance.filter((ord) => !ord.detonated);
+      }
+
       return {
         ...state,
-        ships,
+        ships: finalShips,
+        ordnance: updatedOrdnance,
         plottedMoves: new Map(), // Clear plotted moves after execution
         selectedShipId: null, // Clear selection after movement
       };
@@ -544,6 +594,74 @@ export function gameReducer(
       return {
         ...state,
         selectedTargetId: targetId,
+    case LAUNCH_ORDNANCE: {
+      const { ordnance } = action.payload;
+      return {
+        ...state,
+        ordnance: [...state.ordnance, ordnance],
+      };
+    }
+
+    case REMOVE_ORDNANCE: {
+      const { ordnanceId } = action.payload;
+      return {
+        ...state,
+        ordnance: state.ordnance.filter(o => o.id !== ordnanceId),
+      };
+    }
+
+    case UPDATE_ORDNANCE_POSITION: {
+      const { ordnanceId, position } = action.payload;
+      return {
+        ...state,
+        ordnance: state.ordnance.map(o =>
+          o.id === ordnanceId ? { ...o, position } : o
+        ),
+      };
+    }
+
+    case UPDATE_ORDNANCE_VELOCITY: {
+      const { ordnanceId, velocity } = action.payload;
+      return {
+        ...state,
+        ordnance: state.ordnance.map(o =>
+          o.id === ordnanceId ? { ...o, velocity } : o
+        ),
+      };
+    }
+
+    case DETONATE_ORDNANCE: {
+      const { ordnanceId } = action.payload;
+      return {
+        ...state,
+        ordnance: state.ordnance.map(o =>
+          o.id === ordnanceId ? { ...o, detonated: true } : o
+        ),
+      };
+    }
+
+    case UPDATE_SHIP_ORDNANCE: {
+      const { shipId, ordnanceType, count } = action.payload;
+      return {
+        ...state,
+        ships: state.ships.map(ship => {
+          if (ship.id !== shipId) return ship;
+          
+          const newOrdnance = { ...ship.ordnance };
+          switch (ordnanceType) {
+            case OrdnanceType.Mine:
+              newOrdnance.mines = count;
+              break;
+            case OrdnanceType.Torpedo:
+              newOrdnance.torpedoes = count;
+              break;
+            case OrdnanceType.Missile:
+              newOrdnance.missiles = count;
+              break;
+          }
+          
+          return { ...ship, ordnance: newOrdnance };
+        }),
       };
     }
 

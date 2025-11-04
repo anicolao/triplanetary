@@ -4,6 +4,7 @@ import { Ship, VelocityVector } from '../ship/types';
 import { HexCoordinate } from '../hex/types';
 import { GamePhase } from './types';
 import { DeclaredAttack } from '../combat/types';
+import { Ordnance, OrdnanceType } from '../ordnance/types';
 
 export const ADD_PLAYER = 'ADD_PLAYER';
 export const REMOVE_PLAYER = 'REMOVE_PLAYER';
@@ -48,6 +49,13 @@ export const CANCEL_ATTACK = 'CANCEL_ATTACK';
 export const EXECUTE_COMBAT = 'EXECUTE_COMBAT';
 export const CLEAR_COMBAT_LOG = 'CLEAR_COMBAT_LOG';
 export const SELECT_TARGET = 'SELECT_TARGET';
+// Ordnance action types
+export const LAUNCH_ORDNANCE = 'LAUNCH_ORDNANCE';
+export const REMOVE_ORDNANCE = 'REMOVE_ORDNANCE';
+export const UPDATE_ORDNANCE_POSITION = 'UPDATE_ORDNANCE_POSITION';
+export const UPDATE_ORDNANCE_VELOCITY = 'UPDATE_ORDNANCE_VELOCITY';
+export const DETONATE_ORDNANCE = 'DETONATE_ORDNANCE';
+export const UPDATE_SHIP_ORDNANCE = 'UPDATE_SHIP_ORDNANCE';
 
 export interface AddPlayerAction {
   type: typeof ADD_PLAYER;
@@ -241,6 +249,50 @@ export interface SelectTargetAction {
   type: typeof SELECT_TARGET;
   payload: {
     targetId: string | null;
+// Ordnance action interfaces
+export interface LaunchOrdnanceAction {
+  type: typeof LAUNCH_ORDNANCE;
+  payload: {
+    ordnance: Ordnance;
+  };
+}
+
+export interface RemoveOrdnanceAction {
+  type: typeof REMOVE_ORDNANCE;
+  payload: {
+    ordnanceId: string;
+  };
+}
+
+export interface UpdateOrdnancePositionAction {
+  type: typeof UPDATE_ORDNANCE_POSITION;
+  payload: {
+    ordnanceId: string;
+    position: HexCoordinate;
+  };
+}
+
+export interface UpdateOrdnanceVelocityAction {
+  type: typeof UPDATE_ORDNANCE_VELOCITY;
+  payload: {
+    ordnanceId: string;
+    velocity: VelocityVector;
+  };
+}
+
+export interface DetonateOrdnanceAction {
+  type: typeof DETONATE_ORDNANCE;
+  payload: {
+    ordnanceId: string;
+  };
+}
+
+export interface UpdateShipOrdnanceAction {
+  type: typeof UPDATE_SHIP_ORDNANCE;
+  payload: {
+    shipId: string;
+    ordnanceType: OrdnanceType;
+    count: number;
   };
 }
 
@@ -276,6 +328,12 @@ export type GameAction =
   | ExecuteCombatAction
   | ClearCombatLogAction
   | SelectTargetAction;
+  | LaunchOrdnanceAction
+  | RemoveOrdnanceAction
+  | UpdateOrdnancePositionAction
+  | UpdateOrdnanceVelocityAction
+  | DetonateOrdnanceAction
+  | UpdateShipOrdnanceAction;
 
 // Action creators
 export const addPlayer = (): AddPlayerAction => ({
@@ -449,4 +507,43 @@ export const clearCombatLog = (): ClearCombatLogAction => ({
 export const selectTarget = (targetId: string | null): SelectTargetAction => ({
   type: SELECT_TARGET,
   payload: { targetId },
+// Ordnance action creators
+export const launchOrdnance = (ordnance: Ordnance): LaunchOrdnanceAction => ({
+  type: LAUNCH_ORDNANCE,
+  payload: { ordnance },
+});
+
+export const removeOrdnance = (ordnanceId: string): RemoveOrdnanceAction => ({
+  type: REMOVE_ORDNANCE,
+  payload: { ordnanceId },
+});
+
+export const updateOrdnancePosition = (
+  ordnanceId: string,
+  position: HexCoordinate
+): UpdateOrdnancePositionAction => ({
+  type: UPDATE_ORDNANCE_POSITION,
+  payload: { ordnanceId, position },
+});
+
+export const updateOrdnanceVelocity = (
+  ordnanceId: string,
+  velocity: VelocityVector
+): UpdateOrdnanceVelocityAction => ({
+  type: UPDATE_ORDNANCE_VELOCITY,
+  payload: { ordnanceId, velocity },
+});
+
+export const detonateOrdnance = (ordnanceId: string): DetonateOrdnanceAction => ({
+  type: DETONATE_ORDNANCE,
+  payload: { ordnanceId },
+});
+
+export const updateShipOrdnance = (
+  shipId: string,
+  ordnanceType: OrdnanceType,
+  count: number
+): UpdateShipOrdnanceAction => ({
+  type: UPDATE_SHIP_ORDNANCE,
+  payload: { shipId, ordnanceType, count },
 });
