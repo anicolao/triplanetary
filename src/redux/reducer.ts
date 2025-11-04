@@ -47,6 +47,7 @@ import { moveOrdnance, checkOrdnanceCollisions } from '../physics/ordnanceMoveme
 import { OrdnanceType } from '../ordnance/types';
 import { executeMovementPhase, processCollisions } from '../physics/movementExecution';
 import { executeCombatPhase } from '../combat/combatQueue';
+import { createInitialVictoryState, evaluateVictoryCondition } from '../victory';
 
 // Initial state
 export const initialState: GameState = {
@@ -69,6 +70,7 @@ export const initialState: GameState = {
   declaredAttacks: new Map(),
   combatLog: [],
   selectedTargetId: null,
+  victoryState: createInitialVictoryState(),
 };
 
 // Helper function to get next available color
@@ -187,6 +189,7 @@ export function gameReducer(
         currentPhase: GamePhase.Plot,
         roundNumber: 1,
         turnHistory: [],
+        victoryState: createInitialVictoryState(),
       };
     }
 
@@ -382,6 +385,43 @@ export function gameReducer(
           selectedShipId: null, // Clear selection after movement
           notifications: newNotifications,
         };
+      }
+
+      // Check victory conditions when entering Maintenance phase
+      if (nextPhase === GamePhase.Maintenance) {
+        const updatedVictoryState = evaluateVictoryCondition(
+          state.currentScenario.victoryCondition,
+          newState.ships,
+          state.roundNumber,
+          state.victoryState
+        );
+
+        newState = {
+          ...newState,
+          victoryState: updatedVictoryState,
+        };
+
+        // Add victory notification if game is won
+        if (updatedVictoryState.gameWon && !state.victoryState.gameWon) {
+          let winnerName = 'No one';
+          if (updatedVictoryState.winnerId) {
+            const winnerIndex = state.players.findIndex(p => p.id === updatedVictoryState.winnerId);
+            if (winnerIndex !== -1) {
+              winnerName = `Player ${winnerIndex + 1}`;
+            }
+          }
+          const newNotifications = [...newState.notifications, {
+            id: `victory-${Date.now()}`,
+            message: `Victory! ${winnerName} wins: ${updatedVictoryState.victoryReason}`,
+            type: 'info' as const,
+            timestamp: Date.now(),
+          }];
+          
+          newState = {
+            ...newState,
+            notifications: newNotifications,
+          };
+        }
       }
 
       return newState;

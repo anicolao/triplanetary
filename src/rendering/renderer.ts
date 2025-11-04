@@ -319,7 +319,9 @@ export class Renderer {
         state.players.length,
         state.roundNumber,
         currentPlayer.color,
-        allShipsPlotted
+        allShipsPlotted,
+        state.victoryState,
+        state.players.map(p => p.id)
       );
       this.turnRenderer.renderTurnUI(this.currentTurnUILayout);
     } else {

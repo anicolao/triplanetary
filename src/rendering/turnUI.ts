@@ -1,6 +1,7 @@
 // UI elements for turn management display
 
 import { GamePhase } from '../redux/types';
+import { VictoryState } from '../victory/types';
 
 export interface TurnUIButton {
   x: number;
@@ -35,6 +36,15 @@ export interface TurnUILayout {
   roundBoxHeight: number;
   roundText: string;
   
+  // Victory status (optional)
+  victoryBoxX?: number;
+  victoryBoxY?: number;
+  victoryBoxWidth?: number;
+  victoryBoxHeight?: number;
+  victoryText?: string;
+  victoryColor?: string;
+  showVictory: boolean;
+  
   // Action buttons
   nextPhaseButton: TurnUIButton;
 }
@@ -47,7 +57,9 @@ export function createTurnUILayout(
   playerCount: number,
   roundNumber: number,
   playerColor: string,
-  allShipsPlotted: boolean = true
+  allShipsPlotted: boolean = true,
+  victoryState?: VictoryState,
+  playerIds?: string[]
 ): TurnUILayout {
   // UI will be positioned in the top-right corner
   const padding = 10;
@@ -73,17 +85,47 @@ export function createTurnUILayout(
   const roundBoxY = playerBoxY + boxHeight + spacing;
   const roundText = `Round: ${roundNumber}`;
   
+  // Victory status box (if game is won)
+  let victoryBoxX: number | undefined;
+  let victoryBoxY: number | undefined;
+  let victoryText: string | undefined;
+  let victoryColor: string | undefined;
+  let buttonY = roundBoxY + boxHeight + spacing * 2;
+  
+  if (victoryState?.gameWon) {
+    victoryBoxX = phaseBoxX;
+    victoryBoxY = roundBoxY + boxHeight + spacing;
+    
+    // Find the winner's player number
+    let winnerText = 'Game Over: Draw';
+    if (victoryState.winnerId && playerIds) {
+      const winnerIndex = playerIds.findIndex(id => id === victoryState.winnerId);
+      if (winnerIndex !== -1) {
+        winnerText = `Winner: Player ${winnerIndex + 1}`;
+      }
+    }
+    
+    victoryText = winnerText;
+    victoryColor = '#4ae24a'; // Green for victory
+    buttonY = victoryBoxY + boxHeight + spacing * 2; // Move button down
+  }
+  
   // Next phase button
   const buttonWidth = boxWidth;
   const buttonHeight = 40;
   // In Plot phase, button is only enabled if all ships are plotted
-  const isEnabled = currentPhase === GamePhase.Plot ? allShipsPlotted : true;
+  // Disable button if game is won
+  const isEnabled = victoryState?.gameWon 
+    ? false 
+    : (currentPhase === GamePhase.Plot ? allShipsPlotted : true);
   const nextPhaseButton: TurnUIButton = {
     x: phaseBoxX,
-    y: roundBoxY + boxHeight + spacing * 2,
+    y: buttonY,
     width: buttonWidth,
     height: buttonHeight,
-    text: getNextPhaseButtonText(currentPhase, allShipsPlotted),
+    text: victoryState?.gameWon 
+      ? 'Game Over' 
+      : getNextPhaseButtonText(currentPhase, allShipsPlotted),
     enabled: isEnabled,
     action: currentPhase === GamePhase.Maintenance ? 'next-turn' : 'next-phase',
   };
@@ -105,6 +147,13 @@ export function createTurnUILayout(
     roundBoxWidth: boxWidth,
     roundBoxHeight: boxHeight,
     roundText,
+    victoryBoxX,
+    victoryBoxY,
+    victoryBoxWidth: boxWidth,
+    victoryBoxHeight: boxHeight,
+    victoryText,
+    victoryColor,
+    showVictory: victoryState?.gameWon || false,
     nextPhaseButton,
   };
 }

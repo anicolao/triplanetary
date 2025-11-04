@@ -4,6 +4,7 @@ import { HexCoordinate } from '../hex/types';
 import { SpaceStation, Asteroid, MapObject } from './types';
 import { SUN, getPlanets } from './data';
 import { initializePlanetPositions } from './orbital';
+import { AnyVictoryCondition, VictoryConditionType } from '../victory/types';
 
 /**
  * Map bounds definition.
@@ -37,6 +38,8 @@ export interface Scenario {
   stations: SpaceStation[];
   /** Asteroids in this scenario */
   asteroids: Asteroid[];
+  /** Victory condition for this scenario */
+  victoryCondition: AnyVictoryCondition;
 }
 
 /**
@@ -156,6 +159,10 @@ export const DEFAULT_SCENARIO: Scenario = {
     createStation('station-mars', 'Mars Station', { q: -30, r: 40 }),
   ],
   asteroids: createAsteroidField(42, 8, 15, 5, 'belt'),
+  victoryCondition: {
+    type: VictoryConditionType.Elimination,
+    description: 'Eliminate all enemy ships',
+  },
 };
 
 /**
