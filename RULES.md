@@ -179,9 +179,12 @@ The velocity difference between attacker and defender affects accuracy:
 - **D5** - Severely damaged. Ship recovers 1 D level per turn automatically.
 - **E** - Eliminated. The target ship is destroyed.
 
-Ships with "D" combat ratings (like transports, tankers, liners) may not attack or counterattack, though they still defend. Dreadnaughts may still fire their guns even when disabled (D1 damage). An orbital base may launch torpedoes, fire guns, and resupply friendly ships while slightly (D1) damaged.
-
-Ships disabled (D6 or worse) can be looted or captured. A disabled ship cannot maneuver or fire.
+**Special Cases:**
+- Ships with "D" combat ratings (like transports, tankers, liners) may not attack or counterattack, though they still defend.
+- Dreadnaughts may still fire their guns even when damaged (at D1-D3 damage levels).
+- An orbital base may launch torpedoes, fire guns, and resupply friendly ships while slightly damaged (at D1).
+- Ships at D6 damage or worse are considered disabled and can be looted or captured.
+- A disabled ship cannot maneuver or fire.
 
 ## Game Scenarios
 
@@ -357,11 +360,17 @@ Torpedoes are large single mines with drive systems for both launch and terminal
 ### Nukes
 Nukes are large nuclear weapons intended to devastate planetary surfaces. When launched, they assume the vector of the launching ship.
 - Nukes remain active for 5 turns, then self-destruct
-- A nuke explodes when it enters any hex containing a ship, mine, or planetary mass
-- A nuke striking a planet devastates it: Planetary defenses are destroyed, and the base cannot resupply ships until it is rebuilt (20 turns)
-- Ships in the same hex as a nuke detonation must roll on the nuke damage table
+- A nuke explodes when it enters any hex containing a ship, base, asteroid, mine, or torpedo
+- **A nuke destroys everything in the hex automatically** (an asteroid hex becomes clear space)
+- If a nuke reaches a moon or planet without detonating, it devastates one entire hex side:
+  - Any ships on the planet that landed through that hex side are destroyed
+  - Any base on that side is destroyed
+  - Planetary defenses on that side are destroyed (20 turns to rebuild)
+- Guns and planetary defenses may attack nukes at odds of 2:1 (with range and velocity modifiers)
+- A "disabled" nuke is destroyed
 - Nukes mass 20 tons; a ship must have hold capacity to carry them
-- Nukes cost 300 MCr
+- Non-warships are restricted to carrying only one nuke at a time
+- Nukes cost 300 MCr and are available only if the scenario specifies
 
 ### Equipment Costs and Mass
 
