@@ -125,6 +125,13 @@ This document outlines the complete implementation plan for the Triplanetary web
 - Gravity well zones (inner, middle, outer)
 - Position calculation for orbiting bodies
 
+**⚠️ CORRECTION NEEDED:** Current implementation uses zone-based gravity (inner/middle/outer). Per official 2018 rules, gravity should be:
+- Represented by arrows in specific hexes adjacent to celestial bodies
+- Each gravity hex applies exactly one hex of acceleration in arrow direction
+- Effect applied on turn AFTER entering gravity hex
+- Cumulative and mandatory across multiple gravity hexes
+- Discrete full-hex increments (not gradual zones)
+
 **Testing & Verification**:
 - Unit tests for celestial body data
 - Unit tests for orbital calculations
@@ -138,6 +145,12 @@ This document outlines the complete implementation plan for the Triplanetary web
 - Visual distinction for different planets
 - Appropriate scaling for fixed view display
 
+**⚠️ CORRECTION NEEDED:** Gravity visualization should show:
+- Arrows in hexes adjacent to celestial bodies (not zone circles)
+- Direction and magnitude of gravity effect per hex
+- Map should clearly mark which hexes have gravity effects
+- Arrows point toward the celestial body
+
 **Testing & Verification**:
 - Screenshot tests of solar system layout
 - Visual verification of planet positions
@@ -150,6 +163,12 @@ This document outlines the complete implementation plan for the Triplanetary web
 - Asteroid field placement
 - Map bounds definition
 - Initial view positioning
+
+**⚠️ CORRECTION NEEDED:** Map data structure needs to include:
+- Gravity hex definitions for each celestial body
+- Arrow directions for each gravity hex (pointing toward body)
+- Weak gravity flag for Luna and Io hexes
+- Gravity hexes should be in hexes adjacent to celestial bodies
 
 **Testing & Verification**:
 - Tests for different scenario configurations
@@ -339,11 +358,41 @@ This document outlines the complete implementation plan for the Triplanetary web
 - Orbital mechanics implementation ✓
 - Gravity assist calculations ✓
 
+**⚠️ CORRECTION NEEDED:** Current gravity simulation needs to be updated to match official 2018 rules:
+
+**Required Changes:**
+1. **Discrete Hex-Based System**: Replace continuous force model with discrete hex system
+   - Track which gravity hexes ship entered on current turn
+   - Apply gravity effects on NEXT turn (one-turn delay)
+   - Each gravity hex shifts endpoint by exactly one hex in arrow direction
+   
+2. **Gravity Hex Data Model**: 
+   - Define gravity hexes as specific map hexes with arrow directions
+   - Store arrow direction (pointing toward celestial body)
+   - Mark hexes as full gravity vs weak gravity (Luna, Io)
+   
+3. **Application Order**:
+   - Apply gravity hexes in sequence (order matters for cumulative effects)
+   - Store gravity hex entry order from previous turn
+   - Apply each hex's effect as a one-hex shift in arrow direction
+   
+4. **Weak Gravity Choice**:
+   - Luna and Io: player chooses to use or ignore each weak gravity hex
+   - Multiple weak gravity hexes combine to full gravity effect
+   
+5. **Orbit Definition**:
+   - Ship moving one hex/turn between adjacent gravity hexes = orbit
+   - No automatic orbit calculation needed
+
 **Testing & Verification**:
 - Unit tests for gravity calculations ✓
 - Tests for gravity zones ✓
 - Tests for orbital mechanics ✓
 - Validation against physics principles ✓
+- **TODO**: Add tests for discrete hex-based gravity
+- **TODO**: Add tests for one-turn delay
+- **TODO**: Add tests for cumulative sequential application
+- **TODO**: Add tests for weak gravity choice
 
 **Acceptance Criteria**:
 - Ships move according to velocity vectors ✓
@@ -352,8 +401,11 @@ This document outlines the complete implementation plan for the Triplanetary web
 - Orbital mechanics work realistically ✓
 - Collisions are detected ✓
 - All physics tests pass ✓
+- **TODO**: Gravity applies as discrete one-hex shifts per gravity hex
+- **TODO**: Gravity effects delayed by one turn
+- **TODO**: Multiple gravity hexes apply cumulatively in sequence
 
-**Status**: COMPLETED
+**Status**: COMPLETED (requires correction to match official rules)
 
 **Dependencies**: Phase 4, Phase 3
 

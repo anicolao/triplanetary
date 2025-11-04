@@ -115,17 +115,38 @@ Movement in Triplanetary uses a unique vector-based system:
 
 ### Gravity
 
-Celestial bodies exert gravitational effects:
+The planets, satellites, and sun all exert gravity on objects passing close to them. This gravity is represented by **arrows in hexes adjacent to those bodies**.
 
-1. **Gravity Wells**: Planets and the Sun have zones of gravitational influence
-2. **Orbital Mechanics**: Ships in orbit must maintain proper velocity or fall/escape
-3. **Gravity Assists**: Can use gravity to slingshot around planets
-4. **Capture**: Flying too close to a planet without enough velocity may capture your ship
+#### Gravity Mechanics
 
-#### Gravity Effects by Zone
-- **Inner Zone**: Strong gravity pull (multiple hexes)
-- **Middle Zone**: Moderate gravity influence
-- **Outer Zone**: Minimal gravity effect
+**Each gravity hex has the effect of one hex of acceleration in the direction of the arrow**, on every object passing through that hex. 
+
+**Key Rules:**
+- Gravity takes effect **on the turn after** an object enters the gravity hex
+- Gravity is **cumulative** - multiple gravity hexes affect the ship in sequence
+- Gravity is **mandatory** - it cannot be avoided
+
+**How Gravity Works:**
+1. When a ship enters a gravity hex on turn 1, note which gravity hex(es) it entered
+2. On turn 2, after the ship completes its normal movement, apply the gravity effect(s)
+3. Each gravity hex shifts the ship's endpoint by one hex in the direction of the arrow
+4. Multiple gravity hexes are applied in sequence (the order matters)
+
+**Example:** A ship entering gravity hexes I and II on turn 1 will have its course endpoint shifted by hex I's arrow first, then by hex II's arrow on turn 2. The cumulative effect moves the ship's final position.
+
+#### Weak Gravity
+
+Luna and Io have **weak gravity**. A ship entering a weak gravity hex may **choose to ignore it or use it**. When two or more weak gravity hexes are entered in the same turn, they combine to have the effect of full gravity hexes, regardless of how the player chooses to use them individually.
+
+#### Orbits
+
+Ships may enter orbit around any body with gravity hexes. **A ship which moves at one hex per turn from one gravity hex to an adjacent gravity hex of the same body is in orbit.** Such a ship will continue to orbit until fuel is burned to produce a course change.
+
+#### Gravity and Movement
+
+- The line between a gravity hex and the planetary outline is affected by the gravity hex
+- A ship's course running exactly along the edge of a gravity hex means the ship has not entered that gravity hex
+- Gravity effects are applied after the ship moves to its plotted endpoint
 
 ### Combat
 

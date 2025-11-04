@@ -432,19 +432,21 @@ The game must simulate realistic Newtonian physics:
 - Limited thrust points per turn require strategic planning
 
 #### Gravity Effects
-During Movement Phase:
-- Calculate gravitational influence from all celestial bodies
-- Sun has strongest gravity
-- Planets have gravity proportional to their mass
-- Gravity zones (inner, middle, outer) have different pull strengths
-- Modify ship velocity vectors based on gravity
-- Visual indicators show gravity wells and influence
+During Movement Phase (per official 2018 rules):
+- Gravity is represented by **arrows in hexes adjacent to celestial bodies**
+- Each gravity hex applies **one hex of acceleration in the direction of the arrow**
+- Gravity takes effect **on the turn after** entering the gravity hex
+- Gravity is **cumulative and mandatory** - multiple gravity hexes apply in sequence
+- Gravity hexes are discrete full-hex effects (not gradual forces)
+- Visual indicators: arrows on the map show gravity direction and magnitude
+
+**Implementation Note:** Current implementation may use continuous force model (zones with different strengths). This needs to be corrected to match the official discrete hex-by-hex arrow system where each gravity hex shifts the ship's endpoint by exactly one hex in the arrow's direction after a one-turn delay.
 
 #### Orbital Mechanics
-- Ships in correct orbital velocity maintain stable orbit
-- Too slow: ship falls toward planet
-- Too fast: ship escapes orbit
-- Gravity assists allow fuel-efficient trajectory changes
+- A ship moving at one hex per turn from one gravity hex to an adjacent gravity hex of the same body is in orbit
+- Ships continue to orbit until fuel is burned for course change
+- Luna and Io have weak gravity (player choice to use or ignore)
+- Gravity assists work through the cumulative effects of multiple gravity hexes
 
 ### Combat System
 
