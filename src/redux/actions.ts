@@ -3,6 +3,7 @@
 import { Ship, VelocityVector } from '../ship/types';
 import { HexCoordinate } from '../hex/types';
 import { GamePhase } from './types';
+import { DeclaredAttack } from '../combat/types';
 import { Ordnance, OrdnanceType } from '../ordnance/types';
 
 export const ADD_PLAYER = 'ADD_PLAYER';
@@ -42,6 +43,12 @@ export const ADD_NOTIFICATION = 'ADD_NOTIFICATION';
 export const CLEAR_NOTIFICATION = 'CLEAR_NOTIFICATION';
 export const CLEAR_ALL_NOTIFICATIONS = 'CLEAR_ALL_NOTIFICATIONS';
 
+// Combat action types
+export const DECLARE_ATTACK = 'DECLARE_ATTACK';
+export const CANCEL_ATTACK = 'CANCEL_ATTACK';
+export const EXECUTE_COMBAT = 'EXECUTE_COMBAT';
+export const CLEAR_COMBAT_LOG = 'CLEAR_COMBAT_LOG';
+export const SELECT_TARGET = 'SELECT_TARGET';
 // Ordnance action types
 export const LAUNCH_ORDNANCE = 'LAUNCH_ORDNANCE';
 export const REMOVE_ORDNANCE = 'REMOVE_ORDNANCE';
@@ -215,6 +222,33 @@ export interface ClearAllNotificationsAction {
   type: typeof CLEAR_ALL_NOTIFICATIONS;
 }
 
+// Combat action interfaces
+export interface DeclareAttackAction {
+  type: typeof DECLARE_ATTACK;
+  payload: {
+    attack: DeclaredAttack;
+  };
+}
+
+export interface CancelAttackAction {
+  type: typeof CANCEL_ATTACK;
+  payload: {
+    attackerId: string;
+  };
+}
+
+export interface ExecuteCombatAction {
+  type: typeof EXECUTE_COMBAT;
+}
+
+export interface ClearCombatLogAction {
+  type: typeof CLEAR_COMBAT_LOG;
+}
+
+export interface SelectTargetAction {
+  type: typeof SELECT_TARGET;
+  payload: {
+    targetId: string | null;
 // Ordnance action interfaces
 export interface LaunchOrdnanceAction {
   type: typeof LAUNCH_ORDNANCE;
@@ -289,6 +323,11 @@ export type GameAction =
   | AddNotificationAction
   | ClearNotificationAction
   | ClearAllNotificationsAction
+  | DeclareAttackAction
+  | CancelAttackAction
+  | ExecuteCombatAction
+  | ClearCombatLogAction
+  | SelectTargetAction;
   | LaunchOrdnanceAction
   | RemoveOrdnanceAction
   | UpdateOrdnancePositionAction
@@ -446,6 +485,28 @@ export const clearAllNotifications = (): ClearAllNotificationsAction => ({
   type: CLEAR_ALL_NOTIFICATIONS,
 });
 
+// Combat action creators
+export const declareAttack = (attack: DeclaredAttack): DeclareAttackAction => ({
+  type: DECLARE_ATTACK,
+  payload: { attack },
+});
+
+export const cancelAttack = (attackerId: string): CancelAttackAction => ({
+  type: CANCEL_ATTACK,
+  payload: { attackerId },
+});
+
+export const executeCombat = (): ExecuteCombatAction => ({
+  type: EXECUTE_COMBAT,
+});
+
+export const clearCombatLog = (): ClearCombatLogAction => ({
+  type: CLEAR_COMBAT_LOG,
+});
+
+export const selectTarget = (targetId: string | null): SelectTargetAction => ({
+  type: SELECT_TARGET,
+  payload: { targetId },
 // Ordnance action creators
 export const launchOrdnance = (ordnance: Ordnance): LaunchOrdnanceAction => ({
   type: LAUNCH_ORDNANCE,

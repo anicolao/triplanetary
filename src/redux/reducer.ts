@@ -29,6 +29,11 @@ import {
   ADD_NOTIFICATION,
   CLEAR_NOTIFICATION,
   CLEAR_ALL_NOTIFICATIONS,
+  DECLARE_ATTACK,
+  CANCEL_ATTACK,
+  EXECUTE_COMBAT,
+  CLEAR_COMBAT_LOG,
+  SELECT_TARGET,
   LAUNCH_ORDNANCE,
   REMOVE_ORDNANCE,
   UPDATE_ORDNANCE_POSITION,
@@ -41,6 +46,7 @@ import { getDefaultPlacements, createShipsFromPlacements } from '../ship/placeme
 import { moveOrdnance, checkOrdnanceCollisions } from '../physics/ordnanceMovement';
 import { OrdnanceType } from '../ordnance/types';
 import { executeMovementPhase, processCollisions } from '../physics/movementExecution';
+import { executeCombatPhase } from '../combat/combatQueue';
 
 // Initial state
 export const initialState: GameState = {
@@ -60,6 +66,9 @@ export const initialState: GameState = {
   turnHistory: [],
   ordnance: [],
   notifications: [],
+  declaredAttacks: new Map(),
+  combatLog: [],
+  selectedTargetId: null,
 };
 
 // Helper function to get next available color
@@ -318,6 +327,15 @@ export function gameReducer(
         turnHistory: [...state.turnHistory, historyEntry],
       };
 
+      // Clear combat state when leaving Combat phase
+      if (state.currentPhase === GamePhase.Combat) {
+        newState = {
+          ...newState,
+          selectedTargetId: null,
+          declaredAttacks: new Map(),
+        };
+      }
+
       // Auto-execute movement when entering Movement phase
       if (nextPhase === GamePhase.Movement) {
         const { ships, collisions } = executeMovementPhase(
@@ -512,6 +530,70 @@ export function gameReducer(
       };
     }
 
+    // Combat actions
+    case DECLARE_ATTACK: {
+      const { attack } = action.payload;
+      const newDeclaredAttacks = new Map(state.declaredAttacks);
+      newDeclaredAttacks.set(attack.attackerId, attack);
+      
+      return {
+        ...state,
+        declaredAttacks: newDeclaredAttacks,
+      };
+    }
+
+    case CANCEL_ATTACK: {
+      const { attackerId } = action.payload;
+      const newDeclaredAttacks = new Map(state.declaredAttacks);
+      newDeclaredAttacks.delete(attackerId);
+      
+      return {
+        ...state,
+        declaredAttacks: newDeclaredAttacks,
+      };
+    }
+
+    case EXECUTE_COMBAT: {
+      // Execute all declared attacks
+      const { results, updatedShips, logEntries } = executeCombatPhase(
+        state.declaredAttacks,
+        state.ships
+      );
+      
+      // Add destruction notifications
+      const destructionNotifications = results
+        .filter(result => result.targetDestroyed)
+        .map(result => {
+          const target = state.ships.find(s => s.id === result.attack.targetId);
+          return {
+            id: `notification-${Date.now()}-${Math.random()}`,
+            message: `${target?.name || 'Ship'} was destroyed!`,
+            type: 'destruction' as const,
+            timestamp: Date.now(),
+          };
+        });
+      
+      return {
+        ...state,
+        ships: updatedShips,
+        declaredAttacks: new Map(), // Clear attacks after execution
+        combatLog: [...state.combatLog, ...logEntries],
+        notifications: [...state.notifications, ...destructionNotifications],
+      };
+    }
+
+    case CLEAR_COMBAT_LOG: {
+      return {
+        ...state,
+        combatLog: [],
+      };
+    }
+
+    case SELECT_TARGET: {
+      const { targetId } = action.payload;
+      return {
+        ...state,
+        selectedTargetId: targetId,
     case LAUNCH_ORDNANCE: {
       const { ordnance } = action.payload;
       return {

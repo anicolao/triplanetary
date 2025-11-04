@@ -53,6 +53,8 @@ export interface Ship {
   remainingThrust: number;
   /** Whether this ship is destroyed */
   destroyed: boolean;
+  /** Number of turns remaining that ship is disabled (0 = not disabled) */
+  disabledTurns: number;
   /** Ordnance inventory */
   ordnance: OrdnanceInventory;
 }
@@ -89,6 +91,7 @@ export function createShip(
     stats: shipStats,
     remainingThrust: shipStats.maxThrust,
     destroyed: false,
+    disabledTurns: 0,
     ordnance: createDefaultInventory(),
   };
 }

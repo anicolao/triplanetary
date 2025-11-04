@@ -3,6 +3,7 @@
 import { MapObject } from '../celestial/types';
 import { Scenario, MapBounds } from '../celestial/scenario';
 import { Ship, VelocityVector } from '../ship/types';
+import { DeclaredAttack, CombatLogEntry } from '../combat/types';
 import { Ordnance } from '../ordnance/types';
 
 export type Screen = 'configuration' | 'gameplay';
@@ -62,6 +63,10 @@ export interface GameState {
   turnHistory: TurnHistoryEntry[];
   // Notifications
   notifications: GameNotification[];
+  // Combat Phase state
+  declaredAttacks: Map<string, DeclaredAttack>;
+  combatLog: CombatLogEntry[];
+  selectedTargetId: string | null;
   // Ordnance state
   ordnance: Ordnance[];
 }
