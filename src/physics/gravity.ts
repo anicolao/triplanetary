@@ -1,27 +1,32 @@
-// Gravity simulation for celestial bodies
+// Gravity simulation for celestial bodies per 2018 rules
+// Gravity is represented by arrows in hexes adjacent to celestial bodies.
+// Each gravity hex applies exactly one hex of acceleration in the arrow direction.
+// Effects are applied on the turn AFTER entering the hex (one-turn delay).
 
 import { Ship, VelocityVector } from '../ship/types';
 import { HexCoordinate } from '../hex/types';
-import { CelestialBody, GravityWellZone } from '../celestial/types';
-import { hexDistance } from '../hex/operations';
+import { CelestialBody, GravityWellZone, GravityHex } from '../celestial/types';
+import { hexDistance, hexAdd } from '../hex/operations';
 import { vectorAdd } from './vector';
+import { getGravityHexesAt } from '../celestial/gravityHexes';
 
 /**
- * Determines which gravity well zone a position is in relative to a celestial body.
+ * Legacy function - Determines which gravity well zone a position is in.
  * Returns null if the position is outside all gravity zones.
  * 
- * @param position - The position to check
- * @param body - The celestial body with gravity wells
- * @returns The gravity well zone the position is in, or null
+ * @deprecated Use new hex-based gravity system instead
  */
 export function getGravityZone(
   position: HexCoordinate,
   body: CelestialBody
 ): GravityWellZone | null {
+  if (!body.gravityWells) {
+    return null;
+  }
+  
   const distance = hexDistance(position, body.position);
   
   // Check zones from innermost to outermost
-  // Zones are assumed to be sorted by radius in the data
   for (const zone of body.gravityWells) {
     if (distance <= zone.radius) {
       return zone;
@@ -32,12 +37,9 @@ export function getGravityZone(
 }
 
 /**
- * Calculates the direction vector from a position toward a celestial body.
- * Returns a normalized direction (unit vector concept adapted for hex grid).
+ * Legacy function - Calculates the direction vector from a position toward a celestial body.
  * 
- * @param position - The position to calculate from
- * @param bodyPosition - The position of the celestial body
- * @returns A velocity vector pointing toward the body
+ * @deprecated Use new hex-based gravity system instead
  */
 export function calculateGravityDirection(
   position: HexCoordinate,
@@ -48,7 +50,6 @@ export function calculateGravityDirection(
     r: bodyPosition.r - position.r,
   };
   
-  // Normalize to unit magnitude for hex grid
   const magnitude = Math.sqrt(direction.q * direction.q + direction.r * direction.r);
   
   if (magnitude === 0) {
@@ -62,12 +63,9 @@ export function calculateGravityDirection(
 }
 
 /**
- * Calculates the gravitational force applied to a ship from a celestial body.
- * The force is based on the gravity well zone the ship is in.
+ * Legacy function - Calculates gravitational force for zone-based system.
  * 
- * @param shipPosition - The ship's position
- * @param body - The celestial body exerting gravity
- * @returns The velocity change due to gravity (as a vector)
+ * @deprecated Use new hex-based gravity system instead
  */
 export function calculateGravitationalForce(
   shipPosition: HexCoordinate,
@@ -76,12 +74,11 @@ export function calculateGravitationalForce(
   const zone = getGravityZone(shipPosition, body);
   
   if (!zone) {
-    return { q: 0, r: 0 }; // Outside all gravity zones
+    return { q: 0, r: 0 };
   }
   
   const direction = calculateGravityDirection(shipPosition, body.position);
   
-  // Scale direction by pull strength
   return {
     q: direction.q * zone.pullStrength,
     r: direction.r * zone.pullStrength,
@@ -89,11 +86,95 @@ export function calculateGravitationalForce(
 }
 
 /**
- * Applies gravity from all celestial bodies to a ship's velocity.
+ * Gets all gravity hexes from all celestial bodies.
+ * 
+ * @param celestialBodies - Array of celestial bodies
+ * @returns Array of all gravity hexes
+ */
+export function getAllGravityHexes(celestialBodies: CelestialBody[]): GravityHex[] {
+  const allGravityHexes: GravityHex[] = [];
+  
+  for (const body of celestialBodies) {
+    allGravityHexes.push(...body.gravityHexes);
+  }
+  
+  return allGravityHexes;
+}
+
+/**
+ * Detects which gravity hexes a ship enters during its movement.
+ * This is called during movement execution to track gravity hex entry.
+ * 
+ * @param newPosition - The ship's new position after movement
+ * @param gravityHexes - Array of all gravity hexes
+ * @returns Array of gravity hexes entered
+ */
+export function detectGravityHexEntry(
+  newPosition: HexCoordinate,
+  gravityHexes: GravityHex[]
+): HexCoordinate[] {
+  const hexesEntered = getGravityHexesAt(newPosition, gravityHexes);
+  return hexesEntered.map(gh => gh.position);
+}
+
+/**
+ * Applies gravity effects from previously entered gravity hexes (one-turn delay).
+ * Each gravity hex shifts the endpoint by exactly one hex in the arrow direction.
+ * Multiple gravity hexes are applied cumulatively in sequence.
  * 
  * @param ship - The ship to apply gravity to
- * @param celestialBodies - Array of all celestial bodies in the system
- * @returns A new ship object with gravity-modified velocity
+ * @param celestialBodies - Array of celestial bodies
+ * @param weakGravityChoices - Map of weak gravity hex positions to whether to use them
+ * @returns Updated ship with gravity effects applied
+ */
+export function applyGravityEffects(
+  ship: Ship,
+  celestialBodies: CelestialBody[],
+  weakGravityChoices: Map<string, boolean> = new Map()
+): Ship {
+  if (ship.destroyed || !ship.gravityHexesEntered || ship.gravityHexesEntered.length === 0) {
+    return ship;
+  }
+  
+  const allGravityHexes = getAllGravityHexes(celestialBodies);
+  let cumulativeShift: HexCoordinate = { q: 0, r: 0 };
+  
+  // Apply each gravity hex effect in sequence
+  for (const enteredHexPos of ship.gravityHexesEntered) {
+    const gravityHexes = getGravityHexesAt(enteredHexPos, allGravityHexes);
+    
+    for (const gravityHex of gravityHexes) {
+      // Check if this is weak gravity and player chose to ignore it
+      if (gravityHex.isWeak) {
+        const key = `${gravityHex.position.q},${gravityHex.position.r}`;
+        const useWeakGravity = weakGravityChoices.get(key);
+        if (useWeakGravity === false) {
+          continue; // Player chose to ignore this weak gravity hex
+        }
+      }
+      
+      // Each gravity hex shifts endpoint by exactly one hex in arrow direction
+      cumulativeShift = hexAdd(cumulativeShift, gravityHex.direction);
+    }
+  }
+  
+  // Apply cumulative shift to velocity
+  const newVelocity: VelocityVector = {
+    q: ship.velocity.q + cumulativeShift.q,
+    r: ship.velocity.r + cumulativeShift.r,
+  };
+  
+  return {
+    ...ship,
+    velocity: newVelocity,
+    gravityHexesEntered: [], // Clear after applying
+  };
+}
+
+/**
+ * Legacy function - Applies gravity from all celestial bodies using old zone system.
+ * 
+ * @deprecated Use applyGravityEffects instead
  */
 export function applyGravity(ship: Ship, celestialBodies: CelestialBody[]): Ship {
   if (ship.destroyed) {
@@ -102,7 +183,6 @@ export function applyGravity(ship: Ship, celestialBodies: CelestialBody[]): Ship
   
   let newVelocity = { ...ship.velocity };
   
-  // Apply gravity from each celestial body
   for (const body of celestialBodies) {
     const gravityForce = calculateGravitationalForce(ship.position, body);
     newVelocity = vectorAdd(newVelocity, gravityForce);
@@ -115,11 +195,9 @@ export function applyGravity(ship: Ship, celestialBodies: CelestialBody[]): Ship
 }
 
 /**
- * Applies gravity to all ships in the game.
+ * Legacy function - Applies gravity to all ships using old zone system.
  * 
- * @param ships - Array of ships
- * @param celestialBodies - Array of celestial bodies
- * @returns Array of ships with gravity-modified velocities
+ * @deprecated Use applyGravityEffects instead
  */
 export function applyGravityToAll(
   ships: Ship[],
@@ -161,7 +239,11 @@ export function isInStableOrbit(ship: Ship, body: CelestialBody): boolean {
     return false; // Can't orbit at zero distance
   }
   
-  // Get the strongest gravity zone to estimate body mass
+  // Get the strongest gravity zone to estimate body mass (legacy function)
+  if (!body.gravityWells || body.gravityWells.length === 0) {
+    return false; // No gravity wells to orbit around
+  }
+  
   const strongestZone = body.gravityWells.reduce((prev, current) => 
     current.pullStrength > prev.pullStrength ? current : prev
   );

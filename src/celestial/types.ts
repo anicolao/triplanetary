@@ -3,13 +3,27 @@
 import { HexCoordinate } from '../hex/types';
 
 /**
- * Gravity well zone types.
+ * Gravity hex definition per 2018 official rules.
+ * Each gravity hex applies exactly one hex of acceleration in the arrow direction.
+ * Effects are applied on the turn AFTER entering the hex (one-turn delay).
+ */
+export interface GravityHex {
+  /** Position of the gravity hex */
+  position: HexCoordinate;
+  /** Arrow direction (pointing toward the celestial body) */
+  direction: HexCoordinate;
+  /** Whether this is weak gravity (Luna, Io) - player can choose to use or ignore */
+  isWeak: boolean;
+}
+
+/**
+ * Legacy gravity well zone types (deprecated - kept for migration).
  * Zones represent different strengths of gravitational influence.
  */
 export type GravityZone = 'inner' | 'middle' | 'outer';
 
 /**
- * Gravity well zone definition.
+ * Legacy gravity well zone definition (deprecated - kept for migration).
  * Defines the radius and strength of a gravity zone.
  */
 export interface GravityWellZone {
@@ -32,8 +46,10 @@ export interface CelestialBody {
   name: string;
   /** Current position in hex coordinates */
   position: HexCoordinate;
-  /** Gravity well zones (inner to outer) */
-  gravityWells: GravityWellZone[];
+  /** Gravity hexes adjacent to this body (2018 rules) */
+  gravityHexes: GravityHex[];
+  /** Legacy gravity well zones (deprecated - kept for backward compatibility) */
+  gravityWells?: GravityWellZone[];
   /** Visual radius for rendering (in hexes) */
   visualRadius: number;
   /** Color for rendering */
