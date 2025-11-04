@@ -594,6 +594,9 @@ export function gameReducer(
       return {
         ...state,
         selectedTargetId: targetId,
+      };
+    }
+
     case LAUNCH_ORDNANCE: {
       const { ordnance } = action.payload;
       return {

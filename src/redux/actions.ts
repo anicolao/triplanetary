@@ -249,6 +249,9 @@ export interface SelectTargetAction {
   type: typeof SELECT_TARGET;
   payload: {
     targetId: string | null;
+  };
+}
+
 // Ordnance action interfaces
 export interface LaunchOrdnanceAction {
   type: typeof LAUNCH_ORDNANCE;
@@ -327,7 +330,7 @@ export type GameAction =
   | CancelAttackAction
   | ExecuteCombatAction
   | ClearCombatLogAction
-  | SelectTargetAction;
+  | SelectTargetAction
   | LaunchOrdnanceAction
   | RemoveOrdnanceAction
   | UpdateOrdnancePositionAction
@@ -507,6 +510,8 @@ export const clearCombatLog = (): ClearCombatLogAction => ({
 export const selectTarget = (targetId: string | null): SelectTargetAction => ({
   type: SELECT_TARGET,
   payload: { targetId },
+});
+
 // Ordnance action creators
 export const launchOrdnance = (ordnance: Ordnance): LaunchOrdnanceAction => ({
   type: LAUNCH_ORDNANCE,
