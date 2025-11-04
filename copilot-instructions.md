@@ -74,12 +74,12 @@ npm run test:e2e         # Run Playwright E2E tests
 - See `src/physics/` for movement, gravity, and vector calculations
 
 ### Turn-Based Game Loop
-The game follows a strict five-phase turn sequence:
-1. **Plot Phase**: Players plan ship movements and thrust expenditure
+The game follows a strict five-phase turn sequence (per official 2018 rules):
+1. **Astrogation Phase**: Players plot predicted courses and plan thrust modifications
 2. **Ordnance Phase**: Launch mines, torpedoes, or nuclear weapons
-3. **Movement Phase**: Ships move according to plotted velocities (automated with animations)
+3. **Movement Phase**: Ships move according to plotted velocities (automated with animations), gravity effects applied
 4. **Combat Phase**: Declare and resolve weapon attacks
-5. **Maintenance Phase**: Check victory conditions and handle end-of-turn bookkeeping
+5. **Resupply Phase**: Refuel, transfer cargo, loot ships, and recover 1 D damage level
 
 ## Key Design Principles
 
@@ -173,20 +173,85 @@ case ACTION_CONSTANT:
 ### Movement System
 - Ships have velocity vectors represented as hex-based direction and magnitude
 - Velocity persists turn-to-turn (momentum conservation)
-- Players spend thrust points to modify velocity vectors
+- Players spend thrust points (fuel) to modify velocity vectors
 - Each thrust point shifts the velocity endpoint by one hex
+- Ships may burn up to 1 fuel point per turn (2 with overload maneuver)
+
+### Ship Types
+The game features 9 official ship types plus Orbital Bases:
+
+**Civilian Ships:**
+- **Transport** (1D defense, 10 fuel, 50 ton cargo, 10 MCr)
+- **Tanker** (1D defense, 50 fuel, 0 cargo, 10 MCr)
+- **Liner** (2D defense, 10 fuel, 0 cargo, 50 MCr)
+- **Packet** (2 combat, 10 fuel, 50 ton cargo, 20 MCr)
+
+**Military Ships:**
+- **Corvette** (2 combat, 20 fuel, 5 ton cargo, 40 MCr)
+- **Corsair** (4 combat, 20 fuel, 10 ton cargo, 80 MCr)
+- **Frigate** (8 combat, 20 fuel, 40 ton cargo, 150 MCr)
+- **Dreadnaught** (15 combat, 15 fuel, 50 ton cargo, 600 MCr) - note spelling
+- **Torchship** (8 combat, unlimited fuel, 10 ton cargo, 400 MCr)
+
+**Orbital Base** (16 combat, unlimited fuel/cargo, 1000 MCr)
+
+Ships with "D" suffix (1D, 2D) are defensive only and cannot attack. See RULES.md for complete specifications.
 
 ### Gravity Simulation
-- Celestial bodies exert gravitational influence during Movement Phase
-- Gravity strength varies by zone (inner/middle/outer)
-- Ships in incorrect orbits will fall toward or escape from planets
-- See `src/physics/gravity.ts` for implementation
+Per official 2018 rules, gravity uses a **discrete hex-based system**:
+- Gravity is represented by **arrows in hexes adjacent to celestial bodies**
+- Each gravity hex applies **one hex of acceleration in the arrow direction**
+- Gravity takes effect **on the turn after** entering the gravity hex (one-turn delay)
+- Gravity is **cumulative and mandatory** - multiple gravity hexes apply in sequence
+- Gravity hexes are discrete full-hex effects (not gradual force zones)
+- Luna and Io have weak gravity (player choice to use or ignore)
+- A ship moving one hex per turn between adjacent gravity hexes is in orbit
+
+**Note:** Current implementation may use continuous force model with zones. Per PR#28 and IMPLEMENTATION_PLAN.md, this needs correction to match the official discrete hex-by-hex arrow system where each gravity hex shifts the ship's endpoint by exactly one hex in the arrow's direction after a one-turn delay.
 
 ### Combat System
-- Weapons have range limitations and hit probability calculations
-- Damage reduces ship hull points
-- Ships are destroyed at 0 hull points
-- See `src/combat/` for combat logic
+Gun combat uses odds-based damage tables:
+- Combat odds calculated as attacker:defender strength ratio (1:4, 1:2, 1:1, 2:1, 3:1, 4:1)
+- Range modifier: subtract range in hexes from die roll
+- Relative velocity modifier: subtract 1 per hex of velocity difference greater than 2
+- Damage levels: D1-D5 (disabled 1-5 turns), E (eliminated/destroyed)
+- Cumulative damage: D6+ results in ship destruction
+- Ships recover 1 D level per turn automatically
+- Disabled ships cannot maneuver, launch ordnance, or attack (exception: Dreadnaughts can fire when disabled)
+- See `src/combat/` for combat logic and Gun Combat Damage Table
+
+### Ordnance System
+Three types of ordnance are available:
+
+**Mines** (10 MCr, 10 tons):
+- Assume launching ship's vector
+- Active for 5 turns, then self-destruct
+- Detonate when ship or ordnance enters their hex
+- Use Other Damage Table for effects
+
+**Torpedoes** (20 MCr, 20 tons):
+- Can accelerate 1-2 hexes on launch turn only
+- Active for 5 turns, then self-destruct
+- Hit single target per hex
+- Only warships may launch torpedoes
+
+**Nukes** (300 MCr, 20 tons):
+- Destroy everything in hex automatically
+- Devastate planetary hex sides
+- Active for 5 turns
+- Scenario-dependent availability
+
+See RULES.md for complete ordnance rules and damage tables.
+
+### Official Scenarios
+The 2018 rules include several official scenarios:
+- **Bi-Planetary**: Learning scenario - navigate from one planet to another
+- **Grand Tour**: Multi-player race through the solar system
+- **Escape**: Pilgrims vs Enforcers pursuit scenario
+- **Lateral 7**: Liner escort and piracy scenario
+- **Piracy**: Long-form 3-player campaign with Patrol, Merchants, and Pirates
+
+See RULES.md for complete scenario rules, victory conditions, and special rules.
 
 ## Common Tasks
 
@@ -269,10 +334,11 @@ The project currently implements:
 - ✅ Hexagonal grid rendering with celestial bodies
 - ✅ Ship placement and rendering
 - ✅ Turn management system (5-phase sequence)
-- ✅ Plot phase with movement planning
+- ✅ Astrogation phase with movement planning (predicted courses and thrust modifications)
 - ✅ Movement phase with physics simulation
 - ✅ Ordnance system (mines, torpedoes)
 - ✅ Combat phase with weapon firing
+- ✅ Resupply phase for refueling and damage recovery
 - ✅ Victory condition evaluation
 - ✅ Comprehensive test coverage (500+ tests)
 
