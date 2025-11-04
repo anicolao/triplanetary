@@ -37,6 +37,21 @@ export class TurnRenderer {
       '#e2a64a' // Orange for round
     );
 
+    // Render victory box if game is won
+    if (layout.showVictory && layout.victoryBoxX !== undefined && 
+        layout.victoryBoxY !== undefined && layout.victoryText !== undefined &&
+        layout.victoryColor !== undefined && layout.victoryBoxWidth !== undefined &&
+        layout.victoryBoxHeight !== undefined) {
+      this.renderInfoBox(
+        layout.victoryBoxX,
+        layout.victoryBoxY,
+        layout.victoryBoxWidth,
+        layout.victoryBoxHeight,
+        layout.victoryText,
+        layout.victoryColor
+      );
+    }
+
     this.renderButton(layout.nextPhaseButton);
   }
 

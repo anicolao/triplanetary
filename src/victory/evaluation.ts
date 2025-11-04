@@ -6,7 +6,6 @@ import {
   AnyVictoryCondition,
   VictoryConditionType,
   VictoryState,
-  PlayerVictoryProgress,
   EliminationVictory,
   DestinationVictory,
   RaceVictory,
@@ -26,7 +25,7 @@ function hexEquals(a: HexCoordinate, b: HexCoordinate): boolean {
  * Get all active (non-destroyed) ships for a player.
  */
 function getPlayerShips(ships: Ship[], playerId: string): Ship[] {
-  return ships.filter((s) => s.ownerId === playerId && !s.destroyed);
+  return ships.filter((s) => s.playerId === playerId && !s.destroyed);
 }
 
 /**
@@ -36,7 +35,7 @@ function getPlayersWithShips(ships: Ship[]): Set<string> {
   const playerIds = new Set<string>();
   ships.forEach((ship) => {
     if (!ship.destroyed) {
-      playerIds.add(ship.ownerId);
+      playerIds.add(ship.playerId);
     }
   });
   return playerIds;
@@ -47,7 +46,7 @@ function getPlayersWithShips(ships: Ship[]): Set<string> {
  * Winner is the last player with ships remaining.
  */
 function evaluateElimination(
-  condition: EliminationVictory,
+  _condition: EliminationVictory,
   ships: Ship[],
   currentState: VictoryState
 ): VictoryState {
@@ -91,7 +90,7 @@ function evaluateDestination(
       return {
         ...currentState,
         gameWon: true,
-        winnerId: ship.ownerId,
+        winnerId: ship.playerId,
         victoryReason: `Reached ${destName}`,
       };
     }
@@ -115,7 +114,7 @@ function evaluateRace(
   for (const ship of ships) {
     if (ship.destroyed) continue;
 
-    const playerId = ship.ownerId;
+    const playerId = ship.playerId;
     let progress = newPlayerProgress.get(playerId);
 
     if (!progress) {
@@ -213,16 +212,15 @@ function evaluateDestroyShips(
 ): VictoryState {
   // Track destroyed ships per player
   const newPlayerProgress = new Map(currentState.playerProgress);
-  const destroyedByPlayer = new Map<string, number>();
 
   // Note: This is a simplified implementation that counts all destroyed ships.
   // A more complete implementation would track who destroyed which ships.
   // For MVP, we'll count destroyed enemy ships as progress.
-  const allPlayerIds = new Set(ships.map((s) => s.ownerId));
+  const allPlayerIds = new Set(ships.map((s) => s.playerId));
 
   for (const playerId of allPlayerIds) {
     const enemyShipsDestroyed = ships.filter(
-      (s) => s.destroyed && s.ownerId !== playerId
+      (s) => s.destroyed && s.playerId !== playerId
     ).length;
 
     let progress = newPlayerProgress.get(playerId);
@@ -261,7 +259,7 @@ function evaluateControlLocations(
   const newPlayerProgress = new Map(currentState.playerProgress);
 
   // Check which players control all locations
-  const allPlayerIds = new Set(ships.filter((s) => !s.destroyed).map((s) => s.ownerId));
+  const allPlayerIds = new Set(ships.filter((s) => !s.destroyed).map((s) => s.playerId));
 
   for (const playerId of allPlayerIds) {
     const playerShips = getPlayerShips(ships, playerId);

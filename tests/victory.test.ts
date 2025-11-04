@@ -20,25 +20,26 @@ import { Ship } from '../src/ship/types';
 // Helper to create a basic ship
 function createTestShip(
   id: string,
-  ownerId: string,
+  playerId: string,
   position: { q: number; r: number },
   destroyed: boolean = false
 ): Ship {
   return {
     id,
     name: `Ship ${id}`,
-    ownerId,
+    playerId,
     position,
-    velocity: { dq: 0, dr: 0 },
+    velocity: { q: 0, r: 0 },
     remainingThrust: 5,
     stats: {
-      thrust: 5,
+      maxThrust: 5,
       maxHull: 10,
       currentHull: destroyed ? 0 : 10,
       weapons: 1,
       cargo: 0,
     },
     destroyed,
+    disabledTurns: 0,
     ordnance: { mines: 0, torpedoes: 0, missiles: 0 },
   };
 }
