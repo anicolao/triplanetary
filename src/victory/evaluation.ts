@@ -216,6 +216,9 @@ function evaluateDestroyShips(
   // Note: This is a simplified implementation that counts all destroyed ships.
   // A more complete implementation would track who destroyed which ships.
   // For MVP, we'll count destroyed enemy ships as progress.
+  // Limitation: In multi-player scenarios, multiple players might claim credit
+  // for the same destroyed ships. This could result in multiple simultaneous
+  // winners, which is resolved by first-come-first-served (order of iteration).
   const allPlayerIds = new Set(ships.map((s) => s.playerId));
 
   for (const playerId of allPlayerIds) {

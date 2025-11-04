@@ -403,8 +403,13 @@ export function gameReducer(
 
         // Add victory notification if game is won
         if (updatedVictoryState.gameWon && !state.victoryState.gameWon) {
-          const winnerPlayer = state.players.find(p => p.id === updatedVictoryState.winnerId);
-          const winnerName = winnerPlayer ? `Player ${winnerPlayer.id}` : 'No one';
+          let winnerName = 'No one';
+          if (updatedVictoryState.winnerId) {
+            const winnerIndex = state.players.findIndex(p => p.id === updatedVictoryState.winnerId);
+            if (winnerIndex !== -1) {
+              winnerName = `Player ${winnerIndex + 1}`;
+            }
+          }
           const newNotifications = [...newState.notifications, {
             id: `victory-${Date.now()}`,
             message: `Victory! ${winnerName} wins: ${updatedVictoryState.victoryReason}`,

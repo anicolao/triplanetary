@@ -58,7 +58,8 @@ export function createTurnUILayout(
   roundNumber: number,
   playerColor: string,
   allShipsPlotted: boolean = true,
-  victoryState?: VictoryState
+  victoryState?: VictoryState,
+  playerIds?: string[]
 ): TurnUILayout {
   // UI will be positioned in the top-right corner
   const padding = 10;
@@ -94,9 +95,17 @@ export function createTurnUILayout(
   if (victoryState?.gameWon) {
     victoryBoxX = phaseBoxX;
     victoryBoxY = roundBoxY + boxHeight + spacing;
-    victoryText = victoryState.winnerId 
-      ? `Winner: Player ${currentPlayerIndex + 1}` 
-      : 'Game Over: Draw';
+    
+    // Find the winner's player number
+    let winnerText = 'Game Over: Draw';
+    if (victoryState.winnerId && playerIds) {
+      const winnerIndex = playerIds.findIndex(id => id === victoryState.winnerId);
+      if (winnerIndex !== -1) {
+        winnerText = `Winner: Player ${winnerIndex + 1}`;
+      }
+    }
+    
+    victoryText = winnerText;
     victoryColor = '#4ae24a'; // Green for victory
     buttonY = victoryBoxY + boxHeight + spacing * 2; // Move button down
   }
