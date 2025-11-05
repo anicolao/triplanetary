@@ -1,7 +1,7 @@
 // Input handling and hit detection
 
 import { UILayout, Button } from '../rendering/layout';
-import { PLAYER_COLORS } from '../redux/types';
+import { PLAYER_COLORS, GamePhase } from '../redux/types';
 import { Renderer } from '../rendering/renderer';
 import { store } from '../redux/store';
 import {
@@ -157,6 +157,18 @@ export class InputHandler {
         return;
       }
 
+      // Check coast button
+      if (this.isPointInRect(
+        x, y,
+        plotUI.coastButton.x,
+        plotUI.coastButton.y,
+        plotUI.coastButton.width,
+        plotUI.coastButton.height
+      )) {
+        this.handleCoastButtonClick();
+        return;
+      }
+
       // Check undo button
       if (plotUI.undoButton && this.isPointInRect(
         x, y,
@@ -222,7 +234,7 @@ export class InputHandler {
       }
     }
 
-    // Check for ship clicks to select them
+    // Check for ship clicks to select them and hex clicks to plot moves
     const hexSize = 10;
     const layout: HexLayout = {
       size: hexSize,
@@ -235,6 +247,39 @@ export class InputHandler {
 
     const clickedHex = pixelToHex({ x, y }, layout);
     
+    // In Plot phase, check if a ship is selected and user clicked on a reachable hex
+    if (state.currentPhase === GamePhase.Plot && state.selectedShipId) {
+      const selectedShip = state.ships.find(s => s.id === state.selectedShipId);
+      if (selectedShip && !selectedShip.destroyed) {
+        // Get current velocity and remaining thrust
+        const plottedMove = state.plottedMoves.get(state.selectedShipId);
+        const currentVelocity = plottedMove ? plottedMove.newVelocity : selectedShip.velocity;
+        const thrustAlreadyUsed = plottedMove ? plottedMove.thrustUsed : 0;
+        const remainingThrust = selectedShip.stats.maxThrust - thrustAlreadyUsed;
+        
+        // Calculate reachable hexes
+        const reachableHexes = this.calculateReachableHexesForPlotting(
+          selectedShip.position,
+          currentVelocity,
+          remainingThrust
+        );
+        
+        // Check if the clicked hex is reachable
+        const hexKey = `${clickedHex.q},${clickedHex.r}`;
+        const reachableData = reachableHexes.get(hexKey);
+        
+        if (reachableData) {
+          // Plot move to this hex with the resulting velocity
+          store.dispatch(plotShipMove(
+            state.selectedShipId,
+            reachableData.resultingVelocity,
+            thrustAlreadyUsed + reachableData.thrustRequired
+          ));
+          return;
+        }
+      }
+    }
+    
     // Find ship at clicked hex
     for (const ship of state.ships) {
       if (ship.position.q === clickedHex.q && ship.position.r === clickedHex.r && !ship.destroyed) {
@@ -245,6 +290,60 @@ export class InputHandler {
 
     // If no ship clicked, deselect
     store.dispatch(selectShip(null));
+  }
+  
+  private calculateReachableHexesForPlotting(
+    position: { q: number; r: number },
+    velocity: { q: number; r: number },
+    availableThrust: number
+  ): Map<string, { hex: { q: number; r: number }; thrustRequired: number; resultingVelocity: { q: number; r: number } }> {
+    const reachable = new Map<string, { hex: { q: number; r: number }; thrustRequired: number; resultingVelocity: { q: number; r: number } }>();
+    
+    // Try all possible thrust applications within the available thrust
+    for (let dq = -availableThrust; dq <= availableThrust; dq++) {
+      for (let dr = -availableThrust; dr <= availableThrust; dr++) {
+        const ds = -dq - dr;
+        const thrustMagnitude = (Math.abs(dq) + Math.abs(dr) + Math.abs(ds)) / 2;
+        
+        if (thrustMagnitude <= availableThrust) {
+          const resultingVelocity = {
+            q: velocity.q + dq,
+            r: velocity.r + dr,
+          };
+          
+          const destination = {
+            q: position.q + resultingVelocity.q,
+            r: position.r + resultingVelocity.r,
+          };
+          const key = `${destination.q},${destination.r}`;
+          
+          if (!reachable.has(key) || reachable.get(key)!.thrustRequired > thrustMagnitude) {
+            reachable.set(key, {
+              hex: destination,
+              thrustRequired: thrustMagnitude,
+              resultingVelocity,
+            });
+          }
+        }
+      }
+    }
+    
+    return reachable;
+  }
+
+  private handleCoastButtonClick(): void {
+    const state = store.getState();
+    if (!state.selectedShipId) return;
+
+    const selectedShip = state.ships.find((s) => s.id === state.selectedShipId);
+    if (!selectedShip || selectedShip.destroyed) return;
+
+    // Coast means maintaining current velocity with 0 thrust
+    store.dispatch(plotShipMove(
+      state.selectedShipId,
+      { ...selectedShip.velocity },
+      0
+    ));
   }
 
   private handleThrustButtonClick(direction: { q: number; r: number }): void {

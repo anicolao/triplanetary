@@ -187,17 +187,23 @@ describe('Turn Management', () => {
       state = gameReducer(state, addPlayer());
       state = gameReducer(state, startGame());
       
-      // Add a plotted move (would be done through plotShipMove action in real usage)
-      state = {
-        ...state,
-        plottedMoves: new Map([['ship-1', { shipId: 'ship-1', newVelocity: { q: 1, r: 0 }, thrustUsed: 1 }]]),
-      };
+      // After starting game, coast plots should be automatically initialized for player 1
+      const player1InitialPlots = state.plottedMoves.size;
+      expect(player1InitialPlots).toBeGreaterThan(0);
       
-      expect(state.plottedMoves.size).toBe(1);
-      
+      // Advance to next turn (player 2)
       state = gameReducer(state, nextTurn());
       
-      expect(state.plottedMoves.size).toBe(0);
+      // Coast plots should now be initialized for player 2's ships
+      const player2Plots = state.plottedMoves.size;
+      expect(player2Plots).toBeGreaterThan(0);
+      
+      // Verify the plots are for player 2's ships
+      const player2Id = state.players[state.currentPlayerIndex].id;
+      for (const [shipId, plot] of state.plottedMoves.entries()) {
+        const ship = state.ships.find(s => s.id === shipId);
+        expect(ship?.playerId).toBe(player2Id);
+      }
     });
   });
 

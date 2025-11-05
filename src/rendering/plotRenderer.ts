@@ -6,6 +6,7 @@ import { hexToPixel } from '../hex/operations';
 
 export interface PlotUIElements {
   thrustButtons: ThrustButton[];
+  coastButton: Button;
   confirmButton: Button | null;
   undoButton: Button | null;
   toggleHighlightButton: Button;
@@ -168,6 +169,7 @@ export class PlotRenderer {
     if (elements.undoButton) {
       this.renderButton(elements.undoButton, '#FF9800');
     }
+    this.renderButton(elements.coastButton, '#9C27B0');
     this.renderButton(elements.toggleHighlightButton, '#2196F3');
   }
 
@@ -326,6 +328,16 @@ export function createPlotUIElements(
   };
 
   buttonX -= buttonWidth + 10;
+  const coastButton: Button = {
+    x: buttonX,
+    y: buttonY,
+    width: buttonWidth,
+    height: buttonHeight,
+    text: 'Coast',
+    enabled: true,
+  };
+
+  buttonX -= buttonWidth + 10;
   const undoButton: Button | null = hasPlottedMove ? {
     x: buttonX,
     y: buttonY,
@@ -347,6 +359,7 @@ export function createPlotUIElements(
 
   return {
     thrustButtons,
+    coastButton,
     confirmButton,
     undoButton,
     toggleHighlightButton,
