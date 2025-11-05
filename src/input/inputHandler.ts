@@ -249,7 +249,7 @@ export class InputHandler {
     
     // In Plot phase, check if a ship is selected and user clicked on a reachable hex
     if (state.currentPhase === GamePhase.Plot && state.selectedShipId) {
-      const selectedShip = state.ships.find(s => s.id === state.selectedShipId);
+      const selectedShip = state.ships.find((s) => s.id === state.selectedShipId);
       if (selectedShip && !selectedShip.destroyed) {
         // Get current velocity and remaining thrust
         const plottedMove = state.plottedMoves.get(state.selectedShipId);
