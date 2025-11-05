@@ -3,6 +3,7 @@
 import { store } from './redux/store';
 import { Renderer } from './rendering/renderer';
 import { InputHandler } from './input/inputHandler';
+import { initializeTestAPI } from './testing/testAPI';
 
 // Initialize the application
 function init() {
@@ -13,6 +14,9 @@ function init() {
 
   const renderer = new Renderer(canvas);
   const inputHandler = new InputHandler(renderer);
+
+  // Initialize test API for automated testing
+  initializeTestAPI(renderer, inputHandler);
 
   // Main render function
   function render() {
