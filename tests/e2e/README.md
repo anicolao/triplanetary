@@ -17,6 +17,8 @@ The Test Automation API is automatically enabled when the game is loaded with th
 To enable the Test API, load the game with the test mode URL parameter:
 
 ```javascript
+await page.goto('http://localhost:5173/?testMode');
+// or
 await page.goto('http://localhost:5173/?testMode=true');
 ```
 
@@ -37,6 +39,7 @@ await gotoWithTestMode(page);
 - `testAPI.startGame()` - Starts the game
 - `testAPI.selectShip(shipId)` - Selects a ship by ID
 - `testAPI.plotMove(shipId, velocity, thrustUsed)` - Plots a move for a ship
+- `testAPI.clearPlot(shipId)` - Clears a plotted move for a ship
 - `testAPI.nextPhase()` - Advances to the next game phase
 - `testAPI.nextTurn()` - Advances to the next turn
 

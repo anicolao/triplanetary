@@ -62,6 +62,7 @@ test.describe('Automated Click Handling for Plot Phase', () => {
 
     // Verify the move was plotted
     const stateAfterPlot = await getGameState(page);
+    expect(stateAfterPlot.plottedMoves).toBeTruthy();
     const plottedMove = stateAfterPlot.plottedMoves.get(ship.id);
     expect(plottedMove).toBeTruthy();
     console.log(`Plotted move: velocity (${plottedMove.newVelocity.q}, ${plottedMove.newVelocity.r}), thrust used: ${plottedMove.thrustUsed}`);
@@ -99,6 +100,7 @@ test.describe('Automated Click Handling for Plot Phase', () => {
 
     // Verify a move was plotted
     const state = await getGameState(page);
+    expect(state.plottedMoves).toBeTruthy();
     const plottedMove = state.plottedMoves.get(ship.id);
     expect(plottedMove).toBeTruthy();
     

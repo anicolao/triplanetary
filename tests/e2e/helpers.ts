@@ -2,6 +2,28 @@
 
 import { Page } from '@playwright/test';
 
+// Extend Window interface to include testAPI
+declare global {
+  interface Window {
+    testAPI: {
+      getState: () => any;
+      addPlayer: () => void;
+      startGame: () => void;
+      selectShip: (shipId: string | null) => void;
+      plotMove: (shipId: string, velocity: { q: number; r: number }, thrustUsed: number) => void;
+      clearPlot: (shipId: string) => void;
+      nextPhase: () => void;
+      nextTurn: () => void;
+      getShipScreenCoordinates: (shipId: string) => { x: number; y: number } | null;
+      getHexScreenCoordinates: (q: number, r: number) => { x: number; y: number };
+      getButtonCoordinates: (buttonName: string) => { x: number; y: number; width: number; height: number } | null;
+      getHexLayout: () => any;
+      getCanvasWidth: () => number;
+      getCanvasHeight: () => number;
+    };
+  }
+}
+
 /**
  * Navigate to the game page with test mode enabled
  */
@@ -16,7 +38,7 @@ export async function gotoWithTestMode(page: Page, baseURL: string = 'http://loc
  * Get the test API from the page
  */
 export async function getTestAPI(page: Page) {
-  return await page.evaluate(() => (window as any).testAPI);
+  return await page.evaluate(() => window.testAPI);
 }
 
 /**
@@ -24,11 +46,10 @@ export async function getTestAPI(page: Page) {
  */
 export async function setupGame(page: Page, numPlayers: number = 2) {
   await page.evaluate((count) => {
-    const api = (window as any).testAPI;
     for (let i = 0; i < count; i++) {
-      api.addPlayer();
+      window.testAPI.addPlayer();
     }
-    api.startGame();
+    window.testAPI.startGame();
   }, numPlayers);
   // Wait for game to start
   await page.waitForTimeout(300);
@@ -39,8 +60,7 @@ export async function setupGame(page: Page, numPlayers: number = 2) {
  */
 export async function getShipCoordinates(page: Page, shipId: string) {
   return await page.evaluate((id) => {
-    const api = (window as any).testAPI;
-    return api.getShipScreenCoordinates(id);
+    return window.testAPI.getShipScreenCoordinates(id);
   }, shipId);
 }
 
@@ -49,8 +69,7 @@ export async function getShipCoordinates(page: Page, shipId: string) {
  */
 export async function getHexCoordinates(page: Page, q: number, r: number) {
   return await page.evaluate(({ q, r }) => {
-    const api = (window as any).testAPI;
-    return api.getHexScreenCoordinates(q, r);
+    return window.testAPI.getHexScreenCoordinates(q, r);
   }, { q, r });
 }
 
@@ -59,8 +78,7 @@ export async function getHexCoordinates(page: Page, q: number, r: number) {
  */
 export async function getButtonCoordinates(page: Page, buttonName: string) {
   return await page.evaluate((name) => {
-    const api = (window as any).testAPI;
-    return api.getButtonCoordinates(name);
+    return window.testAPI.getButtonCoordinates(name);
   }, buttonName);
 }
 
@@ -69,8 +87,7 @@ export async function getButtonCoordinates(page: Page, buttonName: string) {
  */
 export async function selectShip(page: Page, shipId: string | null) {
   await page.evaluate((id) => {
-    const api = (window as any).testAPI;
-    api.selectShip(id);
+    window.testAPI.selectShip(id);
   }, shipId);
   await page.waitForTimeout(100);
 }
@@ -80,8 +97,7 @@ export async function selectShip(page: Page, shipId: string | null) {
  */
 export async function getGameState(page: Page) {
   return await page.evaluate(() => {
-    const api = (window as any).testAPI;
-    return api.getState();
+    return window.testAPI.getState();
   });
 }
 

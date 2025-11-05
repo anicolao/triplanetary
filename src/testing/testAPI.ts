@@ -11,6 +11,7 @@ import {
   startGame,
   selectShip,
   plotShipMove,
+  clearPlot,
   nextPhase,
   nextTurn,
 } from '../redux/actions';
@@ -24,6 +25,7 @@ export interface TestAPI {
   startGame: () => void;
   selectShip: (shipId: string | null) => void;
   plotMove: (shipId: string, velocity: { q: number; r: number }, thrustUsed: number) => void;
+  clearPlot: (shipId: string) => void;
   nextPhase: () => void;
   nextTurn: () => void;
   
@@ -58,12 +60,13 @@ export function initializeTestAPI(renderer: Renderer, inputHandler: InputHandler
       plotMove: (shipId: string, velocity: { q: number; r: number }, thrustUsed: number) => {
         store.dispatch(plotShipMove(shipId, velocity, thrustUsed));
       },
+      clearPlot: (shipId: string) => store.dispatch(clearPlot(shipId)),
       nextPhase: () => store.dispatch(nextPhase()),
       nextTurn: () => store.dispatch(nextTurn()),
       
       getShipScreenCoordinates: (shipId: string) => {
         const state = store.getState();
-        const ship = state.ships.find((s: any) => s.id === shipId);
+        const ship = state.ships.find((s) => s.id === shipId);
         if (!ship) return null;
         
         const layout = getHexLayout();
@@ -151,10 +154,11 @@ function getHexLayout(): HexLayout {
 }
 
 function isTestMode(): boolean {
-  // Check if we're in test mode via URL parameter or environment
+  // Check if we're in test mode via URL parameter
+  // Supports both ?testMode and ?testMode=true
   if (typeof window !== 'undefined') {
     const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.has('testMode') || urlParams.get('test') === 'true';
+    return urlParams.has('testMode');
   }
   return false;
 }
