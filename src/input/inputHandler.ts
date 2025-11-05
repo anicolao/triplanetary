@@ -37,6 +37,10 @@ export class InputHandler {
     this.currentLayout = layout;
   }
 
+  getCurrentLayout(): UILayout | null {
+    return this.currentLayout;
+  }
+
   private setupEventListeners(): void {
     const canvas = this.renderer.getCanvas();
 
