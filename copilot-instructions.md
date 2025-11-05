@@ -350,6 +350,7 @@ The project currently implements:
 4. **Keep changes focused**: One feature or fix per change
 5. **Write tests**: All new logic should have unit tests
 6. **Update documentation**: If you change behavior, update relevant docs
+7. **Verify screenshots**: When providing screenshots in PR comments, always verify they match the description given. Screenshots should clearly show the specific feature or UI being described.
 
 ## Build Artifacts
 
