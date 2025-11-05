@@ -99,6 +99,31 @@ function getNextPhase(currentPhase: GamePhase): GamePhase {
   return phaseOrder[nextIndex];
 }
 
+// Helper function to initialize coast plots for all active ships of a player
+// Coasting means maintaining the current velocity with 0 thrust
+function initializeCoastPlots(state: GameState): Map<string, import('./types').PlottedMove> {
+  const plottedMoves = new Map(state.plottedMoves);
+  const currentPlayerId = state.players[state.currentPlayerIndex]?.id;
+  
+  if (!currentPlayerId) {
+    return plottedMoves;
+  }
+  
+  // For each active ship belonging to the current player, initialize a coast plot
+  state.ships.forEach(ship => {
+    if (ship.playerId === currentPlayerId && !ship.destroyed && !plottedMoves.has(ship.id)) {
+      // Coast: maintain current velocity with 0 thrust
+      plottedMoves.set(ship.id, {
+        shipId: ship.id,
+        newVelocity: { ...ship.velocity },
+        thrustUsed: 0,
+      });
+    }
+  });
+  
+  return plottedMoves;
+}
+
 // Reducer function
 export function gameReducer(
   state: GameState = initialState,
@@ -180,9 +205,9 @@ export function gameReducer(
       const placements = getDefaultPlacements(playerIds, state.currentScenario);
       const ships = createShipsFromPlacements(placements, state.currentScenario);
 
-      return {
+      const newState: GameState = {
         ...state,
-        screen: 'gameplay',
+        screen: 'gameplay' as const,
         ships,
         turnOrder: playerIds,
         currentPlayerIndex: 0,
@@ -190,6 +215,12 @@ export function gameReducer(
         roundNumber: 1,
         turnHistory: [],
         victoryState: createInitialVictoryState(),
+      };
+      
+      // Initialize coast plots for all ships of the first player
+      return {
+        ...newState,
+        plottedMoves: initializeCoastPlots(newState),
       };
     }
 
@@ -440,7 +471,7 @@ export function gameReducer(
         timestamp: Date.now(),
       };
 
-      return {
+      const newState = {
         ...state,
         currentPlayerIndex: nextPlayerIndex,
         currentPhase: GamePhase.Plot, // Start of a new turn
@@ -448,6 +479,12 @@ export function gameReducer(
         turnHistory: [...state.turnHistory, historyEntry],
         // Clear plotted moves at the start of a new turn
         plottedMoves: new Map(),
+      };
+      
+      // Initialize coast plots for all ships of the new current player
+      return {
+        ...newState,
+        plottedMoves: initializeCoastPlots(newState),
       };
     }
 
@@ -461,13 +498,19 @@ export function gameReducer(
 
     case INITIALIZE_TURN_ORDER: {
       const playerIds = state.players.map((p) => p.id);
-      return {
+      const newState = {
         ...state,
         turnOrder: playerIds,
         currentPlayerIndex: 0,
         currentPhase: GamePhase.Plot,
         roundNumber: 1,
         turnHistory: [],
+      };
+      
+      // Initialize coast plots for all ships of the first player
+      return {
+        ...newState,
+        plottedMoves: initializeCoastPlots(newState),
       };
     }
 

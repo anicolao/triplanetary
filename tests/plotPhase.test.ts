@@ -9,6 +9,8 @@ import {
   toggleReachableHexes,
   addShip,
   selectShip,
+  addPlayer,
+  startGame,
 } from '../src/redux/actions';
 import { createShip } from '../src/ship/types';
 
@@ -192,5 +194,78 @@ describe('Plot Phase Integration', () => {
     // Toggle back on
     state = gameReducer(state, toggleReachableHexes());
     expect(state.showReachableHexes).toBe(true);
+  });
+});
+
+describe('Coast Feature', () => {
+  it('should plot a coast move (0 thrust, maintain velocity)', () => {
+    const ship = createShip('ship1', 'Test Ship', 'player1', { q: 0, r: 0 });
+    ship.velocity = { q: 2, r: 1 };
+    let state = gameReducer(initialState, addShip(ship));
+    
+    // Plot a coast move
+    state = gameReducer(state, plotShipMove('ship1', { q: 2, r: 1 }, 0));
+    
+    expect(state.plottedMoves.has('ship1')).toBe(true);
+    const plot = state.plottedMoves.get('ship1');
+    expect(plot?.newVelocity).toEqual({ q: 2, r: 1 });
+    expect(plot?.thrustUsed).toBe(0);
+  });
+  
+  it('should automatically initialize coast plots when starting game', () => {
+    // Add players and start game
+    let state = gameReducer(initialState, addPlayer());
+    state = gameReducer(state, addPlayer());
+    const player1Id = state.players[0].id;
+    
+    state = gameReducer(state, startGame());
+    
+    // Check basic state
+    expect(state.players.length).toBe(2);
+    expect(state.ships.length).toBe(2);
+    expect(state.currentPlayerIndex).toBe(0);
+    expect(state.players[0].id).toBe(player1Id);
+    
+    // Check player IDs on ships
+    const player1Ships = state.ships.filter(s => s.playerId === player1Id && !s.destroyed);
+    expect(player1Ships.length).toBe(1); // Default scenario creates 1 ship per player
+    
+    // Check that plottedMoves exist
+    expect(state.plottedMoves.size).toBe(1);
+    
+    // All ships of the first player should have coast plots
+    player1Ships.forEach(ship => {
+      expect(state.plottedMoves.has(ship.id)).toBe(true);
+      const plot = state.plottedMoves.get(ship.id);
+      expect(plot?.thrustUsed).toBe(0);
+      expect(plot?.newVelocity).toEqual(ship.velocity);
+    });
+  });
+  
+  it('should automatically initialize coast plots when advancing to next turn', () => {
+    // Set up game with players
+    let state = gameReducer(initialState, addPlayer());
+    state = gameReducer(state, addPlayer());
+    state = gameReducer(state, startGame());
+    
+    // Clear all plots
+    state = gameReducer(state, clearAllPlots());
+    expect(state.plottedMoves.size).toBe(0);
+    
+    // Advance to next turn
+    state = gameReducer(state, { type: 'NEXT_TURN' });
+    
+    // All ships of the new current player should have coast plots
+    const currentPlayerShips = state.ships.filter(
+      s => s.playerId === state.players[state.currentPlayerIndex].id && !s.destroyed
+    );
+    
+    expect(currentPlayerShips.length).toBeGreaterThan(0);
+    currentPlayerShips.forEach(ship => {
+      expect(state.plottedMoves.has(ship.id)).toBe(true);
+      const plot = state.plottedMoves.get(ship.id);
+      expect(plot?.thrustUsed).toBe(0);
+      expect(plot?.newVelocity).toEqual(ship.velocity);
+    });
   });
 });
