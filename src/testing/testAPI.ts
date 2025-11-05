@@ -2,6 +2,7 @@
 // This module exposes functions to the window object for test automation
 
 import { store } from '../redux/store';
+import { GameState } from '../redux/types';
 import { Renderer } from '../rendering/renderer';
 import { InputHandler } from '../input/inputHandler';
 import { hexToPixel } from '../hex/operations';
@@ -18,7 +19,7 @@ import {
 
 export interface TestAPI {
   // State access
-  getState: () => any;
+  getState: () => GameState;
   
   // Game control
   addPlayer: () => void;
@@ -133,7 +134,7 @@ export function initializeTestAPI(renderer: Renderer, inputHandler: InputHandler
     };
     
     // Expose API to window object
-    (window as any).testAPI = api;
+    (window as unknown as Window & { testAPI: TestAPI }).testAPI = api;
   }
 }
 

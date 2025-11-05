@@ -2,25 +2,51 @@
 
 import { Page } from '@playwright/test';
 
+// Type definitions for the test API
+interface TestAPI {
+  getState: () => GameState;
+  addPlayer: () => void;
+  startGame: () => void;
+  selectShip: (shipId: string | null) => void;
+  plotMove: (shipId: string, velocity: { q: number; r: number }, thrustUsed: number) => void;
+  clearPlot: (shipId: string) => void;
+  nextPhase: () => void;
+  nextTurn: () => void;
+  getShipScreenCoordinates: (shipId: string) => { x: number; y: number } | null;
+  getHexScreenCoordinates: (q: number, r: number) => { x: number; y: number };
+  getButtonCoordinates: (buttonName: string) => { x: number; y: number; width: number; height: number } | null;
+  getHexLayout: () => HexLayout;
+  getCanvasWidth: () => number;
+  getCanvasHeight: () => number;
+}
+
+// Minimal type definitions needed for tests
+interface GameState {
+  screen: string;
+  currentPhase: string;
+  selectedShipId: string | null;
+  ships: Array<{
+    id: string;
+    position: { q: number; r: number };
+    velocity: { q: number; r: number };
+    destroyed?: boolean;
+  }>;
+  plottedMoves: Map<string, {
+    newVelocity: { q: number; r: number };
+    thrustUsed: number;
+  }>;
+}
+
+interface HexLayout {
+  size: number;
+  origin: { x: number; y: number };
+  orientation: string;
+}
+
 // Extend Window interface to include testAPI
 declare global {
   interface Window {
-    testAPI: {
-      getState: () => any;
-      addPlayer: () => void;
-      startGame: () => void;
-      selectShip: (shipId: string | null) => void;
-      plotMove: (shipId: string, velocity: { q: number; r: number }, thrustUsed: number) => void;
-      clearPlot: (shipId: string) => void;
-      nextPhase: () => void;
-      nextTurn: () => void;
-      getShipScreenCoordinates: (shipId: string) => { x: number; y: number } | null;
-      getHexScreenCoordinates: (q: number, r: number) => { x: number; y: number };
-      getButtonCoordinates: (buttonName: string) => { x: number; y: number; width: number; height: number } | null;
-      getHexLayout: () => any;
-      getCanvasWidth: () => number;
-      getCanvasHeight: () => number;
-    };
+    testAPI: TestAPI;
   }
 }
 
