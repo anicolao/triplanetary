@@ -414,7 +414,7 @@ npm run test:e2e -- --debug           # Playwright debug mode
 
 - Check existing code for similar functionality
 - Read the design docs (DESIGN.md, CODE_STRUCTURE.md)
-- Review the original game rules (RULES.md, 2018rules.pdf)
+- Review the original game rules (RULES.md, reference/2018rules.pdf)
 - Look at test files for usage examples
 - Examine Redux state structure in `src/redux/types.ts`
 
