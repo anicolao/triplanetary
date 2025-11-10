@@ -101,6 +101,7 @@ The game follows a strict five-phase turn sequence (per official 2018 rules):
 ### Testing Strategy
 - **Unit tests**: Redux reducers, physics calculations, utility functions
 - **Integration tests**: Full user workflows with Playwright
+- **Touch tests**: All interactive UI elements must have E2E tests using Playwright's `page.touchscreen.tap()` API
 - Test files mirror source structure (e.g., `src/physics/gravity.ts` → `tests/gravity.test.ts`)
 - All tests should pass before committing changes
 
@@ -152,6 +153,15 @@ export function renderElement(
   ctx.restore();
 }
 ```
+
+### Touch Support Requirements
+**All UI/UX implementations MUST support touch interactions:**
+- **Touch events**: Implement `touchstart`, `touchend`, `touchmove`, and `touchcancel` handlers
+- **Event prevention**: Prevent default browser behaviors (scrolling, zooming) on touch events within the game canvas
+- **Unified handling**: Touch and mouse events should trigger the same game actions
+- **Testing**: All new UI elements MUST include E2E tests for touch interactions
+- **Accessibility**: Touch targets should be appropriately sized for finger interaction (minimum 44x44 pixels recommended)
+- **No mouse-only features**: Never implement features that only work with mouse input
 
 ### Redux Patterns
 ```typescript
@@ -266,9 +276,10 @@ See RULES.md for complete scenario rules, victory conditions, and special rules.
 ### Adding a New UI Element
 1. Define layout calculations in `src/rendering/layout.ts`
 2. Add rendering function in appropriate renderer file
-3. Add hit detection in `src/input/inputHandler.ts`
+3. Add hit detection in `src/input/inputHandler.ts` for both mouse and touch
 4. Wire up Redux action dispatch
-5. Add E2E tests if user-facing
+5. **REQUIRED**: Add E2E tests for both mouse clicks and touch interactions
+6. Verify touch targets are appropriately sized (minimum 44x44 pixels)
 
 ### Adding Physics Calculations
 1. Implement pure functions in `src/physics/`
@@ -349,8 +360,9 @@ The project currently implements:
 3. **Follow existing patterns**: Look at similar code for style and structure guidance
 4. **Keep changes focused**: One feature or fix per change
 5. **Write tests**: All new logic should have unit tests
-6. **Update documentation**: If you change behavior, update relevant docs
-7. **Verify screenshots**: When providing screenshots in PR comments, always verify they match the description given. Screenshots should clearly show the specific feature or UI being described.
+6. **Touch support is mandatory**: All UI/UX changes MUST include touch event support and corresponding E2E tests
+7. **Update documentation**: If you change behavior, update relevant docs
+8. **Verify screenshots**: When providing screenshots in PR comments, always verify they match the description given. Screenshots should clearly show the specific feature or UI being described.
 
 ## Build Artifacts
 
