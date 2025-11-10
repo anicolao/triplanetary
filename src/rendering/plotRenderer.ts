@@ -5,22 +5,8 @@ import { Ship, VelocityVector } from '../ship/types';
 import { hexToPixel } from '../hex/operations';
 
 export interface PlotUIElements {
-  thrustButtons: ThrustButton[];
-  coastButton: Button;
-  confirmButton: Button | null;
-  undoButton: Button | null;
   toggleHighlightButton: Button;
   statusPanel: StatusPanel;
-}
-
-export interface ThrustButton {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  direction: VelocityVector;
-  label: string;
-  enabled: boolean;
 }
 
 export interface Button {
@@ -157,19 +143,7 @@ export class PlotRenderer {
     // Render status panel
     this.renderStatusPanel(elements.statusPanel);
 
-    // Render thrust direction buttons
-    elements.thrustButtons.forEach(button => {
-      this.renderThrustButton(button);
-    });
-
-    // Render action buttons
-    if (elements.confirmButton) {
-      this.renderButton(elements.confirmButton, '#4CAF50');
-    }
-    if (elements.undoButton) {
-      this.renderButton(elements.undoButton, '#FF9800');
-    }
-    this.renderButton(elements.coastButton, '#9C27B0');
+    // Render toggle highlight button
     this.renderButton(elements.toggleHighlightButton, '#2196F3');
   }
 
@@ -209,28 +183,6 @@ export class PlotRenderer {
     );
   }
 
-  private renderThrustButton(button: ThrustButton): void {
-    // Background
-    this.ctx.fillStyle = button.enabled ? '#4CAF50' : '#555555';
-    this.ctx.fillRect(button.x, button.y, button.width, button.height);
-
-    // Border
-    this.ctx.strokeStyle = '#FFFFFF';
-    this.ctx.lineWidth = 2;
-    this.ctx.strokeRect(button.x, button.y, button.width, button.height);
-
-    // Label
-    this.ctx.fillStyle = button.enabled ? '#FFFFFF' : '#999999';
-    this.ctx.font = `${button.height * 0.4}px sans-serif`;
-    this.ctx.textAlign = 'center';
-    this.ctx.textBaseline = 'middle';
-    this.ctx.fillText(
-      button.label,
-      button.x + button.width / 2,
-      button.y + button.height / 2
-    );
-  }
-
   private renderButton(button: Button, color: string): void {
     // Background
     this.ctx.fillStyle = button.enabled ? color : '#555555';
@@ -255,53 +207,14 @@ export class PlotRenderer {
 }
 
 /**
- * Creates thrust direction buttons for the Plot UI
- */
-export function createThrustButtons(
-  canvasWidth: number,
-  canvasHeight: number,
-  remainingThrust: number
-): ThrustButton[] {
-  const buttonSize = 60;
-  const spacing = 10;
-  const centerX = canvasWidth - 250;
-  const centerY = canvasHeight / 2;
-
-  const directions: Array<{ dir: VelocityVector; label: string; offsetX: number; offsetY: number }> = [
-    { dir: { q: 0, r: -1 }, label: '↑', offsetX: 0, offsetY: -1 },
-    { dir: { q: 1, r: -1 }, label: '↗', offsetX: 1, offsetY: -1 },
-    { dir: { q: 1, r: 0 }, label: '→', offsetX: 1, offsetY: 0 },
-    { dir: { q: 0, r: 1 }, label: '↓', offsetX: 0, offsetY: 1 },
-    { dir: { q: -1, r: 1 }, label: '↙', offsetX: -1, offsetY: 1 },
-    { dir: { q: -1, r: 0 }, label: '←', offsetX: -1, offsetY: 0 },
-  ];
-
-  return directions.map(({ dir, label, offsetX, offsetY }) => ({
-    x: centerX + offsetX * (buttonSize + spacing),
-    y: centerY + offsetY * (buttonSize + spacing),
-    width: buttonSize,
-    height: buttonSize,
-    direction: dir,
-    label,
-    enabled: remainingThrust > 0,
-  }));
-}
-
-/**
  * Creates the Plot UI elements based on current game state
  */
 export function createPlotUIElements(
   selectedShip: Ship,
   canvasWidth: number,
   canvasHeight: number,
-  hasPlottedMove: boolean
+  _hasPlottedMove: boolean
 ): PlotUIElements {
-  const thrustButtons = createThrustButtons(
-    canvasWidth,
-    canvasHeight,
-    selectedShip.remainingThrust
-  );
-
   const statusPanel: StatusPanel = {
     x: 10,
     y: canvasHeight - 120,
@@ -318,7 +231,7 @@ export function createPlotUIElements(
   const buttonY = 190; // 180px turn UI + 10px gap
   const buttonHeight = 40;
   const buttonWidth = 120;
-  let buttonX = canvasWidth - buttonWidth - 10;
+  const buttonX = canvasWidth - buttonWidth - 10;
 
   const toggleHighlightButton: Button = {
     x: buttonX,
@@ -329,41 +242,7 @@ export function createPlotUIElements(
     enabled: true,
   };
 
-  buttonX -= buttonWidth + 10;
-  const coastButton: Button = {
-    x: buttonX,
-    y: buttonY,
-    width: buttonWidth,
-    height: buttonHeight,
-    text: 'Coast',
-    enabled: true,
-  };
-
-  buttonX -= buttonWidth + 10;
-  const undoButton: Button | null = hasPlottedMove ? {
-    x: buttonX,
-    y: buttonY,
-    width: buttonWidth,
-    height: buttonHeight,
-    text: 'Undo',
-    enabled: true,
-  } : null;
-
-  buttonX -= buttonWidth + 10;
-  const confirmButton: Button | null = hasPlottedMove ? {
-    x: buttonX,
-    y: buttonY,
-    width: buttonWidth,
-    height: buttonHeight,
-    text: 'Confirm',
-    enabled: true,
-  } : null;
-
   return {
-    thrustButtons,
-    coastButton,
-    confirmButton,
-    undoButton,
     toggleHighlightButton,
     statusPanel,
   };

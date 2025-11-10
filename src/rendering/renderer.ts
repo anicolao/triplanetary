@@ -18,6 +18,11 @@ import { getValidTargets } from '../combat/resolution';
 import { renderOrdnance } from './ordnanceRenderer';
 import { createOrdnanceUIElements, renderOrdnanceUI, OrdnanceUIElements } from './ordnanceUI';
 
+export interface ShipNavButtons {
+  previousButton: { x: number; y: number; width: number; height: number; visible: boolean } | null;
+  nextButton: { x: number; y: number; width: number; height: number; isCheckmark: boolean };
+}
+
 export class Renderer {
   private ctx: CanvasRenderingContext2D;
   private canvas: HTMLCanvasElement;
@@ -33,6 +38,7 @@ export class Renderer {
   private currentTurnUILayout: TurnUILayout | null = null;
   private currentCombatUILayout: CombatUILayout | null = null;
   private currentOrdnanceUIElements: OrdnanceUIElements | null = null;
+  private shipNavButtons: ShipNavButtons | null = null;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -83,6 +89,10 @@ export class Renderer {
 
   getCombatUILayout(): CombatUILayout | null {
     return this.currentCombatUILayout;
+  }
+
+  getShipNavButtons(): ShipNavButtons | null {
+    return this.shipNavButtons;
   }
 
   render(state: GameState): UILayout {
@@ -296,12 +306,113 @@ export class Renderer {
     this.ctx.textBaseline = 'top';
     this.ctx.fillText('Players:', 20, 20);
 
-    state.players.forEach((player, index) => {
-      this.ctx.fillStyle = player.color;
-      this.ctx.fillRect(20, 45 + index * 25, 15, 15);
-      this.ctx.fillStyle = '#ffffff';
-      this.ctx.fillText(`Player ${index + 1}`, 40, 45 + index * 25);
-    });
+    // Render ship navigation buttons only in Plot phase for current player
+    this.shipNavButtons = null;
+    if (state.currentPhase === GamePhase.Plot) {
+      const currentPlayer = state.players[state.currentPlayerIndex];
+      if (currentPlayer) {
+        const playerShips = state.ships.filter(s => s.playerId === currentPlayer.id && !s.destroyed);
+        const currentShipIndex = state.selectedShipId 
+          ? playerShips.findIndex(s => s.id === state.selectedShipId)
+          : -1;
+        const isLastShip = currentShipIndex === playerShips.length - 1;
+        const hasMultipleShips = playerShips.length > 1;
+
+        state.players.forEach((player, index) => {
+          this.ctx.fillStyle = player.color;
+          this.ctx.fillRect(20, 45 + index * 25, 15, 15);
+          this.ctx.fillStyle = '#ffffff';
+          this.ctx.fillText(`Player ${index + 1}`, 40, 45 + index * 25);
+
+          // Add navigation buttons for current player
+          if (index === state.currentPlayerIndex) {
+            const buttonY = 45 + index * 25;
+            const buttonSize = 20;
+            const buttonSpacing = 5;
+            let buttonX = 150;
+
+            // Previous button (only if multiple ships)
+            if (hasMultipleShips) {
+              this.ctx.fillStyle = 'rgba(100, 100, 100, 0.8)';
+              this.ctx.fillRect(buttonX, buttonY, buttonSize, buttonSize);
+              this.ctx.strokeStyle = '#ffffff';
+              this.ctx.lineWidth = 2;
+              this.ctx.strokeRect(buttonX, buttonY, buttonSize, buttonSize);
+              
+              // Draw left arrow
+              this.ctx.fillStyle = '#ffffff';
+              this.ctx.beginPath();
+              this.ctx.moveTo(buttonX + buttonSize * 0.65, buttonY + buttonSize * 0.25);
+              this.ctx.lineTo(buttonX + buttonSize * 0.35, buttonY + buttonSize * 0.5);
+              this.ctx.lineTo(buttonX + buttonSize * 0.65, buttonY + buttonSize * 0.75);
+              this.ctx.stroke();
+
+              if (!this.shipNavButtons) {
+                this.shipNavButtons = {
+                  previousButton: { x: buttonX, y: buttonY, width: buttonSize, height: buttonSize, visible: true },
+                  nextButton: { x: 0, y: 0, width: 0, height: 0, isCheckmark: false }
+                };
+              } else {
+                this.shipNavButtons.previousButton = { x: buttonX, y: buttonY, width: buttonSize, height: buttonSize, visible: true };
+              }
+
+              buttonX += buttonSize + buttonSpacing;
+            }
+
+            // Next/Confirm button
+            this.ctx.fillStyle = isLastShip ? 'rgba(0, 200, 0, 0.8)' : 'rgba(100, 100, 100, 0.8)';
+            this.ctx.fillRect(buttonX, buttonY, buttonSize, buttonSize);
+            this.ctx.strokeStyle = '#ffffff';
+            this.ctx.lineWidth = 2;
+            this.ctx.strokeRect(buttonX, buttonY, buttonSize, buttonSize);
+            
+            if (isLastShip) {
+              // Draw checkmark
+              this.ctx.strokeStyle = '#ffffff';
+              this.ctx.lineWidth = 2;
+              this.ctx.beginPath();
+              this.ctx.moveTo(buttonX + buttonSize * 0.25, buttonY + buttonSize * 0.5);
+              this.ctx.lineTo(buttonX + buttonSize * 0.45, buttonY + buttonSize * 0.7);
+              this.ctx.lineTo(buttonX + buttonSize * 0.75, buttonY + buttonSize * 0.3);
+              this.ctx.stroke();
+            } else {
+              // Draw right arrow
+              this.ctx.fillStyle = '#ffffff';
+              this.ctx.beginPath();
+              this.ctx.moveTo(buttonX + buttonSize * 0.35, buttonY + buttonSize * 0.25);
+              this.ctx.lineTo(buttonX + buttonSize * 0.65, buttonY + buttonSize * 0.5);
+              this.ctx.lineTo(buttonX + buttonSize * 0.35, buttonY + buttonSize * 0.75);
+              this.ctx.stroke();
+            }
+
+            if (!this.shipNavButtons) {
+              this.shipNavButtons = {
+                previousButton: hasMultipleShips ? { x: buttonX - buttonSize - buttonSpacing, y: buttonY, width: buttonSize, height: buttonSize, visible: true } : null,
+                nextButton: { x: buttonX, y: buttonY, width: buttonSize, height: buttonSize, isCheckmark: isLastShip }
+              };
+            } else {
+              this.shipNavButtons.nextButton = { x: buttonX, y: buttonY, width: buttonSize, height: buttonSize, isCheckmark: isLastShip };
+            }
+          }
+        });
+      } else {
+        // No ship navigation in other phases
+        state.players.forEach((player, index) => {
+          this.ctx.fillStyle = player.color;
+          this.ctx.fillRect(20, 45 + index * 25, 15, 15);
+          this.ctx.fillStyle = '#ffffff';
+          this.ctx.fillText(`Player ${index + 1}`, 40, 45 + index * 25);
+        });
+      }
+    } else {
+      // No ship navigation in other phases
+      state.players.forEach((player, index) => {
+        this.ctx.fillStyle = player.color;
+        this.ctx.fillRect(20, 45 + index * 25, 15, 15);
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.fillText(`Player ${index + 1}`, 40, 45 + index * 25);
+      });
+    }
 
     // Render turn management UI
     const currentPlayer = state.players[state.currentPlayerIndex];

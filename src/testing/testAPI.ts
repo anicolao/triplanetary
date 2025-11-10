@@ -106,20 +106,21 @@ export function initializeTestAPI(renderer: Renderer, inputHandler: InputHandler
         // Get plot UI buttons
         const plotUI = rendererInstance.getCurrentPlotUIElements();
         if (plotUI) {
-          if (buttonName === 'coast') {
-            const btn = plotUI.coastButton;
-            return { x: btn.x, y: btn.y, width: btn.width, height: btn.height };
-          }
-          if (buttonName === 'undo' && plotUI.undoButton) {
-            const btn = plotUI.undoButton;
-            return { x: btn.x, y: btn.y, width: btn.width, height: btn.height };
-          }
-          if (buttonName === 'confirm' && plotUI.confirmButton) {
-            const btn = plotUI.confirmButton;
-            return { x: btn.x, y: btn.y, width: btn.width, height: btn.height };
-          }
           if (buttonName === 'toggleHighlight') {
             const btn = plotUI.toggleHighlightButton;
+            return { x: btn.x, y: btn.y, width: btn.width, height: btn.height };
+          }
+        }
+        
+        // Get ship navigation buttons
+        const shipNavButtons = rendererInstance.getShipNavButtons();
+        if (shipNavButtons) {
+          if (buttonName === 'previousShip' && shipNavButtons.previousButton) {
+            const btn = shipNavButtons.previousButton;
+            return { x: btn.x, y: btn.y, width: btn.width, height: btn.height };
+          }
+          if (buttonName === 'nextShip') {
+            const btn = shipNavButtons.nextButton;
             return { x: btn.x, y: btn.y, width: btn.width, height: btn.height };
           }
         }

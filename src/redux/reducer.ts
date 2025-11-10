@@ -16,6 +16,8 @@ import {
   UPDATE_SHIP_THRUST,
   DESTROY_SHIP,
   SELECT_SHIP,
+  SELECT_NEXT_SHIP,
+  SELECT_PREVIOUS_SHIP,
   CLEAR_MOVEMENT_HISTORY,
   PLOT_SHIP_MOVE,
   CLEAR_PLOT,
@@ -311,6 +313,55 @@ export function gameReducer(
       };
     }
 
+    case SELECT_NEXT_SHIP: {
+      // Get current player's ships that are not destroyed
+      const currentPlayer = state.players[state.currentPlayerIndex];
+      if (!currentPlayer) return state;
+      
+      const playerShips = state.ships
+        .filter(s => s.playerId === currentPlayer.id && !s.destroyed)
+        .sort((a, b) => a.id.localeCompare(b.id)); // Sort for consistent ordering
+      
+      if (playerShips.length === 0) return state;
+      
+      // Find current ship index
+      const currentIndex = state.selectedShipId 
+        ? playerShips.findIndex(s => s.id === state.selectedShipId)
+        : -1;
+      
+      // Select next ship (or first if none selected or at end)
+      const nextIndex = currentIndex >= playerShips.length - 1 ? 0 : currentIndex + 1;
+      
+      return {
+        ...state,
+        selectedShipId: playerShips[nextIndex].id,
+      };
+    }
+
+    case SELECT_PREVIOUS_SHIP: {
+      // Get current player's ships that are not destroyed
+      const currentPlayer = state.players[state.currentPlayerIndex];
+      if (!currentPlayer) return state;
+      
+      const playerShips = state.ships
+        .filter(s => s.playerId === currentPlayer.id && !s.destroyed)
+        .sort((a, b) => a.id.localeCompare(b.id)); // Sort for consistent ordering
+      
+      if (playerShips.length === 0) return state;
+      
+      // Find current ship index
+      const currentIndex = state.selectedShipId 
+        ? playerShips.findIndex(s => s.id === state.selectedShipId)
+        : -1;
+      
+      // Select previous ship (or last if none selected or at start)
+      const prevIndex = currentIndex <= 0 ? playerShips.length - 1 : currentIndex - 1;
+      
+      return {
+        ...state,
+        selectedShipId: playerShips[prevIndex].id,
+      };
+    }
     case CLEAR_MOVEMENT_HISTORY: {
       const { shipId } = action.payload;
       return {
