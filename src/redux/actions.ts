@@ -21,6 +21,7 @@ export const UPDATE_SHIP_HULL = 'UPDATE_SHIP_HULL';
 export const UPDATE_SHIP_THRUST = 'UPDATE_SHIP_THRUST';
 export const DESTROY_SHIP = 'DESTROY_SHIP';
 export const SELECT_SHIP = 'SELECT_SHIP';
+export const CLEAR_MOVEMENT_HISTORY = 'CLEAR_MOVEMENT_HISTORY';
 
 // Plot Phase action types
 export const PLOT_SHIP_MOVE = 'PLOT_SHIP_MOVE';
@@ -142,6 +143,13 @@ export interface SelectShipAction {
   type: typeof SELECT_SHIP;
   payload: {
     shipId: string | null;
+  };
+}
+
+export interface ClearMovementHistoryAction {
+  type: typeof CLEAR_MOVEMENT_HISTORY;
+  payload: {
+    shipId: string;
   };
 }
 
@@ -313,6 +321,7 @@ export type GameAction =
   | UpdateShipThrustAction
   | DestroyShipAction
   | SelectShipAction
+  | ClearMovementHistoryAction
   | PlotShipMoveAction
   | ClearPlotAction
   | ClearAllPlotsAction
@@ -414,6 +423,11 @@ export const destroyShip = (shipId: string): DestroyShipAction => ({
 
 export const selectShip = (shipId: string | null): SelectShipAction => ({
   type: SELECT_SHIP,
+  payload: { shipId },
+});
+
+export const clearMovementHistory = (shipId: string): ClearMovementHistoryAction => ({
+  type: CLEAR_MOVEMENT_HISTORY,
   payload: { shipId },
 });
 
