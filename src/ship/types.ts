@@ -16,6 +16,17 @@ export interface VelocityVector {
 }
 
 /**
+ * A single move in the ship's movement history.
+ * Records the position and velocity for displaying historical paths.
+ */
+export interface MovementHistoryEntry {
+  /** Position at the start of this move */
+  fromPosition: HexCoordinate;
+  /** Velocity used for this move */
+  velocity: VelocityVector;
+}
+
+/**
  * Ship statistics and capabilities.
  * These define what a ship can do in the game.
  */
@@ -59,6 +70,8 @@ export interface Ship {
   ordnance: OrdnanceInventory;
   /** Gravity hexes entered on previous turn (for one-turn delay effect) */
   gravityHexesEntered?: HexCoordinate[];
+  /** History of moves made by this ship. Cleared on destruction, refueling, or landing. */
+  movementHistory: MovementHistoryEntry[];
 }
 
 /**
@@ -96,6 +109,7 @@ export function createShip(
     disabledTurns: 0,
     ordnance: createDefaultInventory(),
     gravityHexesEntered: [],
+    movementHistory: [],
   };
 }
 

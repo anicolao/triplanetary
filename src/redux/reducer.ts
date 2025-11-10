@@ -18,6 +18,7 @@ import {
   SELECT_SHIP,
   SELECT_NEXT_SHIP,
   SELECT_PREVIOUS_SHIP,
+  CLEAR_MOVEMENT_HISTORY,
   PLOT_SHIP_MOVE,
   CLEAR_PLOT,
   CLEAR_ALL_PLOTS,
@@ -298,7 +299,7 @@ export function gameReducer(
       return {
         ...state,
         ships: state.ships.map((s) =>
-          s.id === shipId ? { ...s, destroyed: true } : s
+          s.id === shipId ? { ...s, destroyed: true, movementHistory: [] } : s
         ),
         selectedShipId: state.selectedShipId === shipId ? null : state.selectedShipId,
       };
@@ -359,6 +360,15 @@ export function gameReducer(
       return {
         ...state,
         selectedShipId: playerShips[prevIndex].id,
+      };
+    }
+    case CLEAR_MOVEMENT_HISTORY: {
+      const { shipId } = action.payload;
+      return {
+        ...state,
+        ships: state.ships.map((s) =>
+          s.id === shipId ? { ...s, movementHistory: [] } : s
+        ),
       };
     }
 

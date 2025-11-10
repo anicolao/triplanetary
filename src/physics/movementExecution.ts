@@ -125,10 +125,20 @@ export function moveAllShips(ships: Ship[], mapObjects?: MapObject[]): Ship[] {
       ? detectGravityHexEntry(newPosition, allGravityHexes)
       : [];
     
+    // Record this move in the ship's movement history
+    const newHistoryEntry = {
+      fromPosition: ship.position,
+      velocity: { ...ship.velocity },
+    };
+    
+    // Handle ships that might not have movementHistory initialized (for backward compatibility)
+    const existingHistory = ship.movementHistory || [];
+    
     return {
       ...ship,
       position: newPosition,
       gravityHexesEntered,
+      movementHistory: [...existingHistory, newHistoryEntry],
     };
   });
 }

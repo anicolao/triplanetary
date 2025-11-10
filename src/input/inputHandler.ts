@@ -43,15 +43,33 @@ export class InputHandler {
   private setupEventListeners(): void {
     const canvas = this.renderer.getCanvas();
 
+    // Mouse events
     canvas.addEventListener('click', (event) => {
       this.handleClick(event.clientX, event.clientY);
     });
 
+    // Touch events - comprehensive support
     canvas.addEventListener('touchstart', (event) => {
       if (event.touches.length > 0) {
         const touch = event.touches[0];
+        // Store touch start position for potential drag detection
         this.handleClick(touch.clientX, touch.clientY);
       }
+      event.preventDefault();
+    });
+
+    canvas.addEventListener('touchend', (event) => {
+      // Handle tap completion
+      event.preventDefault();
+    });
+
+    canvas.addEventListener('touchmove', (event) => {
+      // Prevent scrolling and zooming while touching the game canvas
+      event.preventDefault();
+    });
+
+    canvas.addEventListener('touchcancel', (event) => {
+      // Handle cancelled touch events
       event.preventDefault();
     });
   }
