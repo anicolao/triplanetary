@@ -313,7 +313,9 @@ export function createPlotUIElements(
     maxThrust: selectedShip.stats.maxThrust,
   };
 
-  const buttonY = 10;
+  // Position buttons below the turn UI (phase/player/round boxes + next phase button)
+  // Turn UI uses: 10 (top padding) + 3 boxes (30px each with 10px spacing) + button (40px + 20px spacing) = 180px
+  const buttonY = 190; // 180px turn UI + 10px gap
   const buttonHeight = 40;
   const buttonWidth = 120;
   let buttonX = canvasWidth - buttonWidth - 10;
