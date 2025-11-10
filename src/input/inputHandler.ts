@@ -10,8 +10,9 @@ import {
   changePlayerColor,
   startGame,
   selectShip,
+  selectNextShip,
+  selectPreviousShip,
   plotShipMove,
-  clearPlot,
   toggleReachableHexes,
   nextPhase,
   nextTurn,
@@ -20,8 +21,6 @@ import {
 } from '../redux/actions';
 import { pixelToHex } from '../hex/operations';
 import { HexLayout } from '../hex/types';
-import { calculateRequiredThrust } from '../physics/velocity';
-import { vectorAdd } from '../physics/vector';
 import { createOrdnance, generateOrdnanceId, OrdnanceType } from '../ordnance/types';
 
 export class InputHandler {
@@ -130,6 +129,35 @@ export class InputHandler {
     const turnUI = this.renderer.getTurnUILayout();
     const plotUI = this.renderer.getCurrentPlotUIElements();
     const ordnanceUI = this.renderer.getCurrentOrdnanceUIElements();
+    const shipNavButtons = this.renderer.getShipNavButtons();
+
+    // Check for ship navigation button clicks if in Plot phase
+    if (state.currentPhase === GamePhase.Plot && shipNavButtons) {
+      // Check previous button
+      if (shipNavButtons.previousButton && shipNavButtons.previousButton.visible) {
+        const btn = shipNavButtons.previousButton;
+        if (this.isPointInRect(x, y, btn.x, btn.y, btn.width, btn.height)) {
+          store.dispatch(selectPreviousShip());
+          return;
+        }
+      }
+
+      // Check next/confirm button
+      if (shipNavButtons.nextButton) {
+        const btn = shipNavButtons.nextButton;
+        if (this.isPointInRect(x, y, btn.x, btn.y, btn.width, btn.height)) {
+          if (btn.isCheckmark) {
+            // This is the last ship, move to next phase
+            store.dispatch(selectShip(null));
+            store.dispatch(nextPhase());
+          } else {
+            // Move to next ship
+            store.dispatch(selectNextShip());
+          }
+          return;
+        }
+      }
+    }
 
     // Check for Turn UI button clicks if available
     if (turnUI) {
@@ -159,56 +187,6 @@ export class InputHandler {
       )) {
         store.dispatch(toggleReachableHexes());
         return;
-      }
-
-      // Check coast button
-      if (this.isPointInRect(
-        x, y,
-        plotUI.coastButton.x,
-        plotUI.coastButton.y,
-        plotUI.coastButton.width,
-        plotUI.coastButton.height
-      )) {
-        this.handleCoastButtonClick();
-        return;
-      }
-
-      // Check undo button
-      if (plotUI.undoButton && this.isPointInRect(
-        x, y,
-        plotUI.undoButton.x,
-        plotUI.undoButton.y,
-        plotUI.undoButton.width,
-        plotUI.undoButton.height
-      )) {
-        if (state.selectedShipId) {
-          store.dispatch(clearPlot(state.selectedShipId));
-        }
-        return;
-      }
-
-      // Check confirm button
-      if (plotUI.confirmButton && this.isPointInRect(
-        x, y,
-        plotUI.confirmButton.x,
-        plotUI.confirmButton.y,
-        plotUI.confirmButton.width,
-        plotUI.confirmButton.height
-      )) {
-        // For now, just clear selection
-        // In full implementation, this would move to next phase
-        store.dispatch(selectShip(null));
-        return;
-      }
-
-      // Check thrust direction buttons
-      for (const button of plotUI.thrustButtons) {
-        if (button.enabled && this.isPointInRect(
-          x, y, button.x, button.y, button.width, button.height
-        )) {
-          this.handleThrustButtonClick(button.direction);
-          return;
-        }
       }
     }
 
@@ -335,49 +313,7 @@ export class InputHandler {
     return reachable;
   }
 
-  private handleCoastButtonClick(): void {
-    const state = store.getState();
-    if (!state.selectedShipId) return;
 
-    const selectedShip = state.ships.find((s) => s.id === state.selectedShipId);
-    if (!selectedShip || selectedShip.destroyed) return;
-
-    // Coast means maintaining current velocity with 0 thrust
-    store.dispatch(plotShipMove(
-      state.selectedShipId,
-      { ...selectedShip.velocity },
-      0
-    ));
-  }
-
-  private handleThrustButtonClick(direction: { q: number; r: number }): void {
-    const state = store.getState();
-    if (!state.selectedShipId) return;
-
-    const selectedShip = state.ships.find((s) => s.id === state.selectedShipId);
-    if (!selectedShip || selectedShip.destroyed) return;
-
-    // Get current velocity (from plotted move if exists, otherwise from ship)
-    const plottedMove = state.plottedMoves.get(state.selectedShipId);
-    const currentVelocity = plottedMove ? plottedMove.newVelocity : selectedShip.velocity;
-    const thrustAlreadyUsed = plottedMove ? plottedMove.thrustUsed : 0;
-    const remainingThrust = selectedShip.stats.maxThrust - thrustAlreadyUsed;
-
-    // Apply thrust in the clicked direction
-    const newVelocity = vectorAdd(currentVelocity, direction);
-    
-    // Calculate thrust required for this change
-    const { thrustRequired } = calculateRequiredThrust(currentVelocity, newVelocity);
-
-    // Check if we have enough thrust
-    if (thrustRequired <= remainingThrust) {
-      store.dispatch(plotShipMove(
-        state.selectedShipId,
-        newVelocity,
-        thrustAlreadyUsed + thrustRequired
-      ));
-    }
-  }
 
   private getOrdnanceInfo(
     ship: { velocity: { q: number; r: number }; ordnance: { mines: number; torpedoes: number; missiles: number } },

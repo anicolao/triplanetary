@@ -21,6 +21,8 @@ export const UPDATE_SHIP_HULL = 'UPDATE_SHIP_HULL';
 export const UPDATE_SHIP_THRUST = 'UPDATE_SHIP_THRUST';
 export const DESTROY_SHIP = 'DESTROY_SHIP';
 export const SELECT_SHIP = 'SELECT_SHIP';
+export const SELECT_NEXT_SHIP = 'SELECT_NEXT_SHIP';
+export const SELECT_PREVIOUS_SHIP = 'SELECT_PREVIOUS_SHIP';
 
 // Plot Phase action types
 export const PLOT_SHIP_MOVE = 'PLOT_SHIP_MOVE';
@@ -143,6 +145,14 @@ export interface SelectShipAction {
   payload: {
     shipId: string | null;
   };
+}
+
+export interface SelectNextShipAction {
+  type: typeof SELECT_NEXT_SHIP;
+}
+
+export interface SelectPreviousShipAction {
+  type: typeof SELECT_PREVIOUS_SHIP;
 }
 
 // Plot Phase action interfaces
@@ -313,6 +323,8 @@ export type GameAction =
   | UpdateShipThrustAction
   | DestroyShipAction
   | SelectShipAction
+  | SelectNextShipAction
+  | SelectPreviousShipAction
   | PlotShipMoveAction
   | ClearPlotAction
   | ClearAllPlotsAction
@@ -415,6 +427,14 @@ export const destroyShip = (shipId: string): DestroyShipAction => ({
 export const selectShip = (shipId: string | null): SelectShipAction => ({
   type: SELECT_SHIP,
   payload: { shipId },
+});
+
+export const selectNextShip = (): SelectNextShipAction => ({
+  type: SELECT_NEXT_SHIP,
+});
+
+export const selectPreviousShip = (): SelectPreviousShipAction => ({
+  type: SELECT_PREVIOUS_SHIP,
 });
 
 // Plot Phase action creators
