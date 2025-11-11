@@ -71,7 +71,8 @@ export class Renderer {
       console.error('Failed to load original map image');
       this.originalMapImageLoaded = false;
     };
-    this.originalMapImage.src = '/original-map.png';
+    // Images in public folder are served relative to the document base URI
+    this.originalMapImage.src = new URL('original-map.png', document.baseURI).href;
   }
 
   setRenderCallback(callback: () => void): void {
