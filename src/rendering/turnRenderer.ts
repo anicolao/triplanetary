@@ -53,6 +53,7 @@ export class TurnRenderer {
     }
 
     this.renderButton(layout.nextPhaseButton);
+    this.renderButton(layout.mapLayoutButton);
   }
 
   private renderInfoBox(

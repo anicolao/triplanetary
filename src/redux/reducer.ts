@@ -8,6 +8,7 @@ import {
   CHANGE_PLAYER_COLOR,
   START_GAME,
   RETURN_TO_CONFIG,
+  TOGGLE_MAP_LAYOUT,
   ADD_SHIP,
   REMOVE_SHIP,
   UPDATE_SHIP_POSITION,
@@ -232,6 +233,17 @@ export function gameReducer(
         ...state,
         screen: 'configuration',
         ships: [], // Clear ships when returning to config
+      };
+    }
+
+    case TOGGLE_MAP_LAYOUT: {
+      const newMapLayout = state.currentScenario.mapLayout === 'modern' ? 'original' : 'modern';
+      return {
+        ...state,
+        currentScenario: {
+          ...state.currentScenario,
+          mapLayout: newMapLayout,
+        },
       };
     }
 

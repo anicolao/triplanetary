@@ -10,7 +10,7 @@ export interface TurnUIButton {
   height: number;
   text: string;
   enabled: boolean;
-  action: 'next-phase' | 'next-turn';
+  action: 'next-phase' | 'next-turn' | 'toggle-map-layout';
 }
 
 export interface TurnUILayout {
@@ -47,6 +47,7 @@ export interface TurnUILayout {
   
   // Action buttons
   nextPhaseButton: TurnUIButton;
+  mapLayoutButton: TurnUIButton;
 }
 
 export function createTurnUILayout(
@@ -59,7 +60,8 @@ export function createTurnUILayout(
   playerColor: string,
   allShipsPlotted: boolean = true,
   victoryState?: VictoryState,
-  playerIds?: string[]
+  playerIds?: string[],
+  currentMapLayout: 'modern' | 'original' = 'modern'
 ): TurnUILayout {
   // UI will be positioned in the top-right corner
   const padding = 10;
@@ -130,6 +132,18 @@ export function createTurnUILayout(
     action: currentPhase === GamePhase.Maintenance ? 'next-turn' : 'next-phase',
   };
   
+  // Map layout toggle button (below next phase button)
+  const mapLayoutButtonY = buttonY + buttonHeight + spacing;
+  const mapLayoutButton: TurnUIButton = {
+    x: phaseBoxX,
+    y: mapLayoutButtonY,
+    width: buttonWidth,
+    height: 35,
+    text: currentMapLayout === 'modern' ? 'Use Original Map' : 'Use Modern Map',
+    enabled: true,
+    action: 'toggle-map-layout',
+  };
+  
   return {
     phaseBoxX,
     phaseBoxY,
@@ -155,6 +169,7 @@ export function createTurnUILayout(
     victoryColor,
     showVictory: victoryState?.gameWon || false,
     nextPhaseButton,
+    mapLayoutButton,
   };
 }
 

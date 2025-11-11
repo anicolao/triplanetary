@@ -22,6 +22,11 @@ export interface MapBounds {
 }
 
 /**
+ * Map layout type - determines visual representation of the map.
+ */
+export type MapLayout = 'modern' | 'original';
+
+/**
  * Scenario configuration.
  * Defines the initial setup for a game scenario.
  */
@@ -40,6 +45,8 @@ export interface Scenario {
   asteroids: Asteroid[];
   /** Victory condition for this scenario */
   victoryCondition: AnyVictoryCondition;
+  /** Map layout type - 'modern' uses generated hex grid, 'original' uses original game board image */
+  mapLayout: MapLayout;
 }
 
 /**
@@ -163,6 +170,7 @@ export const DEFAULT_SCENARIO: Scenario = {
     type: VictoryConditionType.Elimination,
     description: 'Eliminate all enemy ships',
   },
+  mapLayout: 'modern',
 };
 
 /**

@@ -39,6 +39,8 @@ export class Renderer {
   private currentCombatUILayout: CombatUILayout | null = null;
   private currentOrdnanceUIElements: OrdnanceUIElements | null = null;
   private shipNavButtons: ShipNavButtons | null = null;
+  private originalMapImage: HTMLImageElement | null = null;
+  private originalMapImageLoaded: boolean = false;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -54,6 +56,22 @@ export class Renderer {
     this.turnRenderer = new TurnRenderer(ctx);
     this.combatRenderer = new CombatRenderer(ctx);
     this.resizeCanvas();
+    this.loadOriginalMapImage();
+  }
+
+  private loadOriginalMapImage(): void {
+    this.originalMapImage = new Image();
+    this.originalMapImage.onload = () => {
+      this.originalMapImageLoaded = true;
+      if (this.onRenderNeeded) {
+        this.onRenderNeeded();
+      }
+    };
+    this.originalMapImage.onerror = () => {
+      console.error('Failed to load original map image');
+      this.originalMapImageLoaded = false;
+    };
+    this.originalMapImage.src = '/original-map.png';
   }
 
   setRenderCallback(callback: () => void): void {
@@ -155,9 +173,18 @@ export class Renderer {
     // Render the hex grid with a larger radius to show all planets
     // Mars orbits at ~50 hexes, so we need at least that much radius
     const gridRadius = 55;
-    this.gridRenderer.renderGameBoard(layout, gridRadius, this.canvas.width, this.canvas.height, {
+    const gridOptions: any = {
       showCoordinates: false, // Hide coordinates for cleaner view at this zoom level
-    });
+    };
+    
+    // If using original map layout and image is loaded, use it as background
+    if (state.currentScenario.mapLayout === 'original' && this.originalMapImageLoaded && this.originalMapImage) {
+      gridOptions.backgroundImage = this.originalMapImage;
+      // Don't show grid when using original map
+      gridOptions.showGrid = false;
+    }
+    
+    this.gridRenderer.renderGameBoard(layout, gridRadius, this.canvas.width, this.canvas.height, gridOptions);
 
     // Render all map objects (celestial bodies, stations, asteroids)
     this.celestialRenderer.renderCelestialBodies(state.mapObjects, layout);
@@ -432,7 +459,8 @@ export class Renderer {
         currentPlayer.color,
         allShipsPlotted,
         state.victoryState,
-        state.players.map(p => p.id)
+        state.players.map(p => p.id),
+        state.currentScenario.mapLayout
       );
       this.turnRenderer.renderTurnUI(this.currentTurnUILayout);
     } else {
