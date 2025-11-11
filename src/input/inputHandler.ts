@@ -18,6 +18,7 @@ import {
   nextTurn,
   launchOrdnance,
   updateShipOrdnance,
+  toggleMapLayout,
 } from '../redux/actions';
 import { pixelToHex } from '../hex/operations';
 import { HexLayout } from '../hex/types';
@@ -188,6 +189,15 @@ export class InputHandler {
           } else if (button.action === 'next-turn') {
             store.dispatch(nextTurn());
           }
+        }
+        return;
+      }
+      
+      // Check for map layout button click
+      const mapLayoutButton = turnUI.mapLayoutButton;
+      if (this.isPointInRect(x, y, mapLayoutButton.x, mapLayoutButton.y, mapLayoutButton.width, mapLayoutButton.height)) {
+        if (mapLayoutButton.enabled) {
+          store.dispatch(toggleMapLayout());
         }
         return;
       }

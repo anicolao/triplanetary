@@ -18,6 +18,8 @@ export interface GridRenderOptions {
   coordinateFontSize: number;
   /** Background color */
   backgroundColor: string;
+  /** Background image (optional) - if provided, will be drawn instead of solid color */
+  backgroundImage?: HTMLImageElement;
 }
 
 export const DEFAULT_GRID_OPTIONS: GridRenderOptions = {
@@ -50,7 +52,11 @@ export class GridRenderer {
     const opts: GridRenderOptions = { ...DEFAULT_GRID_OPTIONS, ...options };
 
     // Layer 1: Background
-    this.renderBackground(canvasWidth, canvasHeight, opts.backgroundColor);
+    if (opts.backgroundImage) {
+      this.renderBackgroundImage(canvasWidth, canvasHeight, opts.backgroundImage);
+    } else {
+      this.renderBackground(canvasWidth, canvasHeight, opts.backgroundColor);
+    }
 
     // Layer 2: Grid
     if (opts.showGrid) {
@@ -69,6 +75,39 @@ export class GridRenderer {
   private renderBackground(width: number, height: number, color: string): void {
     this.ctx.fillStyle = color;
     this.ctx.fillRect(0, 0, width, height);
+  }
+
+  /**
+   * Renders a background image, scaled to fit the canvas while maintaining aspect ratio.
+   */
+  private renderBackgroundImage(width: number, height: number, image: HTMLImageElement): void {
+    // Calculate scaling to fit image on canvas while maintaining aspect ratio
+    const imageAspect = image.width / image.height;
+    const canvasAspect = width / height;
+    
+    let drawWidth: number;
+    let drawHeight: number;
+    let offsetX: number = 0;
+    let offsetY: number = 0;
+    
+    if (imageAspect > canvasAspect) {
+      // Image is wider - fit to width
+      drawWidth = width;
+      drawHeight = width / imageAspect;
+      offsetY = (height - drawHeight) / 2;
+    } else {
+      // Image is taller - fit to height
+      drawHeight = height;
+      drawWidth = height * imageAspect;
+      offsetX = (width - drawWidth) / 2;
+    }
+    
+    // Draw black background first
+    this.ctx.fillStyle = '#000000';
+    this.ctx.fillRect(0, 0, width, height);
+    
+    // Draw the image centered
+    this.ctx.drawImage(image, offsetX, offsetY, drawWidth, drawHeight);
   }
 
   /**

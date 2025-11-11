@@ -11,6 +11,7 @@ export const REMOVE_PLAYER = 'REMOVE_PLAYER';
 export const CHANGE_PLAYER_COLOR = 'CHANGE_PLAYER_COLOR';
 export const START_GAME = 'START_GAME';
 export const RETURN_TO_CONFIG = 'RETURN_TO_CONFIG';
+export const TOGGLE_MAP_LAYOUT = 'TOGGLE_MAP_LAYOUT';
 
 // Ship action types
 export const ADD_SHIP = 'ADD_SHIP';
@@ -85,6 +86,10 @@ export interface StartGameAction {
 
 export interface ReturnToConfigAction {
   type: typeof RETURN_TO_CONFIG;
+}
+
+export interface ToggleMapLayoutAction {
+  type: typeof TOGGLE_MAP_LAYOUT;
 }
 
 // Ship action interfaces
@@ -322,6 +327,7 @@ export type GameAction =
   | ChangePlayerColorAction
   | StartGameAction
   | ReturnToConfigAction
+  | ToggleMapLayoutAction
   | AddShipAction
   | RemoveShipAction
   | UpdateShipPositionAction
@@ -382,6 +388,10 @@ export const startGame = (): StartGameAction => ({
 
 export const returnToConfig = (): ReturnToConfigAction => ({
   type: RETURN_TO_CONFIG,
+});
+
+export const toggleMapLayout = (): ToggleMapLayoutAction => ({
+  type: TOGGLE_MAP_LAYOUT,
 });
 
 // Ship action creators
