@@ -36,7 +36,22 @@ triplanetary/
 
 ## Getting Started
 
-### Setup
+### Automated Startup (Recommended for Copilot Sessions)
+```bash
+./scripts/copilot-startup.sh    # Complete automated startup with all checks
+```
+
+This automated startup script performs all necessary initialization tasks:
+1. Environment verification (Node.js, npm, git, configuration files)
+2. Dependency security and update checks
+3. Dependency installation (npm ci)
+4. Project build (TypeScript compilation + Vite)
+5. Playwright browser installation
+6. Test execution (unit tests)
+
+The script provides clear status indicators and helpful error messages if any step fails. See the **Startup Infrastructure** section below for details on the modular script system.
+
+### Manual Setup
 ```bash
 npm install              # Install dependencies
 npm run dev              # Start development server (http://localhost:5173)
@@ -454,18 +469,265 @@ The project currently implements:
 - ✅ Victory condition evaluation
 - ✅ Comprehensive test coverage (500+ tests)
 
+## Startup Infrastructure
+
+### Overview
+The project includes a comprehensive startup script system designed to ensure consistent initialization across all Copilot sessions, CI/CD pipelines, and development environments. This modular system validates the environment, manages dependencies, and runs tests to catch issues early.
+
+### Core Scripts
+
+#### Main Startup Script
+**Location:** `scripts/copilot-startup.sh`
+
+This is the primary entry point for automated startup. It orchestrates all initialization tasks and provides clear visual feedback:
+
+```bash
+./scripts/copilot-startup.sh
+```
+
+**What it does:**
+1. Verifies environment prerequisites
+2. Checks for outdated dependencies and security vulnerabilities
+3. Installs dependencies with `npm ci`
+4. Builds the project (TypeScript + Vite)
+5. Installs Playwright browsers
+6. Runs unit tests to validate baseline functionality
+
+The script exits with code 0 on success or 1 on critical failures, making it suitable for CI/CD integration.
+
+#### Environment Verification
+**Location:** `scripts/verify-environment.sh`
+
+Validates that all required tools and configurations are in place:
+- Node.js version 20 or higher
+- npm availability
+- git installation and repository status
+- Required configuration files (package.json, tsconfig.json, playwright.config.ts, vitest.config.ts)
+- Disk space availability
+
+```bash
+./scripts/verify-environment.sh
+```
+
+#### Dependency Management
+**Location:** `scripts/check-dependencies.sh`
+
+Performs comprehensive dependency checks:
+- Security vulnerability scanning with `npm audit`
+- Detection of outdated packages
+- Validation of package-lock.json integrity
+- Identification of deprecated packages
+- Node.js version compatibility checks
+
+```bash
+./scripts/check-dependencies.sh
+```
+
+**Self-Maintenance:** This script identifies when dependencies need updates and provides actionable recommendations. When security vulnerabilities or major version updates are detected, maintainers should create a PR to address them.
+
+#### Test Runner
+**Location:** `scripts/run-tests.sh`
+
+Unified test execution with multiple modes:
+
+```bash
+./scripts/run-tests.sh                    # Unit tests only (default)
+./scripts/run-tests.sh --all              # All tests (unit + E2E + user stories)
+./scripts/run-tests.sh --e2e-only         # E2E tests only
+./scripts/run-tests.sh --user-stories     # User story tests only
+./scripts/run-tests.sh --quick            # Quick mode with minimal output
+```
+
+### Usage Patterns
+
+#### For Copilot Sessions
+Always run the startup script at the beginning of a session:
+```bash
+./scripts/copilot-startup.sh
+```
+
+This ensures:
+- Environment is properly configured
+- Dependencies are up to date and secure
+- Build succeeds before making changes
+- Existing tests pass (baseline validation)
+- Playwright is ready for E2E testing
+
+#### For CI/CD Integration
+The scripts are designed for CI/CD pipelines:
+
+```yaml
+steps:
+  - name: Startup and Validation
+    run: ./scripts/copilot-startup.sh
+  
+  # Or run individual steps
+  - name: Verify Environment
+    run: ./scripts/verify-environment.sh
+  
+  - name: Check Dependencies
+    run: ./scripts/check-dependencies.sh
+  
+  - name: Install and Build
+    run: npm ci && npm run build
+  
+  - name: Run Tests
+    run: ./scripts/run-tests.sh --all
+```
+
+#### For Local Development
+Use individual scripts as needed:
+
+```bash
+# Quick environment check
+./scripts/verify-environment.sh
+
+# Check for dependency updates
+./scripts/check-dependencies.sh
+
+# Run specific test suites
+./scripts/run-tests.sh --e2e-only
+```
+
+### Self-Maintenance and Upgrade Detection
+
+The dependency check script automatically identifies:
+1. **Security vulnerabilities** via `npm audit`
+2. **Outdated packages** via `npm outdated`
+3. **Deprecated packages** in the dependency tree
+4. **Breaking changes** in major version updates
+
+**When issues are detected:**
+1. The script logs warnings with detailed information
+2. Provides actionable commands to fix issues
+3. Returns exit code 0 (with warnings) to not block startup
+4. Maintainers should create a dedicated PR to address the issues
+
+**Creating an upgrade PR:**
+```bash
+# Check for issues
+./scripts/check-dependencies.sh
+
+# Fix security vulnerabilities
+npm audit fix
+
+# Update non-breaking changes
+npm update
+
+# For major version updates:
+# 1. Review changelogs
+# 2. Update package.json manually
+# 3. Run npm install
+# 4. Test thoroughly
+
+# Commit and create PR
+git checkout -b upgrade/dependencies-$(date +%Y%m%d)
+git add package.json package-lock.json
+git commit -m "chore: update dependencies and fix security issues"
+git push origin upgrade/dependencies-$(date +%Y%m%d)
+```
+
+### Extending the System
+
+The modular design allows easy extension for new automation scenarios:
+
+#### Adding a New Initialization Step
+1. Create a new script in `scripts/` (e.g., `scripts/setup-cache.sh`)
+2. Make it executable: `chmod +x scripts/setup-cache.sh`
+3. Add it to `copilot-startup.sh` in the appropriate sequence
+4. Update this documentation
+
+#### Adding New Test Categories
+Extend `scripts/run-tests.sh` with new flags:
+```bash
+# Add to argument parsing
+--integration-tests)
+    RUN_INTEGRATION=true
+    ;;
+
+# Add to execution logic
+if [ "$RUN_INTEGRATION" = true ]; then
+    npm run test:integration
+fi
+```
+
+#### Creating Scenario-Specific Scripts
+For specific use cases (e.g., user story validation), create specialized scripts:
+```bash
+# scripts/validate-user-stories.sh
+#!/bin/bash
+./scripts/run-tests.sh --user-stories
+# Additional user story specific logic
+```
+
+### Maintenance Guidelines
+
+#### Keeping Scripts Up to Date
+1. **Review quarterly:** Check if new dependencies or tools need verification
+2. **Update version checks:** When minimum Node.js version changes, update `verify-environment.sh`
+3. **Add new checks:** As project evolves, add environment checks for new tools
+4. **Test regularly:** Run scripts in clean environments to catch issues
+
+#### When Adding New Dependencies
+1. Run `./scripts/check-dependencies.sh` before committing
+2. Address any security warnings immediately
+3. Update documentation if new environment requirements are introduced
+4. Test that startup script still works end-to-end
+
+#### When Upgrading Tools
+When upgrading Node.js, npm, TypeScript, or other core tools:
+1. Update version checks in `verify-environment.sh`
+2. Test all scripts with the new version
+3. Update CI/CD workflows if needed
+4. Document breaking changes in commit messages
+
+### Error Handling and Debugging
+
+All scripts use consistent logging:
+- **Blue ℹ:** Informational messages
+- **Green ✓:** Success indicators
+- **Yellow ⚠:** Warnings (non-blocking)
+- **Red ✗:** Errors (blocking)
+
+**Debugging failed startups:**
+```bash
+# Run individual components
+./scripts/verify-environment.sh
+./scripts/check-dependencies.sh
+
+# Check specific issues
+node --version               # Verify Node.js
+npm ls                       # Check dependency tree
+npm audit                    # Security issues
+npx playwright --version     # Playwright status
+```
+
+### Integration with Existing Hooks
+
+The startup system complements existing git hooks:
+- **Pre-commit hook:** Runs user story tests (from `scripts/pre-commit-user-stories.sh`)
+- **Startup script:** Runs unit tests and environment checks
+- Both use the unified `scripts/run-tests.sh` for consistency
+
+Install hooks with:
+```bash
+./scripts/install-hooks.sh
+```
+
 ## When Contributing
 
-1. **Read the design docs first**: DESIGN.md and CODE_STRUCTURE.md explain the architecture
-2. **Run tests before and after changes**: Ensure you don't break existing functionality
-3. **Follow existing patterns**: Look at similar code for style and structure guidance
-4. **Keep changes focused**: One feature or fix per change
-5. **Write tests**: All new logic should have unit tests
-6. **Touch support is mandatory**: All UI/UX changes MUST include touch event support and corresponding E2E tests
-7. **User story tests REQUIRED for gameplay changes**: Every modification to gameplay MUST include or update a user story test (see User Story Tests section)
-8. **Update documentation**: If you change behavior, update relevant docs
-9. **Verify screenshots**: When providing screenshots in PR comments, always verify they match the description given. Screenshots should clearly show the specific feature or UI being described.
-10. **Install git hooks**: Run `./scripts/install-hooks.sh` to enable pre-commit validation
+1. **Run startup script first**: Always run `./scripts/copilot-startup.sh` at the beginning of Copilot sessions
+2. **Read the design docs first**: DESIGN.md and CODE_STRUCTURE.md explain the architecture
+3. **Run tests before and after changes**: Ensure you don't break existing functionality
+4. **Follow existing patterns**: Look at similar code for style and structure guidance
+5. **Keep changes focused**: One feature or fix per change
+6. **Write tests**: All new logic should have unit tests
+7. **Touch support is mandatory**: All UI/UX changes MUST include touch event support and corresponding E2E tests
+8. **User story tests REQUIRED for gameplay changes**: Every modification to gameplay MUST include or update a user story test (see User Story Tests section)
+9. **Update documentation**: If you change behavior, update relevant docs
+10. **Verify screenshots**: When providing screenshots in PR comments, always verify they match the description given. Screenshots should clearly show the specific feature or UI being described.
+11. **Install git hooks**: Run `./scripts/install-hooks.sh` to enable pre-commit validation
+12. **Check dependencies**: If adding new dependencies, run `./scripts/check-dependencies.sh` to validate security
 
 ## Build Artifacts
 

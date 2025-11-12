@@ -1,0 +1,104 @@
+name: Copilot CI
+
+# This workflow demonstrates how to use the startup scripts in CI/CD
+# It can be used as a template for other automated workflows
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # Job 1: Complete automated startup
+  startup-automated:
+    name: Automated Startup
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Run complete startup
+        run: |
+          chmod +x scripts/*.sh
+          ./scripts/copilot-startup.sh
+  
+  # Job 2: Modular approach with individual scripts
+  startup-modular:
+    name: Modular Startup
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Make scripts executable
+        run: chmod +x scripts/*.sh
+      
+      - name: Verify environment
+        run: ./scripts/verify-environment.sh
+      
+      - name: Check dependencies
+        run: ./scripts/check-dependencies.sh
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build project
+        run: npm run build
+      
+      - name: Install Playwright
+        run: npx playwright install chromium
+      
+      - name: Run unit tests
+        run: ./scripts/run-tests.sh --unit-only
+      
+      - name: Run E2E tests
+        run: ./scripts/run-tests.sh --e2e-only
+  
+  # Job 3: Dependency security and update check
+  dependency-check:
+    name: Dependency Security Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Make scripts executable
+        run: chmod +x scripts/*.sh
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Check for security issues and updates
+        run: ./scripts/check-dependencies.sh
+      
+      - name: Security audit report
+        if: failure()
+        run: |
+          echo "Security issues detected! Review the output above."
+          echo "Run 'npm audit fix' to attempt automatic fixes."
+          echo "Create a PR to address security vulnerabilities."

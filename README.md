@@ -43,10 +43,42 @@ Play through historical scenarios from the original game, including mining opera
 
 ### Prerequisites
 
-- Node.js (v18 or later)
+- Node.js (v20 or later)
 - npm (v9 or later)
+- git
 
-### Installation
+### Quick Start (Recommended)
+
+Use the automated startup script for complete initialization:
+
+```bash
+# Clone the repository
+git clone https://github.com/anicolao/triplanetary.git
+cd triplanetary
+
+# Run automated startup (validates environment, installs dependencies, builds, tests)
+./scripts/copilot-startup.sh
+
+# Install git hooks (optional)
+./scripts/install-hooks.sh
+
+# Start development server
+npm run dev
+```
+
+The automated startup script performs:
+1. ✓ Environment verification (Node.js 20+, npm, git)
+2. ✓ Dependency security and update checks
+3. ✓ Dependency installation with `npm ci`
+4. ✓ Project build (TypeScript + Vite)
+5. ✓ Playwright browser installation
+6. ✓ Unit test validation (529 tests)
+
+See [STARTUP_GUIDE.md](STARTUP_GUIDE.md) for detailed documentation on the startup system.
+
+### Manual Installation
+
+If you prefer manual setup:
 
 1. Clone the repository:
 ```bash
@@ -57,6 +89,11 @@ cd triplanetary
 2. Install dependencies:
 ```bash
 npm install
+```
+
+3. Build the project:
+```bash
+npm run build
 ```
 
 ### Development
