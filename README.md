@@ -90,6 +90,22 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
+#### User Story Tests
+
+The project includes a comprehensive user story testing system that validates complete user workflows with visual verification:
+
+```bash
+# Run user story tests
+npm run test:e2e -- tests/e2e/user-stories
+
+# Install pre-commit hook to run tests automatically
+./scripts/install-hooks.sh
+```
+
+User story tests capture screenshots at each significant step and compare them with baseline images to catch visual regressions. See [tests/e2e/USER_STORIES.md](tests/e2e/USER_STORIES.md) for complete documentation.
+
+**Note**: Every modification to gameplay must include or update a user story test.
+
 ## Current Features
 
 ### Game Configuration Screen
