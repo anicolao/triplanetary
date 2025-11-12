@@ -309,6 +309,104 @@ npm test -- --watch                   # Watch mode
 npm run test:e2e -- --headed          # E2E with visible browser
 ```
 
+### User Story Tests (REQUIRED for Gameplay Changes)
+**CRITICAL: Every modification to gameplay MUST be tested in a user story test.**
+
+User story tests are comprehensive E2E tests that validate complete user workflows with visual verification:
+
+#### Purpose
+- Document user journeys through the game
+- Validate both functionality and visual appearance
+- Catch regressions in gameplay and UI
+- Provide visual documentation of features
+
+#### Structure
+Each user story lives in `tests/e2e/user-stories/<story-name>/`:
+- `README.md`: Describes each step with expected results and screenshot names
+- `<story-name>.spec.ts`: Playwright test that captures screenshots at each step
+- `expected/`: Baseline screenshots for comparison
+- `actual/`: Generated screenshots (gitignored, created during test runs)
+
+#### Creating a User Story
+1. **Create directory structure:**
+   ```bash
+   mkdir -p tests/e2e/user-stories/my-feature/{expected,actual}
+   ```
+
+2. **Write README.md** documenting each step:
+   ```markdown
+   # User Story: My Feature
+   
+   ## Step 1: Initial Action
+   **Action:** What the user does
+   **Expected:** What should happen
+   **Screenshot:** `01-step-name.png`
+   ```
+
+3. **Write test spec** with screenshots:
+   ```typescript
+   import { test } from '@playwright/test';
+   import { gotoWithTestMode, clickButton } from '../../helpers';
+   
+   const STORY_PATH = 'tests/e2e/user-stories/my-feature';
+   
+   test('should complete workflow', async ({ page }) => {
+     await gotoWithTestMode(page);
+     await page.screenshot({ path: `${STORY_PATH}/actual/01-step.png` });
+     // ... more steps with screenshots
+   });
+   ```
+
+4. **Generate baseline screenshots:**
+   ```bash
+   npm run test:e2e -- tests/e2e/user-stories/my-feature
+   # Review actual/ screenshots
+   cp tests/e2e/user-stories/my-feature/actual/*.png \
+      tests/e2e/user-stories/my-feature/expected/
+   git add tests/e2e/user-stories/my-feature/expected/
+   ```
+
+#### When to Create User Stories
+- **REQUIRED**: Any gameplay change (movement, combat, phases, etc.)
+- **REQUIRED**: New UI features or interactions
+- **REQUIRED**: Bug fixes that affect user workflows
+- **RECOMMENDED**: Major refactorings to verify behavior unchanged
+
+#### Pre-commit Hook
+The project uses a pre-commit hook that runs user story tests:
+```bash
+./scripts/install-hooks.sh  # Install the hook
+```
+
+The hook will:
+- Run all user story tests before each commit
+- Compare screenshots with baselines
+- Block commit if tests fail or screenshots differ
+- Allow commits on first run (no baseline yet)
+
+To skip temporarily: `git commit --no-verify`
+
+#### Screenshot Best Practices
+- Use numbered prefixes: `01-initial.png`, `02-action.png`
+- Add waits after actions: `await page.waitForTimeout(200)`
+- Capture at stable points (no animations)
+- Use `fullPage: false` for consistency
+- Document what each screenshot shows in README.md
+
+#### Updating Baselines
+When intentional changes affect screenshots:
+```bash
+npm run test:e2e -- tests/e2e/user-stories
+# Review changes in actual/ directories
+# If correct, update expected/:
+cp tests/e2e/user-stories/*/actual/*.png \
+   tests/e2e/user-stories/*/expected/
+git add tests/e2e/user-stories/*/expected/
+git commit -m "Update user story baselines for [change description]"
+```
+
+**See `tests/e2e/USER_STORIES.md` for complete documentation.**
+
 ## Important Files to Understand
 
 ### Core Application
@@ -337,6 +435,8 @@ npm run test:e2e -- --headed          # E2E with visible browser
 - **CODE_STRUCTURE.md**: Directory organization and module responsibilities
 - **RULES.md**: Complete game rules from original Triplanetary
 - **IMPLEMENTATION_PLAN.md**: Development roadmap and milestones
+- **tests/e2e/README.md**: E2E test automation API guide
+- **tests/e2e/USER_STORIES.md**: User story testing system documentation
 
 ## Current Development Status
 
@@ -361,8 +461,10 @@ The project currently implements:
 4. **Keep changes focused**: One feature or fix per change
 5. **Write tests**: All new logic should have unit tests
 6. **Touch support is mandatory**: All UI/UX changes MUST include touch event support and corresponding E2E tests
-7. **Update documentation**: If you change behavior, update relevant docs
-8. **Verify screenshots**: When providing screenshots in PR comments, always verify they match the description given. Screenshots should clearly show the specific feature or UI being described.
+7. **User story tests REQUIRED for gameplay changes**: Every modification to gameplay MUST include or update a user story test (see User Story Tests section)
+8. **Update documentation**: If you change behavior, update relevant docs
+9. **Verify screenshots**: When providing screenshots in PR comments, always verify they match the description given. Screenshots should clearly show the specific feature or UI being described.
+10. **Install git hooks**: Run `./scripts/install-hooks.sh` to enable pre-commit validation
 
 ## Build Artifacts
 
@@ -371,6 +473,7 @@ The following are generated and should not be committed:
 - `dist/`: Production build output
 - `.vite/`: Vite cache
 - Test screenshots in `tests/e2e/screenshots/` (generated by E2E tests)
+- User story actual screenshots in `tests/e2e/user-stories/*/actual/` (gitignored)
 
 ## Performance Considerations
 

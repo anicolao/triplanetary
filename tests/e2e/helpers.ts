@@ -25,13 +25,19 @@ interface GameState {
   screen: string;
   currentPhase: string;
   selectedShipId: string | null;
+  roundNumber: number;
+  players: Array<{
+    id: string;
+    name: string;
+    color: string;
+  }>;
   ships: Array<{
     id: string;
     position: { q: number; r: number };
     velocity: { q: number; r: number };
     destroyed?: boolean;
   }>;
-  plottedMoves: Map<string, {
+  plottedMoves: Record<string, {
     newVelocity: { q: number; r: number };
     thrustUsed: number;
   }>;

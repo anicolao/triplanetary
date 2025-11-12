@@ -9,3 +9,6 @@ test-results/
 *.js.map
 !playwright.config.ts
 !vitest.config.ts
+
+# User story actual screenshots (generated during test runs)
+tests/e2e/user-stories/*/actual/
