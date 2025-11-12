@@ -1,0 +1,86 @@
+name: Deploy to Testing
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Branch, tag, or commit SHA to deploy'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main branch
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: main-repo
+
+      - name: Setup Node for main
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: main-repo/package-lock.json
+
+      - name: Install dependencies for main
+        run: |
+          cd main-repo
+          npm ci
+
+      - name: Build main deployment
+        run: |
+          cd main-repo
+          npm run build
+
+      - name: Checkout target ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref || github.ref }}
+          path: testing-repo
+
+      - name: Install dependencies for testing
+        run: |
+          cd testing-repo
+          npm ci
+
+      - name: Build for testing
+        run: |
+          cd testing-repo
+          npm run build
+        env:
+          VITE_BASE_PATH: /triplanetary/testing/
+
+      - name: Combine deployments
+        run: |
+          mkdir -p combined-dist/triplanetary
+          cp -r main-repo/dist/* combined-dist/triplanetary/
+          mkdir -p combined-dist/triplanetary/testing
+          cp -r testing-repo/dist/* combined-dist/triplanetary/testing/
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./combined-dist
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}triplanetary/testing/
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
