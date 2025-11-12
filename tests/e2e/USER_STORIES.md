@@ -62,12 +62,14 @@ Brief description of what this user story tests.
 ### Step 1: Initial Action
 **Action:** What the user does
 **Expected:** What should happen
-**Screenshot:** `01-step-name.png`
+
+![Step 1 Description](expected/01-step-name.png)
 
 ### Step 2: Next Action
 **Action:** Next user action
 **Expected:** Expected result
-**Screenshot:** `02-step-name.png`
+
+![Step 2 Description](expected/02-step-name.png)
 
 ## Success Criteria
 - Specific criteria for success
@@ -159,6 +161,11 @@ await page.screenshot({ path: '...' });
 - Use `fullPage: false` for consistent viewport captures
 - Take screenshots at stable points (no animations in progress)
 - Ensure test mode is enabled for reproducible state
+
+### Embedding in README
+- Embed screenshots using markdown image syntax: `![Description](expected/01-step.png)`
+- Use descriptive alt text for each image
+- Place the image immediately after the step's action and expected result
 
 ## Screenshot Comparison
 

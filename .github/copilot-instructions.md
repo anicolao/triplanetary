@@ -340,7 +340,8 @@ Each user story lives in `tests/e2e/user-stories/<story-name>/`:
    ## Step 1: Initial Action
    **Action:** What the user does
    **Expected:** What should happen
-   **Screenshot:** `01-step-name.png`
+   
+   ![Step Description](expected/01-step-name.png)
    ```
 
 3. **Write test spec** with screenshots:
@@ -391,7 +392,7 @@ To skip temporarily: `git commit --no-verify`
 - Add waits after actions: `await page.waitForTimeout(200)`
 - Capture at stable points (no animations)
 - Use `fullPage: false` for consistency
-- Document what each screenshot shows in README.md
+- Embed screenshots in README.md using markdown image syntax: `![Description](expected/01-step.png)`
 
 #### Updating Baselines
 When intentional changes affect screenshots:
