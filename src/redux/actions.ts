@@ -61,6 +61,12 @@ export const UPDATE_ORDNANCE_VELOCITY = 'UPDATE_ORDNANCE_VELOCITY';
 export const DETONATE_ORDNANCE = 'DETONATE_ORDNANCE';
 export const UPDATE_SHIP_ORDNANCE = 'UPDATE_SHIP_ORDNANCE';
 
+// Viewport action types
+export const TOGGLE_MAP_MANIPULATION = 'TOGGLE_MAP_MANIPULATION';
+export const SET_VIEWPORT_PAN = 'SET_VIEWPORT_PAN';
+export const SET_VIEWPORT_ZOOM = 'SET_VIEWPORT_ZOOM';
+export const RESET_VIEWPORT = 'RESET_VIEWPORT';
+
 export interface AddPlayerAction {
   type: typeof ADD_PLAYER;
 }
@@ -321,6 +327,30 @@ export interface UpdateShipOrdnanceAction {
   };
 }
 
+// Viewport action interfaces
+export interface ToggleMapManipulationAction {
+  type: typeof TOGGLE_MAP_MANIPULATION;
+}
+
+export interface SetViewportPanAction {
+  type: typeof SET_VIEWPORT_PAN;
+  payload: {
+    offsetX: number;
+    offsetY: number;
+  };
+}
+
+export interface SetViewportZoomAction {
+  type: typeof SET_VIEWPORT_ZOOM;
+  payload: {
+    zoom: number;
+  };
+}
+
+export interface ResetViewportAction {
+  type: typeof RESET_VIEWPORT;
+}
+
 export type GameAction =
   | AddPlayerAction
   | RemovePlayerAction
@@ -362,7 +392,11 @@ export type GameAction =
   | UpdateOrdnancePositionAction
   | UpdateOrdnanceVelocityAction
   | DetonateOrdnanceAction
-  | UpdateShipOrdnanceAction;
+  | UpdateShipOrdnanceAction
+  | ToggleMapManipulationAction
+  | SetViewportPanAction
+  | SetViewportZoomAction
+  | ResetViewportAction;
 
 // Action creators
 export const addPlayer = (): AddPlayerAction => ({
@@ -593,4 +627,23 @@ export const updateShipOrdnance = (
 ): UpdateShipOrdnanceAction => ({
   type: UPDATE_SHIP_ORDNANCE,
   payload: { shipId, ordnanceType, count },
+});
+
+// Viewport action creators
+export const toggleMapManipulation = (): ToggleMapManipulationAction => ({
+  type: TOGGLE_MAP_MANIPULATION,
+});
+
+export const setViewportPan = (offsetX: number, offsetY: number): SetViewportPanAction => ({
+  type: SET_VIEWPORT_PAN,
+  payload: { offsetX, offsetY },
+});
+
+export const setViewportZoom = (zoom: number): SetViewportZoomAction => ({
+  type: SET_VIEWPORT_ZOOM,
+  payload: { zoom },
+});
+
+export const resetViewport = (): ResetViewportAction => ({
+  type: RESET_VIEWPORT,
 });
