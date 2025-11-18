@@ -4,10 +4,10 @@ name: Copilot CI
 # It can be used as a template for other automated workflows
 
 on:
-  pull_request:
-    branches:
-      - main
-  workflow_dispatch:
+#  pull_request:
+#    branches:
+#      - main
+#  workflow_dispatch:
 
 permissions:
   contents: read
