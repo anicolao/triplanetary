@@ -98,9 +98,15 @@ export function initializeTestAPI(renderer: Renderer, inputHandler: InputHandler
         
         // Get turn UI buttons
         const turnUI = rendererInstance.getTurnUILayout();
-        if (turnUI && buttonName === 'nextPhase') {
-          const btn = turnUI.nextPhaseButton;
-          return { x: btn.x, y: btn.y, width: btn.width, height: btn.height };
+        if (turnUI) {
+          if (buttonName === 'nextPhase') {
+            const btn = turnUI.nextPhaseButton;
+            return { x: btn.x, y: btn.y, width: btn.width, height: btn.height };
+          }
+          if (buttonName === 'toggle-map-layout') {
+            const btn = turnUI.mapLayoutButton;
+            return { x: btn.x, y: btn.y, width: btn.width, height: btn.height };
+          }
         }
         
         // Get plot UI buttons

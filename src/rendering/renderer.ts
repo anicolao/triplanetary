@@ -160,13 +160,27 @@ export class Renderer {
 
   private renderGameplayScreen(state: GameState): UILayout {
     // Define hex layout for the game board
-    // Adjusted hex size to fit the full solar system (Mars orbit is ~50 hexes)
-    const hexSize = 10; // Smaller size to fit more hexes on screen
+    // When using original map, align with the bitmap's hex grid
+    const usingOriginalMap = state.currentScenario.mapLayout === 'original' && 
+                             this.originalMapImageLoaded && 
+                             this.originalMapImage;
+    
+    // Hex size needs to match the bitmap's hex size
+    // Original map (after 90° rotation): 1083x791 pixels
+    // The bitmap has approximately 100+ hexes across its width
+    // Adjusting hex size to align with bitmap grid
+    const hexSize = usingOriginalMap ? 10.5 : 10;
+    
+    // Origin needs to be adjusted for proper alignment with bitmap
+    // After rotation, the center needs to account for the bitmap's hex grid offset
+    const originX = usingOriginalMap ? this.canvas.width / 2 - 3 : this.canvas.width / 2;
+    const originY = usingOriginalMap ? this.canvas.height / 2 + 1 : this.canvas.height / 2;
+    
     const layout: HexLayout = {
       size: hexSize,
       origin: {
-        x: this.canvas.width / 2,
-        y: this.canvas.height / 2,
+        x: originX,
+        y: originY,
       },
       orientation: 'pointy',
     };
@@ -179,16 +193,19 @@ export class Renderer {
     };
     
     // If using original map layout and image is loaded, use it as background
-    if (state.currentScenario.mapLayout === 'original' && this.originalMapImageLoaded && this.originalMapImage) {
+    if (usingOriginalMap) {
       gridOptions.backgroundImage = this.originalMapImage;
-      // Don't show grid when using original map
+      // Don't show grid when using original map - use embedded bitmap grid
       gridOptions.showGrid = false;
     }
     
     this.gridRenderer.renderGameBoard(layout, gridRadius, this.canvas.width, this.canvas.height, gridOptions);
 
     // Render all map objects (celestial bodies, stations, asteroids)
-    this.celestialRenderer.renderCelestialBodies(state.mapObjects, layout);
+    // Skip when using original map - use embedded features in the bitmap instead
+    if (state.currentScenario.mapLayout !== 'original') {
+      this.celestialRenderer.renderCelestialBodies(state.mapObjects, layout);
+    }
 
     // If a ship is selected and we should show reachable hexes, render them
     if (state.selectedShipId && state.showReachableHexes) {

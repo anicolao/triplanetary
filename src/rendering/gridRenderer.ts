@@ -79,35 +79,58 @@ export class GridRenderer {
 
   /**
    * Renders a background image, scaled to fit the canvas while maintaining aspect ratio.
+   * The original map is rotated 90° clockwise for proper orientation.
    */
   private renderBackgroundImage(width: number, height: number, image: HTMLImageElement): void {
-    // Calculate scaling to fit image on canvas while maintaining aspect ratio
-    const imageAspect = image.width / image.height;
+    // Draw black background first
+    this.ctx.fillStyle = '#000000';
+    this.ctx.fillRect(0, 0, width, height);
+    
+    // Save context state before rotation
+    this.ctx.save();
+    
+    // Rotate the image 90° clockwise
+    // After rotation, the image dimensions are swapped (width becomes height, height becomes width)
+    const rotatedWidth = image.height;  // After 90° rotation
+    const rotatedHeight = image.width;  // After 90° rotation
+    
+    // Calculate scaling to fit rotated image on canvas while maintaining aspect ratio
+    const imageAspect = rotatedWidth / rotatedHeight;
     const canvasAspect = width / height;
     
     let drawWidth: number;
     let drawHeight: number;
-    let offsetX: number = 0;
-    let offsetY: number = 0;
     
     if (imageAspect > canvasAspect) {
       // Image is wider - fit to width
       drawWidth = width;
       drawHeight = width / imageAspect;
-      offsetY = (height - drawHeight) / 2;
     } else {
       // Image is taller - fit to height
       drawHeight = height;
       drawWidth = height * imageAspect;
-      offsetX = (width - drawWidth) / 2;
     }
     
-    // Draw black background first
-    this.ctx.fillStyle = '#000000';
-    this.ctx.fillRect(0, 0, width, height);
+    // Calculate center position
+    const centerX = width / 2;
+    const centerY = height / 2;
     
-    // Draw the image centered
-    this.ctx.drawImage(image, offsetX, offsetY, drawWidth, drawHeight);
+    // Move to center, rotate 90° clockwise (PI/2 radians), then move back
+    this.ctx.translate(centerX, centerY);
+    this.ctx.rotate(Math.PI / 2);
+    
+    // Draw the image centered at the rotated origin
+    // Note: After rotation, we need to draw at negative half dimensions
+    this.ctx.drawImage(
+      image,
+      -drawHeight / 2,  // x position (swapped due to rotation)
+      -drawWidth / 2,   // y position (swapped due to rotation)
+      drawHeight,       // width (swapped due to rotation)
+      drawWidth         // height (swapped due to rotation)
+    );
+    
+    // Restore context state
+    this.ctx.restore();
   }
 
   /**
