@@ -19,6 +19,10 @@ import {
   launchOrdnance,
   updateShipOrdnance,
   toggleMapLayout,
+  toggleMapManipulation,
+  resetViewport,
+  setViewportPan,
+  setViewportZoom,
 } from '../redux/actions';
 import { pixelToHex } from '../hex/operations';
 import { HexLayout } from '../hex/types';
@@ -27,6 +31,10 @@ import { createOrdnance, generateOrdnanceId, OrdnanceType } from '../ordnance/ty
 export class InputHandler {
   private renderer: Renderer;
   private currentLayout: UILayout | null = null;
+  private isDragging: boolean = false;
+  private dragStartX: number = 0;
+  private dragStartY: number = 0;
+  private lastTouchDistance: number = 0;
 
   constructor(renderer: Renderer) {
     this.renderer = renderer;
@@ -46,32 +54,174 @@ export class InputHandler {
 
     // Mouse events
     canvas.addEventListener('click', (event) => {
-      this.handleClick(event.clientX, event.clientY);
+      const state = store.getState();
+      // Only handle clicks if not in manipulation mode or if not dragged
+      if (!state.viewport.manipulationEnabled || !this.isDragging) {
+        this.handleClick(event.clientX, event.clientY);
+      }
+    });
+
+    // Mouse wheel for zooming
+    canvas.addEventListener('wheel', (event) => {
+      const state = store.getState();
+      if (state.viewport.manipulationEnabled && state.screen === 'gameplay') {
+        event.preventDefault();
+        const delta = -event.deltaY * 0.001;
+        const newZoom = state.viewport.zoom * (1 + delta);
+        store.dispatch(setViewportZoom(newZoom));
+      }
+    }, { passive: false });
+
+    // Mouse drag for panning
+    canvas.addEventListener('mousedown', (event) => {
+      const state = store.getState();
+      if (state.viewport.manipulationEnabled && state.screen === 'gameplay') {
+        this.isDragging = true;
+        this.dragStartX = event.clientX;
+        this.dragStartY = event.clientY;
+      }
+    });
+
+    canvas.addEventListener('mousemove', (event) => {
+      const state = store.getState();
+      if (this.isDragging && state.viewport.manipulationEnabled && state.screen === 'gameplay') {
+        const dx = event.clientX - this.dragStartX;
+        const dy = event.clientY - this.dragStartY;
+        store.dispatch(setViewportPan(
+          state.viewport.offsetX + dx,
+          state.viewport.offsetY + dy
+        ));
+        this.dragStartX = event.clientX;
+        this.dragStartY = event.clientY;
+      }
+    });
+
+    canvas.addEventListener('mouseup', () => {
+      this.isDragging = false;
+    });
+
+    canvas.addEventListener('mouseleave', () => {
+      this.isDragging = false;
     });
 
     // Touch events - comprehensive support
     canvas.addEventListener('touchstart', (event) => {
-      if (event.touches.length > 0) {
+      const state = store.getState();
+      
+      if (state.viewport.manipulationEnabled && state.screen === 'gameplay') {
+        if (event.touches.length === 1) {
+          // Single touch - start panning
+          const touch = event.touches[0];
+          this.isDragging = true;
+          this.dragStartX = touch.clientX;
+          this.dragStartY = touch.clientY;
+        } else if (event.touches.length === 2) {
+          // Two finger touch - prepare for pinch zoom
+          const touch1 = event.touches[0];
+          const touch2 = event.touches[1];
+          const dx = touch2.clientX - touch1.clientX;
+          const dy = touch2.clientY - touch1.clientY;
+          this.lastTouchDistance = Math.sqrt(dx * dx + dy * dy);
+          this.isDragging = false;
+        }
+        event.preventDefault();
+      } else if (event.touches.length > 0) {
         const touch = event.touches[0];
-        // Store touch start position for potential drag detection
         this.handleClick(touch.clientX, touch.clientY);
+        event.preventDefault();
       }
-      event.preventDefault();
-    });
-
-    canvas.addEventListener('touchend', (event) => {
-      // Handle tap completion
-      event.preventDefault();
     });
 
     canvas.addEventListener('touchmove', (event) => {
-      // Prevent scrolling and zooming while touching the game canvas
+      const state = store.getState();
+      
+      if (state.viewport.manipulationEnabled && state.screen === 'gameplay') {
+        if (event.touches.length === 1 && this.isDragging) {
+          // Single touch - panning
+          const touch = event.touches[0];
+          const dx = touch.clientX - this.dragStartX;
+          const dy = touch.clientY - this.dragStartY;
+          store.dispatch(setViewportPan(
+            state.viewport.offsetX + dx,
+            state.viewport.offsetY + dy
+          ));
+          this.dragStartX = touch.clientX;
+          this.dragStartY = touch.clientY;
+        } else if (event.touches.length === 2) {
+          // Two finger touch - pinch zoom
+          const touch1 = event.touches[0];
+          const touch2 = event.touches[1];
+          const dx = touch2.clientX - touch1.clientX;
+          const dy = touch2.clientY - touch1.clientY;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          
+          if (this.lastTouchDistance > 0) {
+            const scale = distance / this.lastTouchDistance;
+            const newZoom = state.viewport.zoom * scale;
+            store.dispatch(setViewportZoom(newZoom));
+          }
+          
+          this.lastTouchDistance = distance;
+        }
+        event.preventDefault();
+      } else {
+        // Prevent scrolling and zooming while touching the game canvas
+        event.preventDefault();
+      }
+    });
+
+    canvas.addEventListener('touchend', (event) => {
+      this.isDragging = false;
+      this.lastTouchDistance = 0;
       event.preventDefault();
     });
 
     canvas.addEventListener('touchcancel', (event) => {
-      // Handle cancelled touch events
+      this.isDragging = false;
+      this.lastTouchDistance = 0;
       event.preventDefault();
+    });
+
+    // Keyboard events for panning and zooming
+    window.addEventListener('keydown', (event) => {
+      const state = store.getState();
+      if (state.viewport.manipulationEnabled && state.screen === 'gameplay') {
+        const panAmount = 50; // pixels
+        let handled = false;
+        
+        switch (event.key) {
+          case 'ArrowUp':
+            store.dispatch(setViewportPan(state.viewport.offsetX, state.viewport.offsetY + panAmount));
+            handled = true;
+            break;
+          case 'ArrowDown':
+            store.dispatch(setViewportPan(state.viewport.offsetX, state.viewport.offsetY - panAmount));
+            handled = true;
+            break;
+          case 'ArrowLeft':
+            store.dispatch(setViewportPan(state.viewport.offsetX + panAmount, state.viewport.offsetY));
+            handled = true;
+            break;
+          case 'ArrowRight':
+            store.dispatch(setViewportPan(state.viewport.offsetX - panAmount, state.viewport.offsetY));
+            handled = true;
+            break;
+          case '+':
+          case '=':
+            store.dispatch(setViewportZoom(state.viewport.zoom * 1.1));
+            handled = true;
+            break;
+          case '-':
+          case '_':
+            store.dispatch(setViewportZoom(state.viewport.zoom * 0.9));
+            handled = true;
+            break;
+        }
+        
+        if (handled) {
+          event.preventDefault();
+        }
+      }
     });
   }
 
@@ -200,6 +350,26 @@ export class InputHandler {
           store.dispatch(toggleMapLayout());
         }
         return;
+      }
+      
+      // Check for map manipulation toggle button click
+      const mapManipulationButton = turnUI.mapManipulationButton;
+      if (this.isPointInRect(x, y, mapManipulationButton.x, mapManipulationButton.y, mapManipulationButton.width, mapManipulationButton.height)) {
+        if (mapManipulationButton.enabled) {
+          store.dispatch(toggleMapManipulation());
+        }
+        return;
+      }
+      
+      // Check for home button click (if visible)
+      if (turnUI.homeButton) {
+        const homeButton = turnUI.homeButton;
+        if (this.isPointInRect(x, y, homeButton.x, homeButton.y, homeButton.width, homeButton.height)) {
+          if (homeButton.enabled) {
+            store.dispatch(resetViewport());
+          }
+          return;
+        }
       }
     }
 

@@ -17,6 +17,11 @@ function init() {
 
   // Initialize test API for automated testing
   initializeTestAPI(renderer, inputHandler);
+  
+  // Expose store for testing (only in test mode)
+  if (new URLSearchParams(window.location.search).get('testMode') === 'true') {
+    (window as any).__REDUX_STORE__ = store;
+  }
 
   // Main render function
   function render() {
