@@ -159,6 +159,15 @@ export class Renderer {
   }
 
   private renderGameplayScreen(state: GameState): UILayout {
+    // Save canvas state before applying viewport transformations
+    this.ctx.save();
+    
+    // Apply viewport transformations (pan and zoom)
+    // These transformations will affect all game elements (grid, ships, etc.)
+    // but not UI elements rendered afterwards
+    this.ctx.translate(state.viewport.offsetX, state.viewport.offsetY);
+    this.ctx.scale(state.viewport.zoom, state.viewport.zoom);
+    
     // Define hex layout for the game board
     // When using original map, align with the bitmap's hex grid
     const usingOriginalMap = state.currentScenario.mapLayout === 'original' && 
@@ -341,6 +350,10 @@ export class Renderer {
       this.currentCombatUILayout = null;
     }
 
+    // Restore canvas state after rendering game elements
+    // UI overlays should not be affected by viewport transformations
+    this.ctx.restore();
+
     // Render UI overlay showing player information
     this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
     this.ctx.fillRect(10, 10, 200, 60 + state.players.length * 25);
@@ -478,7 +491,8 @@ export class Renderer {
         allShipsPlotted,
         state.victoryState,
         state.players.map(p => p.id),
-        state.currentScenario.mapLayout
+        state.currentScenario.mapLayout,
+        state.viewport.manipulationEnabled
       );
       this.turnRenderer.renderTurnUI(this.currentTurnUILayout);
     } else {

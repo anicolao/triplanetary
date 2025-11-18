@@ -45,6 +45,14 @@ export interface GameNotification {
   timestamp: number;
 }
 
+// Map viewport state for panning and zooming
+export interface MapViewport {
+  offsetX: number; // Pan offset in pixels
+  offsetY: number; // Pan offset in pixels
+  zoom: number; // Zoom scale factor (1.0 = default)
+  manipulationEnabled: boolean; // Toggle for enabling map manipulation
+}
+
 export interface GameState {
   screen: Screen;
   players: Player[];
@@ -53,6 +61,8 @@ export interface GameState {
   mapObjects: MapObject[];
   currentScenario: Scenario;
   mapBounds: MapBounds;
+  // Map viewport state
+  viewport: MapViewport;
   // Plot Phase state
   plottedMoves: Map<string, PlottedMove>;
   showReachableHexes: boolean;

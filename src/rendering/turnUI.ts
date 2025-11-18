@@ -10,7 +10,7 @@ export interface TurnUIButton {
   height: number;
   text: string;
   enabled: boolean;
-  action: 'next-phase' | 'next-turn' | 'toggle-map-layout';
+  action: 'next-phase' | 'next-turn' | 'toggle-map-layout' | 'toggle-map-manipulation' | 'reset-viewport';
 }
 
 export interface TurnUILayout {
@@ -48,6 +48,8 @@ export interface TurnUILayout {
   // Action buttons
   nextPhaseButton: TurnUIButton;
   mapLayoutButton: TurnUIButton;
+  mapManipulationButton: TurnUIButton;
+  homeButton?: TurnUIButton; // Only visible when manipulation mode is enabled
 }
 
 export function createTurnUILayout(
@@ -61,7 +63,8 @@ export function createTurnUILayout(
   allShipsPlotted: boolean = true,
   victoryState?: VictoryState,
   playerIds?: string[],
-  currentMapLayout: 'modern' | 'original' = 'modern'
+  currentMapLayout: 'modern' | 'original' = 'modern',
+  manipulationEnabled: boolean = false
 ): TurnUILayout {
   // UI will be positioned in the top-right corner
   const padding = 10;
@@ -144,6 +147,33 @@ export function createTurnUILayout(
     action: 'toggle-map-layout',
   };
   
+  // Map manipulation toggle button (below map layout button)
+  const mapManipulationButtonY = mapLayoutButtonY + 35 + spacing;
+  const mapManipulationButton: TurnUIButton = {
+    x: phaseBoxX,
+    y: mapManipulationButtonY,
+    width: buttonWidth,
+    height: 35,
+    text: manipulationEnabled ? 'Lock Map' : 'Pan/Zoom Map',
+    enabled: true,
+    action: 'toggle-map-manipulation',
+  };
+  
+  // Home button (visible only when manipulation mode is enabled)
+  let homeButton: TurnUIButton | undefined;
+  if (manipulationEnabled) {
+    const homeButtonY = mapManipulationButtonY + 35 + spacing;
+    homeButton = {
+      x: phaseBoxX,
+      y: homeButtonY,
+      width: buttonWidth,
+      height: 35,
+      text: '🏠 Reset View',
+      enabled: true,
+      action: 'reset-viewport',
+    };
+  }
+  
   return {
     phaseBoxX,
     phaseBoxY,
@@ -170,6 +200,8 @@ export function createTurnUILayout(
     showVictory: victoryState?.gameWon || false,
     nextPhaseButton,
     mapLayoutButton,
+    mapManipulationButton,
+    homeButton,
   };
 }
 

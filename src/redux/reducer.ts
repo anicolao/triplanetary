@@ -44,6 +44,10 @@ import {
   UPDATE_ORDNANCE_VELOCITY,
   DETONATE_ORDNANCE,
   UPDATE_SHIP_ORDNANCE,
+  TOGGLE_MAP_MANIPULATION,
+  SET_VIEWPORT_PAN,
+  SET_VIEWPORT_ZOOM,
+  RESET_VIEWPORT,
 } from './actions';
 import { DEFAULT_SCENARIO, initializeMap } from '../celestial';
 import { getDefaultPlacements, createShipsFromPlacements } from '../ship/placement';
@@ -62,6 +66,12 @@ export const initialState: GameState = {
   mapObjects: initializeMap(DEFAULT_SCENARIO),
   currentScenario: DEFAULT_SCENARIO,
   mapBounds: DEFAULT_SCENARIO.bounds,
+  viewport: {
+    offsetX: 0,
+    offsetY: 0,
+    zoom: 1.0,
+    manipulationEnabled: false,
+  },
   plottedMoves: new Map(),
   showReachableHexes: true,
   currentPlayerIndex: 0,
@@ -822,6 +832,54 @@ export function gameReducer(
           
           return { ...ship, ordnance: newOrdnance };
         }),
+      };
+    }
+
+    case TOGGLE_MAP_MANIPULATION: {
+      return {
+        ...state,
+        viewport: {
+          ...state.viewport,
+          manipulationEnabled: !state.viewport.manipulationEnabled,
+        },
+      };
+    }
+
+    case SET_VIEWPORT_PAN: {
+      return {
+        ...state,
+        viewport: {
+          ...state.viewport,
+          offsetX: action.payload.offsetX,
+          offsetY: action.payload.offsetY,
+        },
+      };
+    }
+
+    case SET_VIEWPORT_ZOOM: {
+      // Enforce minimum zoom to prevent map from being smaller than screen
+      const minZoom = 0.5;
+      const maxZoom = 3.0;
+      const clampedZoom = Math.max(minZoom, Math.min(maxZoom, action.payload.zoom));
+      
+      return {
+        ...state,
+        viewport: {
+          ...state.viewport,
+          zoom: clampedZoom,
+        },
+      };
+    }
+
+    case RESET_VIEWPORT: {
+      return {
+        ...state,
+        viewport: {
+          offsetX: 0,
+          offsetY: 0,
+          zoom: 1.0,
+          manipulationEnabled: state.viewport.manipulationEnabled, // Keep the toggle state
+        },
       };
     }
 
