@@ -165,10 +165,10 @@ export class Renderer {
                              this.originalMapImageLoaded && 
                              this.originalMapImage;
     
-    // Hex size needs to match the bitmap's hex size
+    // Hex size configuration
     // Original map (after 90° rotation): 1083x791 pixels
-    // The bitmap has approximately 60 hexes across its width
-    // Both modern and original maps now use the same hex size for consistency
+    // The bitmap has approximately 60 hexes across its width (1083 / 18 ≈ 60)
+    // Both modern and original maps use the same hex size for consistency
     const hexSize = 10.5;
     
     // Origin needs to be adjusted for proper alignment with bitmap

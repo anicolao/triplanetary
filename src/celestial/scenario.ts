@@ -166,6 +166,8 @@ export const DEFAULT_SCENARIO: Scenario = {
     createStation('station-earth', 'Earth Station', { q: -17, r: 5 }),
     createStation('station-mars', 'Mars Station', { q: 2, r: -28 }),
   ],
+  // Asteroid field parameters: centerQ=22, centerR=5, count=10, spread=3, baseId='belt'
+  // Positioned in the asteroid belt region between Mars orbit (26 hexes) and outer space
   asteroids: createAsteroidField(22, 5, 10, 3, 'belt'),
   victoryCondition: {
     type: VictoryConditionType.Elimination,
