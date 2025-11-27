@@ -37,6 +37,7 @@ export const SUN: Sun = {
 /**
  * Mercury - innermost planet.
  * Fast orbital period, small size, weak gravity.
+ * Position matches the original Triplanetary map layout.
  */
 export const MERCURY: Planet = {
   id: 'mercury',
@@ -46,7 +47,7 @@ export const MERCURY: Planet = {
   visualRadius: 0.5,
   color: '#8C7853', // Gray-brown
   orbit: {
-    semiMajorAxis: 15, // Orbital radius in hexes
+    semiMajorAxis: 7, // Orbital radius in hexes (matches original map)
     eccentricity: 0.1, // Slightly elliptical
     period: 20, // Game turns for one complete orbit
     currentAngle: 0, // Starting position
@@ -69,6 +70,7 @@ export const MERCURY: Planet = {
 /**
  * Venus - second planet.
  * Similar size to Earth, thick atmosphere.
+ * Position matches the original Triplanetary map layout.
  */
 export const VENUS: Planet = {
   id: 'venus',
@@ -78,7 +80,7 @@ export const VENUS: Planet = {
   visualRadius: 1,
   color: '#E8C47D', // Yellowish
   orbit: {
-    semiMajorAxis: 25, // Orbital radius in hexes
+    semiMajorAxis: 13, // Orbital radius in hexes (matches original map)
     eccentricity: 0.05, // Nearly circular
     period: 35, // Game turns for one complete orbit
     currentAngle: 90, // Starting at a different position
@@ -101,6 +103,7 @@ export const VENUS: Planet = {
 /**
  * Earth - third planet.
  * Home planet, moderate gravity.
+ * Position matches the original Triplanetary map layout.
  */
 export const EARTH: Planet = {
   id: 'earth',
@@ -110,7 +113,7 @@ export const EARTH: Planet = {
   visualRadius: 1,
   color: '#4A90E2', // Blue
   orbit: {
-    semiMajorAxis: 35, // Orbital radius in hexes
+    semiMajorAxis: 19, // Orbital radius in hexes (matches original map)
     eccentricity: 0.05, // Nearly circular
     period: 50, // Game turns for one complete orbit
     currentAngle: 180, // Starting opposite Mercury
@@ -133,6 +136,7 @@ export const EARTH: Planet = {
 /**
  * Mars - fourth planet.
  * Smaller than Earth, red planet.
+ * Position matches the original Triplanetary map layout.
  */
 export const MARS: Planet = {
   id: 'mars',
@@ -142,7 +146,7 @@ export const MARS: Planet = {
   visualRadius: 0.8,
   color: '#D4745E', // Reddish
   orbit: {
-    semiMajorAxis: 50, // Orbital radius in hexes
+    semiMajorAxis: 26, // Orbital radius in hexes (matches original map)
     eccentricity: 0.1, // Slightly elliptical
     period: 80, // Game turns for one complete orbit
     currentAngle: 270, // Starting at yet another position

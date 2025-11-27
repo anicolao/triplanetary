@@ -57,9 +57,9 @@ export interface Scenario {
  * @returns Map bounds that encompass all celestial bodies
  */
 export function calculateDefaultBounds(padding: number = 10): MapBounds {
-  // Mars has the largest orbit at radius 50
+  // Mars has the largest orbit at radius 26 (matching original map)
   // Add padding for visibility and gameplay
-  const maxRadius = 50 + padding;
+  const maxRadius = 26 + padding;
   
   return {
     minQ: -maxRadius,
@@ -155,6 +155,7 @@ export function createAsteroidField(
 /**
  * Default scenario - basic solar system with minimal additions.
  * Suitable for learning and testing.
+ * Positions match the original Triplanetary map dimensions.
  */
 export const DEFAULT_SCENARIO: Scenario = {
   id: 'default',
@@ -162,10 +163,12 @@ export const DEFAULT_SCENARIO: Scenario = {
   description: 'Basic solar system scenario with a few stations',
   bounds: calculateDefaultBounds(),
   stations: [
-    createStation('station-earth', 'Earth Station', { q: 35, r: 5 }),
-    createStation('station-mars', 'Mars Station', { q: -30, r: 40 }),
+    createStation('station-earth', 'Earth Station', { q: -17, r: 5 }),
+    createStation('station-mars', 'Mars Station', { q: 2, r: -28 }),
   ],
-  asteroids: createAsteroidField(42, 8, 15, 5, 'belt'),
+  // Asteroid field parameters: centerQ=22, centerR=5, count=10, spread=3, baseId='belt'
+  // Positioned in the asteroid belt region between Mars orbit (26 hexes) and outer space
+  asteroids: createAsteroidField(22, 5, 10, 3, 'belt'),
   victoryCondition: {
     type: VictoryConditionType.Elimination,
     description: 'Eliminate all enemy ships',
