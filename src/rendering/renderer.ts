@@ -167,14 +167,15 @@ export class Renderer {
     
     // Hex size needs to match the bitmap's hex size
     // Original map (after 90° rotation): 1083x791 pixels
-    // The bitmap has approximately 100+ hexes across its width
-    // Adjusting hex size to align with bitmap grid
-    const hexSize = usingOriginalMap ? 10.5 : 10;
+    // The bitmap has approximately 60 hexes across its width
+    // Both modern and original maps now use the same hex size for consistency
+    const hexSize = 10.5;
     
     // Origin needs to be adjusted for proper alignment with bitmap
     // After rotation, the center needs to account for the bitmap's hex grid offset
-    const originX = usingOriginalMap ? this.canvas.width / 2 - 3 : this.canvas.width / 2;
-    const originY = usingOriginalMap ? this.canvas.height / 2 + 1 : this.canvas.height / 2;
+    // Both modern and original maps use the same origin calculation for consistency
+    const originX = this.canvas.width / 2 - 3;
+    const originY = this.canvas.height / 2 + 1;
     
     const layout: HexLayout = {
       size: hexSize,
@@ -185,9 +186,9 @@ export class Renderer {
       orientation: 'pointy',
     };
 
-    // Render the hex grid with a larger radius to show all planets
-    // Mars orbits at ~50 hexes, so we need at least that much radius
-    const gridRadius = 55;
+    // Render the hex grid with a radius to show all planets
+    // Mars orbits at ~26 hexes (matching original map), so we need at least that much radius
+    const gridRadius = 36;
     const gridOptions: any = {
       showCoordinates: false, // Hide coordinates for cleaner view at this zoom level
     };

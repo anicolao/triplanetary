@@ -21,9 +21,9 @@ describe('Map Initialization (Phase 3.3)', () => {
       expect(bounds.minR).toBeLessThan(0);
       expect(bounds.maxR).toBeGreaterThan(0);
       
-      // Mars orbit is at ~50, so bounds should be larger
-      expect(bounds.maxQ).toBeGreaterThan(50);
-      expect(bounds.maxR).toBeGreaterThan(50);
+      // Mars orbit is at ~26 (matching original map), so bounds should be larger
+      expect(bounds.maxQ).toBeGreaterThan(26);
+      expect(bounds.maxR).toBeGreaterThan(26);
     });
 
     it('should apply custom padding', () => {
