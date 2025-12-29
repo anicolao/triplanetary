@@ -43,6 +43,8 @@ jobs:
         run: |
           cd main-repo
           npm run build
+        env:
+          VITE_BASE_PATH: /triplanetary/
 
       - name: Checkout target ref
         uses: actions/checkout@v4
@@ -62,12 +64,25 @@ jobs:
         env:
           VITE_BASE_PATH: /triplanetary/testing/
 
+      - name: Verify testing build artifacts
+        run: |
+          echo "Checking testing-repo dist directory..."
+          ls -la testing-repo/dist/
+          test -f testing-repo/dist/index.html || { echo "ERROR: testing index.html not found"; exit 1; }
+          grep -q "/triplanetary/testing/" testing-repo/dist/index.html || { echo "ERROR: /triplanetary/testing/ base path not found"; exit 1; }
+          echo "Testing build artifacts verified!"
+
       - name: Combine deployments
         run: |
           mkdir -p combined-dist/triplanetary
           cp -r main-repo/dist/* combined-dist/triplanetary/
           mkdir -p combined-dist/triplanetary/testing
           cp -r testing-repo/dist/* combined-dist/triplanetary/testing/
+          echo "Verifying combined deployment structure..."
+          ls -la combined-dist/
+          ls -la combined-dist/triplanetary/
+          ls -la combined-dist/triplanetary/testing/
+          echo "Combined deployment structure verified!"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

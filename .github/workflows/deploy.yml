@@ -33,6 +33,22 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          VITE_BASE_PATH: /triplanetary/
+
+      - name: Verify build artifacts
+        run: |
+          echo "Checking dist directory contents..."
+          ls -la dist/
+          echo "Checking index.html exists..."
+          test -f dist/index.html || { echo "ERROR: dist/index.html not found"; exit 1; }
+          echo "Checking assets directory..."
+          test -d dist/assets || { echo "ERROR: dist/assets directory not found"; exit 1; }
+          echo "Checking .nojekyll file..."
+          test -f dist/.nojekyll || { echo "ERROR: dist/.nojekyll not found"; exit 1; }
+          echo "Verifying base path in index.html..."
+          grep -q "/triplanetary/" dist/index.html || { echo "ERROR: /triplanetary/ base path not found in index.html"; exit 1; }
+          echo "Build artifacts verified successfully!"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
