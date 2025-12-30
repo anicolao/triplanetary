@@ -333,7 +333,8 @@ export class Renderer {
         selectedTarget,
         declaredAttack,
         state.combatLog,
-        (q, r) => hexToPixel({ q, r }, layout)
+        (q, r) => hexToPixel({ q, r }, layout),
+        state.players.length
       );
       
       this.combatRenderer.renderCombatUI(this.currentCombatUILayout);

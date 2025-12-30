@@ -67,7 +67,8 @@ export function createCombatUILayout(
   selectedTarget: Ship | null,
   declaredAttack: DeclaredAttack | null,
   combatLog: CombatLogEntry[],
-  hexToPixel: (q: number, r: number) => { x: number; y: number }
+  hexToPixel: (q: number, r: number) => { x: number; y: number },
+  playerCount: number = 2
 ): CombatUILayout {
   const padding = 10;
   const buttonHeight = 40;
@@ -138,11 +139,13 @@ export function createCombatUILayout(
     action: 'end-combat',
   };
   
-  // Combat log in top-left
+  // Combat log in top-left, positioned below the player panel
+  // Player panel height = 60 + playerCount * 25 (from renderer.ts line 360)
+  const playerPanelHeight = 60 + playerCount * 25;
   const combatLogWidth = 400;
   const combatLogHeight = 200;
   const combatLogX = padding;
-  const combatLogY = padding + 200; // Below turn UI
+  const combatLogY = padding + playerPanelHeight + 20; // 20px spacing below player panel
   
   // Get last 5 combat log entries
   const combatLogEntries = combatLog
